@@ -2,11 +2,13 @@
   "name": "theatre",
   "version": "0.1.0",
   "description": "theathre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
-  "main": "index.js",
+  "main": "build/theatre.js",
+  "types": "build/theatre.d.ts",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
