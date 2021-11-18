@@ -1,0 +1,30 @@
+{
+  "name": "theatre",
+  "version": "0.1.0",
+  "description": "theathre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pawel-kuznik/theatre.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pawel-kuznik/theatre/issues"
+  },
+  "homepage": "https://github.com/pawel-kuznik/theatre#readme",
+  "devDependencies": {
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "@types/resize-observer-browser": "^0.1.6",
+    "@types/three": "^0.133.1",
+    "three": "^0.133.1"
+  }
+}
