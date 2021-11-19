@@ -1,6 +1,9 @@
-import { BoxGeometry } from "three";
+import { BoxGeometry, MeshBasicMaterial, Mesh } from "three";
 import Actor from "./Actor";
 
+/**
+ *  This is a class to test stuff around when we are developing code.
+ */
 export default class CompanionActor extends Actor {
 
     constructor() {
@@ -8,8 +11,10 @@ export default class CompanionActor extends Actor {
         super();
 
         const geometry = new BoxGeometry(1, 1, 1);
-        
+        const material = new MeshBasicMaterial({ color: 'red' });
 
-        this._object.add()
+        const mesh = new Mesh(geometry, material);
+
+        this._object.add(mesh);
     }
 };

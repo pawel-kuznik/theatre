@@ -1,4 +1,4 @@
-import { Object3D } from "three";
+import { Mesh, Object3D } from "three";
 import Position from "./Position";
 
 /**
@@ -16,4 +16,29 @@ export default abstract class Actor {
      *  Get access to the position.
      */
     get position() : Position { return new Position(this._object.position); }
+
+    /**
+     *  Detach the actor
+     */
+    detach() : void {
+
+        this._object.removeFromParent();
+    }
+
+    /**
+     *  Dispose of the data allocated by the actor.
+     */
+    dispose() : void {
+
+        for (let child of this._object.children) {
+
+            if (child instanceof Mesh) {
+
+                child.geometry.dispose();
+
+                // @todo figure out if the material is owned by the actor. If so,
+                // we need to dispose it.
+            }
+        }
+    }
 };
