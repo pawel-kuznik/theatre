@@ -1,5 +1,10 @@
 import { Vector3 } from "three";
 
+/**
+ *  This is our special class to wrap around a vector that describes a position of 
+ *  a specific actor on the stage. We use this to conceptualize some of our ideas
+ *  and have a quick access to our domain logic over the native vector data.
+ */
 export default class Position {
 
     /**

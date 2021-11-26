@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "es2020",
+        "declaration": true,
+        "outDir": "./example/build",
+        "strict": true,
+        "lib": ["es6", "es2017", "dom"]
+    },
+    "include": [ "./theatre.ts", "./lib/**/*" ],
+    "exclude": [ "./build", "node_modules", "**/__tests__/*"]
+}
+  
