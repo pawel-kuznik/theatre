@@ -1,0 +1,1 @@
+window.THEATRE = { ...require('./build/theatre.js') };

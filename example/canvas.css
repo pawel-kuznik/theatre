@@ -1,0 +1,24 @@
+/**
+ *  Styles to setup the canvas and the main view in examples.
+ */
+
+html, body
+{
+    height:     100vh;
+    width:      100vw;
+    margin:     0;
+    padding:    0;
+}
+
+canvas
+{
+    width:      calc(100% - 2rem - 4px);
+    height:     calc(100% - 2rem - 4px);
+
+    margin:     1rem;
+    border:     2px dashed darkorange;
+    background-clip: border-box;
+    background:gainsboro;
+
+    border-radius: 7px;
+}

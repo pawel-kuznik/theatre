@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "example": "tsc -p tsconfig.example.json",
+    "example": "tsc -p tsconfig.example.json && browserify example/bootstrap.js -o example/lib.js",
     "example-server": "http-server ./example -o"
   },
   "repository": {
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/pawel-kuznik/theatre#readme",
   "devDependencies": {
+    "browserify": "^17.0.0",
     "http-server": "^14.0.0",
     "typescript": "^4.4.4"
   },

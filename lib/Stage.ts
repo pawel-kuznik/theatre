@@ -10,17 +10,12 @@ export default class Stage {
     /**
      *  The current scene of the stage.
      */
-    private _scene:Scene = new Scene();
+    public readonly scene:Scene = new Scene();
 
     /**
      *  The actors.
      */
-    private _actors:Set<Actor> = new Set();
-
-    /**
-     *  Get the current stage scene.
-     */
-    get scene() : Scene { return this._scene; }
+    private readonly _actors:Set<Actor> = new Set();
 
     /**
      *  The the current actors of the scene.
