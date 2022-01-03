@@ -35,7 +35,7 @@ export default class RendererHandler {
     /**
      *  Cleanup any resources of this class.
      */
-    dispose() : void {
+    public dispose() : void {
 
         this._observer.disconnect();
         this._renderer.dispose();

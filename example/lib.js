@@ -1,6 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
-},{"./build/theatre.js":10}],2:[function(require,module,exports){
+window.THREE = { ...require('three') };
+},{"./build/theatre.js":14,"three":15}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -42,7 +43,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":4,"three":11}],3:[function(require,module,exports){
+},{"./Position":5,"three":15}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -62,7 +63,23 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":11}],4:[function(require,module,exports){
+},{"./Actor":2,"three":15}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Stage_1 = require("./Stage");
+/**
+ *  This is a special stage that is deliberately empty.
+ *  Right now it's mostly used to make the StageContainer
+ *  happy and always have a defined state. However, it
+ *  would be better if we would have a better way of dealing
+ *  with it.
+ */
+class EmptyStage extends Stage_1.default {
+}
+exports.default = EmptyStage;
+;
+
+},{"./Stage":8}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -92,7 +109,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -140,10 +157,48 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":11}],6:[function(require,module,exports){
+},{"three":15}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is a class describing a rendering loop.
+ *
+ *  @todo It would be great if this function would be also able to provide FPS counter
+ *  and have capabilities to cap rendering at certain speed.
+ */
+class RenderingLoop {
+    constructor(_renderFunction) {
+        this._renderFunction = _renderFunction;
+        this._running = false;
+    }
+    /**
+     *  Start the rendering loop.
+     */
+    start() {
+        this._running = true;
+        const step = () => {
+            if (!this._running)
+                return;
+            this._renderFunction();
+            window.requestAnimationFrame(step);
+        };
+        step();
+    }
+    /**
+     *  Stop the rendering loop.
+     */
+    stop() {
+        this._running = false;
+    }
+}
+exports.default = RenderingLoop;
+;
+
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
+const StageAmbience_1 = require("./Stage/StageAmbience");
 /**
  *  This is the stage. This class represents the scene as well as definition for
  *  lights and actors.
@@ -158,16 +213,97 @@ class Stage {
          *  The actors.
          */
         this._actors = new Set();
+        /**
+         *  The current scene ambience.
+         */
+        this._ambience = null;
+        const g = new three_1.BoxGeometry(1, 1, 1);
+        const m = new three_1.MeshBasicMaterial({ color: 0x0000ff });
+        const b = new three_1.Mesh(g, m);
+        this.scene.add(b);
     }
     /**
      *  The the current actors of the scene.
      */
     get actors() { return [...this._actors]; }
+    /**
+     *  Set Ambience.
+     */
+    setAmbience(props) {
+        if (this._ambience)
+            this._ambience.vacate();
+        this._ambience = new StageAmbience_1.default(props);
+        this._ambience.occupy(this.scene);
+    }
 }
 exports.default = Stage;
 ;
 
-},{"three":11}],7:[function(require,module,exports){
+},{"./Stage/StageAmbience":10,"three":15}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const EmptyStage_1 = require("./EmptyStage");
+/**
+ *  This is a special class that makes sure there is always
+ *  a stage and allows for switching between stages. The switch
+ *  can be done with a specific transition or loading state
+ *  which is not a stage of itself.
+ *
+ *  @todo   make the transition/loader
+ */
+class StageContainer {
+    constructor() {
+        /**
+         *  The current stage.
+         */
+        this._stage = new EmptyStage_1.default();
+    }
+    /**
+     *  Expose the stage.
+     */
+    get stage() { return this._stage; }
+    /**
+     *  Mount new stage. A promise of fully mounted stage is returned.
+     *  This promise resolves when the provided stage is fully loaded.
+     */
+    mount(stage) {
+        this._stage = stage;
+        return Promise.resolve();
+    }
+}
+exports.default = StageContainer;
+;
+
+},{"./EmptyStage":4}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+/**
+ *  This is a class that provides ambience for the stage. This includes
+ *  ambient lightning and possible ambience objects (like a world box
+ *  or similar).
+ */
+class StageAmbience {
+    constructor(properties) {
+        this._ambientLight = new three_1.AmbientLight(properties.ambientColor);
+    }
+    /**
+     *  Occupy/mount scene ambience.
+     */
+    occupy(scene) {
+        scene.add(this._ambientLight);
+    }
+    /**
+     *  Vacate/unmount the scene.
+     */
+    vacate() {
+        this._ambientLight.removeFromParent();
+    }
+}
+exports.default = StageAmbience;
+;
+
+},{"three":15}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -242,11 +378,14 @@ class TableTopCamera {
 exports.default = TableTopCamera;
 ;
 
-},{"three":11}],8:[function(require,module,exports){
+},{"three":15}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
+const RenderingLoop_1 = require("./RenderingLoop");
 const Stage_1 = require("./Stage");
+const StageContainer_1 = require("./StageContainer");
+const TableTopCamera_1 = require("./TableTopCamera");
 const Warderobe_1 = require("./Warderobe");
 /**
  *  This is the main class that creates the theater and allows
@@ -267,22 +406,51 @@ class Theatre {
          */
         this.warderobe = new Warderobe_1.default();
         /**
-         *  The current stage.
+         *  The container wrapping around the current stage and providing us
+         *  with ability to transition from one stage to another.
          */
-        this.stage = new Stage_1.default();
+        this._stageContainer = new StageContainer_1.default();
+        /**
+         *  The stages created inside the theatre.
+         */
+        this._stages = new Map();
+        this._camera = new TableTopCamera_1.default(.45);
         this._rendererHandler = new RendererHandler_1.default(canvas);
+        this._loop = new RenderingLoop_1.default(() => {
+            this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+        });
+        this._loop.start();
     }
     /**
+     *  Get the current stage.
+     */
+    get stage() { return this._stageContainer.stage; }
+    /**
      *  Create a new stage.
+     *
+     *  @throws Error   When a stage of a given name already exists.
      */
     createStage(name) {
-        return this.stage;
+        if (this._stages.has(name))
+            throw new Error('Theatre: Stage with this name already exists.');
+        const stage = new Stage_1.default();
+        this._stages.set(name, stage);
+        return stage;
+    }
+    /**
+     *  Transition to a specific stage by it's name.
+     */
+    transitionTo(stageName) {
+        const stage = this._stages.get(stageName);
+        if (!stage)
+            throw new Error('Theatre: Stage with this name does not exists.');
+        this._stageContainer.mount(stage);
     }
 }
 exports.default = Theatre;
 ;
 
-},{"./RendererHandler":5,"./Stage":6,"./Warderobe":9}],9:[function(require,module,exports){
+},{"./RendererHandler":6,"./RenderingLoop":7,"./Stage":8,"./StageContainer":9,"./TableTopCamera":11,"./Warderobe":13}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -333,7 +501,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"three":11}],10:[function(require,module,exports){
+},{"three":15}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.Actor = exports.TableTopCamera = void 0;
@@ -352,7 +520,7 @@ Object.defineProperty(exports, "Position", { enumerable: true, get: function () 
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":3,"./lib/Position":4,"./lib/Stage":6,"./lib/TableTopCamera":7,"./lib/Theatre":8,"./lib/Warderobe":9}],11:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/CompanionActor":3,"./lib/Position":5,"./lib/Stage":8,"./lib/TableTopCamera":11,"./lib/Theatre":12,"./lib/Warderobe":13}],15:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

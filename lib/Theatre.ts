@@ -1,5 +1,8 @@
 import RendererHandler from "./RendererHandler";
+import RenderingLoop from "./RenderingLoop";
 import Stage from "./Stage";
+import StageContainer from "./StageContainer";
+import TableTopCamera from "./TableTopCamera";
 import Warderobe from "./Warderobe";
 
 /**
@@ -22,9 +25,17 @@ export default class Theatre {
     public readonly warderobe:Warderobe = new Warderobe();
 
     /**
-     *  The current stage.
+     *  The container wrapping around the current stage and providing us
+     *  with ability to transition from one stage to another.
      */
-    public readonly stage:Stage = new Stage();
+    private readonly _stageContainer:StageContainer = new StageContainer();
+
+    /**
+     *  The stages created inside the theatre.
+     */
+    private readonly _stages:Map<string,Stage> = new Map();
+
+    private readonly _camera:TableTopCamera = new TableTopCamera(.45);
 
     /**
      *  An instance of the renderer, but wrapped in a a cosy handler that
@@ -32,16 +43,53 @@ export default class Theatre {
      */
     private readonly _rendererHandler:RendererHandler;
 
+    /**
+     *  A special class allowing us to affect rendering loop.
+     */
+    private readonly _loop:RenderingLoop;
+
     constructor(canvas:HTMLCanvasElement) {
 
         this._rendererHandler = new RendererHandler(canvas);
+
+        this._loop = new RenderingLoop(() => {
+
+            this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+        });
+
+        this._loop.start();
     }
 
     /**
+     *  Get the current stage.
+     */
+    get stage() : Stage { return this._stageContainer.stage; }
+
+    /**
      *  Create a new stage.
+     * 
+     *  @throws Error   When a stage of a given name already exists.
      */
     createStage(name:string) : Stage {
 
-        return this.stage;
+        if (this._stages.has(name)) throw new Error('Theatre: Stage with this name already exists.');
+
+        const stage = new Stage();
+
+        this._stages.set(name, stage);
+
+        return stage;
+    }
+
+    /**
+     *  Transition to a specific stage by it's name.
+     */
+    transitionTo(stageName:string) {
+
+        const stage = this._stages.get(stageName);
+
+        if (!stage) throw new Error('Theatre: Stage with this name does not exists.');
+
+        this._stageContainer.mount(stage);
     }
 };
