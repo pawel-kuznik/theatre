@@ -1,6 +1,7 @@
 import { PerspectiveCamera, Camera as ThreeJSCamera  } from "three";
-import Camera from '../Camera';
+import CameraMover from "./CameraMover";
 import CameraOptions from "./CameraOptions";
+import FreefloatCamera from "./FreefloatCamera";
 
 /**
  *  The specific options for top-down camera.
@@ -15,9 +16,11 @@ export interface TopDownCameraOptions extends CameraOptions {
  *  This is a special camera implementation that is suitable for a top-down
  *  view akin to board games or RTS games.
  */
-export default class TopDownCamera implements Camera {
+export default class TopDownCamera implements FreefloatCamera {
 
     private readonly _camera:PerspectiveCamera;
+
+    private readonly _movers:Array<CameraMover> = [];
 
     /**
      *  The construct of the camera.
@@ -104,15 +107,7 @@ export default class TopDownCamera implements Camera {
      */
     public handle(event:KeyboardEvent|MouseEvent) {
 
-        if (event.type === 'keydown') {
-
-            const keyboardEvent = event as KeyboardEvent;
-
-            if (keyboardEvent.code === 'KeyA') this.moveBy(-1, 0);
-            if (keyboardEvent.code === 'KeyD') this.moveBy(1, 0);
-            if (keyboardEvent.code === 'KeyW') this.moveBy(0, -1);
-            if (keyboardEvent.code === 'KeyS') this.moveBy(0, 1);
-        }
+        for (let mover of this._movers) mover.handle(event, this);
     }
 
     /**
@@ -123,5 +118,13 @@ export default class TopDownCamera implements Camera {
         this._camera.aspect = aspectRatio;
 
         this._camera.updateProjectionMatrix();
+    }
+
+    /**
+     *  Add a mover to the camera.
+     */
+    public appendMover(mover:CameraMover) {
+
+        this._movers.push(mover);
     }
 };

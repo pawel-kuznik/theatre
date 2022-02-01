@@ -1,6 +1,14 @@
 import Camera from "../Camera";
+import CameraMoverOptions from "./CameraMoverOptions";
 import CameraOptions from "./CameraOptions";
 import TopDownCamera from "./TopDownCamera";
+import WSADCameraMover from "./WSADCameraMover";
+
+export type CameraFactorySpecs = CameraOptions & {
+
+    movers:Array<CameraMoverOptions>;
+};
+
 /**
  *  A special class to create a camera based
  *  on provided camera options.
@@ -10,7 +18,7 @@ export default class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(private readonly _options:CameraOptions) {
+    constructor(private readonly _options:CameraFactorySpecs) {
 
     }
 
@@ -32,6 +40,26 @@ export default class CameraFactory {
      */
     private buildTopDown() : TopDownCamera {
 
-        return new TopDownCamera(this._options);
+        const options = Object.assign({ }, {
+            type:           this._options.type,
+            aspectRatio:    this._options.aspectRatio
+        });
+
+        const camera = new TopDownCamera(options);
+
+        for (let moverOptions of this._options.movers) {
+
+            if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(moverOptions));
+        }
+
+        return camera;
     }
+
+    /**
+     *  Build a camera mover that reacts to WSAD keys.
+     */
+    private buildWSADMover(options:CameraMoverOptions) : WSADCameraMover {
+
+        return new WSADCameraMover();
+    } 
 };

@@ -37,6 +37,16 @@ export default class RendererHandler {
     get canvas() : HTMLCanvasElement { return this._canvas; }
 
     /**
+     *  Get the aspect ratio of the renderer.
+     */
+    get aspectRatio() : number { 
+
+        const bb = this._canvas.getBoundingClientRect();
+
+        return bb.width / bb.height;
+    }
+
+    /**
      *  Cleanup any resources of this class.
      */
     public dispose() : void {

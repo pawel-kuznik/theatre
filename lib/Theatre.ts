@@ -73,7 +73,9 @@ export default class Theatre {
 
         this._camera = (new CameraFactory({
             type:           'topdown',
-            aspectRatio:    .45             // @todo this should come from configuration.
+            aspectRatio:    this._rendererHandler.aspectRatio,
+            movers:         [ { type: 'wsad' }]
+            
         })).build();
 
         this._loop = new RenderingLoop(() => {
