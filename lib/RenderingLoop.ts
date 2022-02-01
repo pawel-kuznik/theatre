@@ -1,3 +1,5 @@
+import { RenderStep } from "./RenderStep";
+
 /**
  *  This is a class describing a rendering loop.
  * 
@@ -8,7 +10,7 @@ export default class RenderingLoop {
 
     private _running:boolean = false;
 
-    constructor(private _renderFunction:() => void) {
+    constructor(private _renderFunction:(step:RenderStep) => void) {
 
     }
 
@@ -19,16 +21,22 @@ export default class RenderingLoop {
 
         this._running = true;
 
-        const step = () => {
+        let last:DOMHighResTimeStamp = performance.now();
+
+        const step = (time:DOMHighResTimeStamp) => {
 
             if (!this._running) return;
 
-            this._renderFunction();
+            const renderStep = new RenderStep(last, time);
+
+            last = time;
+
+            this._renderFunction(renderStep);
 
             window.requestAnimationFrame(step);
         };
 
-        step();
+        step(last);
     }
 
     /**

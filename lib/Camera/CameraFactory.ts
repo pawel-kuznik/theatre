@@ -1,6 +1,7 @@
 import Camera from "../Camera";
 import CameraMoverOptions from "./CameraMoverOptions";
 import CameraOptions from "./CameraOptions";
+import FreefloatCamera from "./FreefloatCamera";
 import TopDownCamera from "./TopDownCamera";
 import WSADCameraMover from "./WSADCameraMover";
 
@@ -49,7 +50,7 @@ export default class CameraFactory {
 
         for (let moverOptions of this._options.movers) {
 
-            if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(moverOptions));
+            if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(camera, moverOptions));
         }
 
         return camera;
@@ -58,8 +59,8 @@ export default class CameraFactory {
     /**
      *  Build a camera mover that reacts to WSAD keys.
      */
-    private buildWSADMover(options:CameraMoverOptions) : WSADCameraMover {
+    private buildWSADMover(camera:FreefloatCamera, options:CameraMoverOptions) : WSADCameraMover {
 
-        return new WSADCameraMover();
+        return new WSADCameraMover(camera);
     } 
 };

@@ -1,16 +1,14 @@
 import { Camera as ThreeJSCamera } from "three";
+import RenderParticipant from "./RenderParticipant";
 /**
  *  An interface describing a camera in the theatre.
  */
-export default interface Camera {
+export default interface Camera extends RenderParticipant {
 
     /**
      *  Get access to the Three.js camera instance.
      */
-     get native() : ThreeJSCamera;
-
-    // @todo add a renderUpdate() method that would be called inside the rendering loop
-    // and update the camera position and so on.
+    get native() : ThreeJSCamera;
 
     /**
      *  Handle an input event related to the camera.

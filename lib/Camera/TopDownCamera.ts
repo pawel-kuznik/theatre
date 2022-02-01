@@ -1,4 +1,5 @@
 import { PerspectiveCamera, Camera as ThreeJSCamera  } from "three";
+import { RenderStep } from "../RenderStep";
 import CameraMover from "./CameraMover";
 import CameraOptions from "./CameraOptions";
 import FreefloatCamera from "./FreefloatCamera";
@@ -107,7 +108,7 @@ export default class TopDownCamera implements FreefloatCamera {
      */
     public handle(event:KeyboardEvent|MouseEvent) {
 
-        for (let mover of this._movers) mover.handle(event, this);
+        for (let mover of this._movers) mover.handle(event);
     }
 
     /**
@@ -126,5 +127,13 @@ export default class TopDownCamera implements FreefloatCamera {
     public appendMover(mover:CameraMover) {
 
         this._movers.push(mover);
+    }
+
+    /**
+     *  Update the camera on render step.
+     */
+    renderUpdate(step:RenderStep) : void {
+
+        for (let mover of this._movers) mover.renderUpdate(step);
     }
 };

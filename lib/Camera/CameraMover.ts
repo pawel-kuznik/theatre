@@ -1,12 +1,12 @@
-import Camera from "../Camera";
+import RenderParticipant from "../RenderParticipant";
 
 /**
  *  The base interface all camera movers needs to adhere to.
  */
-export default interface CameraMover {
+export default interface CameraMover extends RenderParticipant {
 
     /**
      *  Handle a user input event.
      */
-    handle(event:KeyboardEvent|MouseEvent, camera:Camera) : void;
+    handle(event:KeyboardEvent|MouseEvent) : void;
 };

@@ -7,6 +7,7 @@ import Warderobe from "./Warderobe";
 import Camera from "./Camera";
 import CameraSpecs from "./Camera/CameraOptions";
 import CameraFactory from "./Camera/CameraFactory";
+import { RenderStep } from "./RenderStep";
 
 /**
  *  The 
@@ -78,9 +79,9 @@ export default class Theatre {
             
         })).build();
 
-        this._loop = new RenderingLoop(() => {
+        this._loop = new RenderingLoop((step:RenderStep) => {
 
-            // @todo we should update the camera (cause camera might also have animations)
+            this._camera.renderUpdate(step);
 
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
         });
