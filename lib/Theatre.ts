@@ -2,7 +2,6 @@ import RendererHandler from "./RendererHandler";
 import RenderingLoop from "./RenderingLoop";
 import Stage from "./Stage";
 import StageContainer from "./StageContainer";
-import TableTopCamera from "./Camera/TopDownCamera";
 import Warderobe from "./Warderobe";
 import Camera from "./Camera";
 import CameraSpecs from "./Camera/CameraOptions";
@@ -10,7 +9,7 @@ import CameraFactory from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
 
 /**
- *  The 
+ *  The options for the main object.
  */
 export interface TheatreOptions {
 
