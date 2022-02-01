@@ -1,5 +1,7 @@
 import { WebGLRenderer } from "three";
 
+export type ResizeHandler = (width:number, height:number) => void;
+
 /**
  *  This is a class that handlers the canvas element and its relation to the renderer
  *  for us.
@@ -9,6 +11,8 @@ export default class RendererHandler {
     private readonly _renderer:WebGLRenderer;
 
     private readonly _observer:ResizeObserver;
+
+    private _resizeHandler:ResizeHandler|undefined;
 
     public constructor(private _canvas:HTMLCanvasElement) {
 
@@ -42,6 +46,15 @@ export default class RendererHandler {
     }
 
     /**
+     *  Pass an on resize handler. This one will replace any existing ones.
+     *  Note that this handler will be called on all resize.
+     */
+    public onResize(handler:ResizeHandler|undefined) {
+
+        this._resizeHandler = handler;
+    }
+
+    /**
      *  Resize the renderer to match the current canvas size.
      */
     private _resize() : void {
@@ -52,5 +65,7 @@ export default class RendererHandler {
         // resize the observer, but don't allow the renderer to resize
         // the canvas. This would make it a somewhat silly loop.
         this._renderer.setSize(bb.width * scale, bb.height * scale, false);
+
+        if (this._resizeHandler) this._resizeHandler(bb.width, bb.height);
     };
 };

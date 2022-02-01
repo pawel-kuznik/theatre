@@ -1,20 +1,31 @@
 import { PerspectiveCamera, Camera as ThreeJSCamera  } from "three";
+import Camera from '../Camera';
+import CameraOptions from "./CameraOptions";
 
 /**
- *  This is a special camera implementation that is suitable for table top
- *  view of the scene.
+ *  The specific options for top-down camera.
  */
-export default class TableTopCamera {
+export interface TopDownCameraOptions extends CameraOptions {
+
+    // obligatory form CameraOptions
+    type: 'topdown';
+};
+
+/**
+ *  This is a special camera implementation that is suitable for a top-down
+ *  view akin to board games or RTS games.
+ */
+export default class TopDownCamera implements Camera {
 
     private readonly _camera:PerspectiveCamera;
 
     /**
      *  The construct of the camera.
      */
-    constructor(aspect:number) {
+    constructor(options:TopDownCameraOptions) {
 
         // construct the actual camera instance
-        this._camera = new PerspectiveCamera(45, aspect, 0.1, 8000);
+        this._camera = new PerspectiveCamera(45, options.aspectRatio, 0.1, 8000);
 
         // position the camera
         this._camera.position.x = 0;
@@ -24,6 +35,7 @@ export default class TableTopCamera {
         // make it look at the center of the board
         this._camera.lookAt(0, 0, 0);
     }
+
     /**
      *  Get access to the Three.js camera instance.
      */
@@ -44,7 +56,7 @@ export default class TableTopCamera {
     /**
      *  Update aspect ratio of the camera.
      */
-    aspect(aspect:number) {
+    public aspect(aspect:number) {
 
         // update the aspect ratio of the camera
         this._camera.aspect = aspect;
@@ -57,7 +69,7 @@ export default class TableTopCamera {
      *  Set the height of the camera. Calling it with no param will reset the camera
      *  to the default height.
      */
-    lift(height:number = 10) {
+    public lift(height:number = 10) {
 
         // set the height
         this._camera.position.z = height;
@@ -69,7 +81,7 @@ export default class TableTopCamera {
     /**
      *  Move the camera by certain x and y values.
      */
-    moveBy(x:number, y:number) {
+    public moveBy(x:number, y:number) {
 
         this.moveTo(this._camera.position.x + x, this._camera.position.y + y);
     }
@@ -77,7 +89,7 @@ export default class TableTopCamera {
     /** 
      *  Move camera to a certain x and y values.
      */
-    moveTo(x:number, y:number) {
+    public moveTo(x:number, y:number) {
 
         // update camera position
         this._camera.position.x = x;
@@ -85,5 +97,31 @@ export default class TableTopCamera {
 
         // update where the camera is looking
         this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+    }
+
+    /**
+     *  Handle event related to the user input.
+     */
+    public handle(event:KeyboardEvent|MouseEvent) {
+
+        if (event.type === 'keydown') {
+
+            const keyboardEvent = event as KeyboardEvent;
+
+            if (keyboardEvent.code === 'KeyA') this.moveBy(-1, 0);
+            if (keyboardEvent.code === 'KeyD') this.moveBy(1, 0);
+            if (keyboardEvent.code === 'KeyW') this.moveBy(0, -1);
+            if (keyboardEvent.code === 'KeyS') this.moveBy(0, 1);
+        }
+    }
+
+    /**
+     *  A method to update aspect ratio of the camera.
+     */
+    public updateAspectRatio(aspectRatio: number): void {
+
+        this._camera.aspect = aspectRatio;
+
+        this._camera.updateProjectionMatrix();
     }
 };

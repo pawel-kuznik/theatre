@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":14,"three":15}],2:[function(require,module,exports){
+},{"./build/theatre.js":15,"three":16}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -43,281 +43,58 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":5,"three":15}],3:[function(require,module,exports){
+},{"./Position":7,"three":16}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const TopDownCamera_1 = require("./TopDownCamera");
+/**
+ *  A special class to create a camera based
+ *  on provided camera options.
+ */
+class CameraFactory {
+    /**
+     *  The constructor.
+     */
+    constructor(_options) {
+        this._options = _options;
+    }
+    /**
+     *  Build an instance of the camera based
+     *  on current state of the factory.
+     *
+     *  Or throw an exception if the camera can't be built.
+     */
+    build() {
+        if (this._options.type === 'topdown')
+            return this.buildTopDown();
+        throw Error('Not supported camera type');
+    }
+    /**
+     *  Built a topdown camera instance.
+     */
+    buildTopDown() {
+        return new TopDownCamera_1.default(this._options);
+    }
+}
+exports.default = CameraFactory;
+;
+
+},{"./TopDownCamera":4}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
-const Actor_1 = require("./Actor");
-/**
- *  This is a class to test stuff around when we are developing code.
- */
-class CompanionActor extends Actor_1.default {
-    constructor() {
-        super();
-        const geometry = new three_1.BoxGeometry(1, 1, 1);
-        const material = new three_1.MeshBasicMaterial({ color: 'red' });
-        const mesh = new three_1.Mesh(geometry, material);
-        this._object.add(mesh);
-    }
-}
-exports.default = CompanionActor;
 ;
-
-},{"./Actor":2,"three":15}],4:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const Stage_1 = require("./Stage");
 /**
- *  This is a special stage that is deliberately empty.
- *  Right now it's mostly used to make the StageContainer
- *  happy and always have a defined state. However, it
- *  would be better if we would have a better way of dealing
- *  with it.
+ *  This is a special camera implementation that is suitable for a top-down
+ *  view akin to board games or RTS games.
  */
-class EmptyStage extends Stage_1.default {
-}
-exports.default = EmptyStage;
-;
-
-},{"./Stage":8}],5:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- *  This is our special class to wrap around a vector that describes a position of
- *  a specific actor on the stage. We use this to conceptualize some of our ideas
- *  and have a quick access to our domain logic over the native vector data.
- */
-class Position {
-    constructor(vector) {
-        this._vector = vector;
-    }
-    /**
-     *  Get the vector of the position.
-     */
-    get vector() { return this._vector; }
-    /**
-     *  The coordinates for easy access.
-     */
-    get x() { return this._vector.x; }
-    get y() { return this._vector.y; }
-    get z() { return this._vector.z; }
-    /**
-     *  And for the convinience, the height at wich the position is.
-     */
-    get height() { return this.z; }
-}
-exports.default = Position;
-;
-
-},{}],6:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = require("three");
-/**
- *  This is a class that handlers the canvas element and its relation to the renderer
- *  for us.
- */
-class RendererHandler {
-    constructor(_canvas) {
-        this._canvas = _canvas;
-        this._renderer = new three_1.WebGLRenderer({
-            canvas: this._canvas
-        });
-        this._observer = new ResizeObserver(() => void this._resize());
-        this._resize();
-        this._observer.observe(this._canvas);
-    }
-    /**
-     *  Get access to the actual renderer.
-     */
-    get renderer() { return this._renderer; }
-    /**
-     *  Get acecss to the actual canvas element
-     */
-    get canvas() { return this._canvas; }
-    /**
-     *  Cleanup any resources of this class.
-     */
-    dispose() {
-        this._observer.disconnect();
-        this._renderer.dispose();
-    }
-    /**
-     *  Resize the renderer to match the current canvas size.
-     */
-    _resize() {
-        const scale = window.devicePixelRatio;
-        const bb = this._canvas.getBoundingClientRect();
-        // resize the observer, but don't allow the renderer to resize
-        // the canvas. This would make it a somewhat silly loop.
-        this._renderer.setSize(bb.width * scale, bb.height * scale, false);
-    }
-    ;
-}
-exports.default = RendererHandler;
-;
-
-},{"three":15}],7:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- *  This is a class describing a rendering loop.
- *
- *  @todo It would be great if this function would be also able to provide FPS counter
- *  and have capabilities to cap rendering at certain speed.
- */
-class RenderingLoop {
-    constructor(_renderFunction) {
-        this._renderFunction = _renderFunction;
-        this._running = false;
-    }
-    /**
-     *  Start the rendering loop.
-     */
-    start() {
-        this._running = true;
-        const step = () => {
-            if (!this._running)
-                return;
-            this._renderFunction();
-            window.requestAnimationFrame(step);
-        };
-        step();
-    }
-    /**
-     *  Stop the rendering loop.
-     */
-    stop() {
-        this._running = false;
-    }
-}
-exports.default = RenderingLoop;
-;
-
-},{}],8:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = require("three");
-const StageAmbience_1 = require("./Stage/StageAmbience");
-/**
- *  This is the stage. This class represents the scene as well as definition for
- *  lights and actors.
- */
-class Stage {
-    constructor() {
-        /**
-         *  The current scene of the stage.
-         */
-        this.scene = new three_1.Scene();
-        /**
-         *  The actors.
-         */
-        this._actors = new Set();
-        /**
-         *  The current scene ambience.
-         */
-        this._ambience = null;
-        const g = new three_1.BoxGeometry(1, 1, 1);
-        const m = new three_1.MeshBasicMaterial({ color: 0x0000ff });
-        const b = new three_1.Mesh(g, m);
-        this.scene.add(b);
-    }
-    /**
-     *  The the current actors of the scene.
-     */
-    get actors() { return [...this._actors]; }
-    /**
-     *  Set Ambience.
-     */
-    setAmbience(props) {
-        if (this._ambience)
-            this._ambience.vacate();
-        this._ambience = new StageAmbience_1.default(props);
-        this._ambience.occupy(this.scene);
-    }
-}
-exports.default = Stage;
-;
-
-},{"./Stage/StageAmbience":10,"three":15}],9:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const EmptyStage_1 = require("./EmptyStage");
-/**
- *  This is a special class that makes sure there is always
- *  a stage and allows for switching between stages. The switch
- *  can be done with a specific transition or loading state
- *  which is not a stage of itself.
- *
- *  @todo   make the transition/loader
- */
-class StageContainer {
-    constructor() {
-        /**
-         *  The current stage.
-         */
-        this._stage = new EmptyStage_1.default();
-    }
-    /**
-     *  Expose the stage.
-     */
-    get stage() { return this._stage; }
-    /**
-     *  Mount new stage. A promise of fully mounted stage is returned.
-     *  This promise resolves when the provided stage is fully loaded.
-     */
-    mount(stage) {
-        this._stage = stage;
-        return Promise.resolve();
-    }
-}
-exports.default = StageContainer;
-;
-
-},{"./EmptyStage":4}],10:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = require("three");
-/**
- *  This is a class that provides ambience for the stage. This includes
- *  ambient lightning and possible ambience objects (like a world box
- *  or similar).
- */
-class StageAmbience {
-    constructor(properties) {
-        this._ambientLight = new three_1.AmbientLight(properties.ambientColor);
-    }
-    /**
-     *  Occupy/mount scene ambience.
-     */
-    occupy(scene) {
-        scene.add(this._ambientLight);
-    }
-    /**
-     *  Vacate/unmount the scene.
-     */
-    vacate() {
-        this._ambientLight.removeFromParent();
-    }
-}
-exports.default = StageAmbience;
-;
-
-},{"three":15}],11:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = require("three");
-/**
- *  This is a special camera implementation that is suitable for table top
- *  view of the scene.
- */
-class TableTopCamera {
+class TopDownCamera {
     /**
      *  The construct of the camera.
      */
-    constructor(aspect) {
+    constructor(options) {
         // construct the actual camera instance
-        this._camera = new three_1.PerspectiveCamera(45, aspect, 0.1, 8000);
+        this._camera = new three_1.PerspectiveCamera(45, options.aspectRatio, 0.1, 8000);
         // position the camera
         this._camera.position.x = 0;
         this._camera.position.y = -2.5;
@@ -374,19 +151,312 @@ class TableTopCamera {
         // update where the camera is looking
         this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
     }
+    /**
+     *  Handle event related to the user input.
+     */
+    handle(event) {
+        if (event.type === 'keydown') {
+            const keyboardEvent = event;
+            if (keyboardEvent.code === 'KeyA')
+                this.moveBy(-1, 0);
+            if (keyboardEvent.code === 'KeyD')
+                this.moveBy(1, 0);
+            if (keyboardEvent.code === 'KeyW')
+                this.moveBy(0, -1);
+            if (keyboardEvent.code === 'KeyS')
+                this.moveBy(0, 1);
+        }
+    }
+    /**
+     *  A method to update aspect ratio of the camera.
+     */
+    updateAspectRatio(aspectRatio) {
+        this._camera.aspect = aspectRatio;
+        this._camera.updateProjectionMatrix();
+    }
 }
-exports.default = TableTopCamera;
+exports.default = TopDownCamera;
 ;
 
-},{"three":15}],12:[function(require,module,exports){
+},{"three":16}],5:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+const Actor_1 = require("./Actor");
+/**
+ *  This is a class to test stuff around when we are developing code.
+ */
+class CompanionActor extends Actor_1.default {
+    constructor() {
+        super();
+        const geometry = new three_1.BoxGeometry(1, 1, 1);
+        const material = new three_1.MeshBasicMaterial({ color: 'red' });
+        const mesh = new three_1.Mesh(geometry, material);
+        this._object.add(mesh);
+    }
+}
+exports.default = CompanionActor;
+;
+
+},{"./Actor":2,"three":16}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Stage_1 = require("./Stage");
+/**
+ *  This is a special stage that is deliberately empty.
+ *  Right now it's mostly used to make the StageContainer
+ *  happy and always have a defined state. However, it
+ *  would be better if we would have a better way of dealing
+ *  with it.
+ */
+class EmptyStage extends Stage_1.default {
+}
+exports.default = EmptyStage;
+;
+
+},{"./Stage":10}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is our special class to wrap around a vector that describes a position of
+ *  a specific actor on the stage. We use this to conceptualize some of our ideas
+ *  and have a quick access to our domain logic over the native vector data.
+ */
+class Position {
+    constructor(vector) {
+        this._vector = vector;
+    }
+    /**
+     *  Get the vector of the position.
+     */
+    get vector() { return this._vector; }
+    /**
+     *  The coordinates for easy access.
+     */
+    get x() { return this._vector.x; }
+    get y() { return this._vector.y; }
+    get z() { return this._vector.z; }
+    /**
+     *  And for the convinience, the height at wich the position is.
+     */
+    get height() { return this.z; }
+}
+exports.default = Position;
+;
+
+},{}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+/**
+ *  This is a class that handlers the canvas element and its relation to the renderer
+ *  for us.
+ */
+class RendererHandler {
+    constructor(_canvas) {
+        this._canvas = _canvas;
+        this._renderer = new three_1.WebGLRenderer({
+            canvas: this._canvas
+        });
+        this._observer = new ResizeObserver(() => void this._resize());
+        this._resize();
+        this._observer.observe(this._canvas);
+    }
+    /**
+     *  Get access to the actual renderer.
+     */
+    get renderer() { return this._renderer; }
+    /**
+     *  Get acecss to the actual canvas element
+     */
+    get canvas() { return this._canvas; }
+    /**
+     *  Cleanup any resources of this class.
+     */
+    dispose() {
+        this._observer.disconnect();
+        this._renderer.dispose();
+    }
+    /**
+     *  Pass an on resize handler. This one will replace any existing ones.
+     *  Note that this handler will be called on all resize.
+     */
+    onResize(handler) {
+        this._resizeHandler = handler;
+    }
+    /**
+     *  Resize the renderer to match the current canvas size.
+     */
+    _resize() {
+        const scale = window.devicePixelRatio;
+        const bb = this._canvas.getBoundingClientRect();
+        // resize the observer, but don't allow the renderer to resize
+        // the canvas. This would make it a somewhat silly loop.
+        this._renderer.setSize(bb.width * scale, bb.height * scale, false);
+        if (this._resizeHandler)
+            this._resizeHandler(bb.width, bb.height);
+    }
+    ;
+}
+exports.default = RendererHandler;
+;
+
+},{"three":16}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is a class describing a rendering loop.
+ *
+ *  @todo It would be great if this function would be also able to provide FPS counter
+ *  and have capabilities to cap rendering at certain speed.
+ */
+class RenderingLoop {
+    constructor(_renderFunction) {
+        this._renderFunction = _renderFunction;
+        this._running = false;
+    }
+    /**
+     *  Start the rendering loop.
+     */
+    start() {
+        this._running = true;
+        const step = () => {
+            if (!this._running)
+                return;
+            this._renderFunction();
+            window.requestAnimationFrame(step);
+        };
+        step();
+    }
+    /**
+     *  Stop the rendering loop.
+     */
+    stop() {
+        this._running = false;
+    }
+}
+exports.default = RenderingLoop;
+;
+
+},{}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+const StageAmbience_1 = require("./Stage/StageAmbience");
+/**
+ *  This is the stage. This class represents the scene as well as definition for
+ *  lights and actors.
+ */
+class Stage {
+    constructor() {
+        /**
+         *  The current scene of the stage.
+         */
+        this.scene = new three_1.Scene();
+        /**
+         *  The actors.
+         */
+        this._actors = new Set();
+        /**
+         *  The current scene ambience.
+         */
+        this._ambience = null;
+        const g = new three_1.BoxGeometry(1, 1, 1);
+        const m = new three_1.MeshBasicMaterial({ color: 0x0000ff });
+        const b = new three_1.Mesh(g, m);
+        this.scene.add(b);
+    }
+    /**
+     *  The the current actors of the scene.
+     */
+    get actors() { return [...this._actors]; }
+    /**
+     *  Set Ambience.
+     */
+    setAmbience(props) {
+        if (this._ambience)
+            this._ambience.vacate();
+        this._ambience = new StageAmbience_1.default(props);
+        this._ambience.occupy(this.scene);
+    }
+}
+exports.default = Stage;
+;
+
+},{"./Stage/StageAmbience":12,"three":16}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const EmptyStage_1 = require("./EmptyStage");
+/**
+ *  This is a special class that makes sure there is always
+ *  a stage and allows for switching between stages. The switch
+ *  can be done with a specific transition or loading state
+ *  which is not a stage of itself.
+ *
+ *  @todo   make the transition/loader
+ */
+class StageContainer {
+    constructor() {
+        /**
+         *  The current stage.
+         */
+        this._stage = new EmptyStage_1.default();
+    }
+    /**
+     *  Expose the stage.
+     */
+    get stage() { return this._stage; }
+    /**
+     *  Mount new stage. A promise of fully mounted stage is returned.
+     *  This promise resolves when the provided stage is fully loaded.
+     */
+    mount(stage) {
+        this._stage = stage;
+        return Promise.resolve();
+    }
+}
+exports.default = StageContainer;
+;
+
+},{"./EmptyStage":6}],12:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+/**
+ *  This is a class that provides ambience for the stage. This includes
+ *  ambient lightning and possible ambience objects (like a world box
+ *  or similar).
+ */
+class StageAmbience {
+    constructor(properties) {
+        this._ambientLight = new three_1.AmbientLight(properties.ambientColor);
+    }
+    /**
+     *  Occupy/mount scene ambience.
+     */
+    occupy(scene) {
+        scene.add(this._ambientLight);
+    }
+    /**
+     *  Vacate/unmount the scene.
+     */
+    vacate() {
+        this._ambientLight.removeFromParent();
+    }
+}
+exports.default = StageAmbience;
+;
+
+},{"three":16}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
 const RenderingLoop_1 = require("./RenderingLoop");
 const Stage_1 = require("./Stage");
 const StageContainer_1 = require("./StageContainer");
-const TableTopCamera_1 = require("./TableTopCamera");
 const Warderobe_1 = require("./Warderobe");
+const CameraFactory_1 = require("./Camera/CameraFactory");
+;
 /**
  *  This is the main class that creates the theater and allows
  *  to compose the scene. The theatre in our case is the whole
@@ -400,6 +470,11 @@ const Warderobe_1 = require("./Warderobe");
  *  - providing a way to transition actors between scenes
  */
 class Theatre {
+    /**
+     *  The constructor
+     *
+     *  @throw  Error   When initialization fails. The message contains the reason.
+     */
     constructor(canvas) {
         /**
          *  The warderobe for the theathre.
@@ -414,10 +489,21 @@ class Theatre {
          *  The stages created inside the theatre.
          */
         this._stages = new Map();
-        this._camera = new TableTopCamera_1.default(.45);
         this._rendererHandler = new RendererHandler_1.default(canvas);
+        this._camera = (new CameraFactory_1.default({
+            type: 'topdown',
+            aspectRatio: .45 // @todo this should come from configuration.
+        })).build();
         this._loop = new RenderingLoop_1.default(() => {
+            // @todo we should update the camera (cause camera might also have animations)
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+        });
+        // @todo This whole thing should be disposable and this event handler should be uninstalled.
+        canvas.ownerDocument.body.addEventListener('keydown', (event) => {
+            this._camera.handle(event);
+        });
+        this._rendererHandler.onResize((x, y) => {
+            this._camera.updateAspectRatio(x / y);
         });
         this._loop.start();
     }
@@ -450,7 +536,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./RendererHandler":6,"./RenderingLoop":7,"./Stage":8,"./StageContainer":9,"./TableTopCamera":11,"./Warderobe":13}],13:[function(require,module,exports){
+},{"./Camera/CameraFactory":3,"./RendererHandler":8,"./RenderingLoop":9,"./Stage":10,"./StageContainer":11,"./Warderobe":14}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -501,12 +587,12 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"three":15}],14:[function(require,module,exports){
+},{"three":16}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.Actor = exports.TableTopCamera = void 0;
-var TableTopCamera_1 = require("./lib/TableTopCamera");
-Object.defineProperty(exports, "TableTopCamera", { enumerable: true, get: function () { return TableTopCamera_1.default; } });
+var TopDownCamera_1 = require("./lib/Camera/TopDownCamera");
+Object.defineProperty(exports, "TableTopCamera", { enumerable: true, get: function () { return TopDownCamera_1.default; } });
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var CompanionActor_1 = require("./lib/CompanionActor");
@@ -520,7 +606,7 @@ Object.defineProperty(exports, "Position", { enumerable: true, get: function () 
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":3,"./lib/Position":5,"./lib/Stage":8,"./lib/TableTopCamera":11,"./lib/Theatre":12,"./lib/Warderobe":13}],15:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/Camera/TopDownCamera":4,"./lib/CompanionActor":5,"./lib/Position":7,"./lib/Stage":10,"./lib/Theatre":13,"./lib/Warderobe":14}],16:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

@@ -2,8 +2,19 @@ import RendererHandler from "./RendererHandler";
 import RenderingLoop from "./RenderingLoop";
 import Stage from "./Stage";
 import StageContainer from "./StageContainer";
-import TableTopCamera from "./TableTopCamera";
+import TableTopCamera from "./Camera/TopDownCamera";
 import Warderobe from "./Warderobe";
+import Camera from "./Camera";
+import CameraSpecs from "./Camera/CameraOptions";
+import CameraFactory from "./Camera/CameraFactory";
+
+/**
+ *  The 
+ */
+export interface TheatreOptions {
+
+    camera:CameraSpecs;
+};
 
 /**
  *  This is the main class that creates the theater and allows
@@ -35,10 +46,13 @@ export default class Theatre {
      */
     private readonly _stages:Map<string,Stage> = new Map();
 
-    private readonly _camera:TableTopCamera = new TableTopCamera(.45);
+    /**
+     *  The active camera of the game.
+     */
+    private readonly _camera:Camera;
 
     /**
-     *  An instance of the renderer, but wrapped in a a cosy handler that
+     *  An instance of the renderer, but wrapped in a cosy handler that
      *  takes care of all canvas-renderer interactions.
      */
     private readonly _rendererHandler:RendererHandler;
@@ -48,13 +62,36 @@ export default class Theatre {
      */
     private readonly _loop:RenderingLoop;
 
+    /**
+     *  The constructor
+     *
+     *  @throw  Error   When initialization fails. The message contains the reason.
+     */
     constructor(canvas:HTMLCanvasElement) {
 
         this._rendererHandler = new RendererHandler(canvas);
 
+        this._camera = (new CameraFactory({
+            type:           'topdown',
+            aspectRatio:    .45             // @todo this should come from configuration.
+        })).build();
+
         this._loop = new RenderingLoop(() => {
 
+            // @todo we should update the camera (cause camera might also have animations)
+
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+        });
+
+        // @todo This whole thing should be disposable and this event handler should be uninstalled.
+        canvas.ownerDocument.body.addEventListener('keydown', (event:KeyboardEvent) => {
+
+            this._camera.handle(event);
+        });
+
+        this._rendererHandler.onResize((x:number, y:number) => {
+
+            this._camera.updateAspectRatio(x/y);
         });
 
         this._loop.start();
