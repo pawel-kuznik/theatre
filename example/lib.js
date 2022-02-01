@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":17,"three":18}],2:[function(require,module,exports){
+},{"./build/theatre.js":18,"three":19}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -15,17 +15,32 @@ class Actor {
         /**
          *  The actual object that we are dealing with.
          */
-        this._object = new three_1.Object3D();
+        this._object = this._initObject();
     }
     /**
      *  Get access to the position.
      */
     get position() { return new Position_1.default(this._object.position); }
     /**
+     *  Move actor to given spacial coordinates.
+     */
+    moveTo(x, y, z = undefined) {
+        this._object.position.x = x;
+        this._object.position.y = y;
+        if (z !== undefined)
+            this._object.position.z;
+    }
+    /**
      *  Detach the actor
      */
     detach() {
         this._object.removeFromParent();
+    }
+    /**
+     *  Attach the actor to a parent object.
+     */
+    attach(parent) {
+        parent.add(this._object);
     }
     /**
      *  Dispose of the data allocated by the actor.
@@ -43,7 +58,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":8,"three":18}],3:[function(require,module,exports){
+},{"./Position":8,"three":19}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TopDownCamera_1 = require("./TopDownCamera");
@@ -199,7 +214,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":18}],5:[function(require,module,exports){
+},{"three":19}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -284,18 +299,16 @@ const Actor_1 = require("./Actor");
  *  This is a class to test stuff around when we are developing code.
  */
 class CompanionActor extends Actor_1.default {
-    constructor() {
-        super();
+    _initObject() {
         const geometry = new three_1.BoxGeometry(1, 1, 1);
         const material = new three_1.MeshBasicMaterial({ color: 'red' });
-        const mesh = new three_1.Mesh(geometry, material);
-        this._object.add(mesh);
+        return new three_1.Mesh(geometry, material);
     }
 }
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":18}],7:[function(require,module,exports){
+},{"./Actor":2,"three":19}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -435,7 +448,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":18}],11:[function(require,module,exports){
+},{"three":19}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -499,15 +512,18 @@ class Stage {
          *  The current scene ambience.
          */
         this._ambience = null;
-        const g = new three_1.BoxGeometry(1, 1, 1);
-        const m = new three_1.MeshBasicMaterial({ color: 0x0000ff });
-        const b = new three_1.Mesh(g, m);
-        this.scene.add(b);
     }
     /**
      *  The the current actors of the scene.
      */
     get actors() { return [...this._actors]; }
+    /**
+     *  Insert an actor into the scene.
+     */
+    insert(actor) {
+        this._actors.add(actor);
+        actor.attach(this.scene);
+    }
     /**
      *  Set Ambience.
      */
@@ -521,7 +537,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":14,"three":18}],13:[function(require,module,exports){
+},{"./Stage/StageAmbience":14,"three":19}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -585,7 +601,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":18}],15:[function(require,module,exports){
+},{"three":19}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -675,7 +691,56 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":3,"./RendererHandler":10,"./RenderingLoop":11,"./Stage":12,"./StageContainer":13,"./Warderobe":16}],16:[function(require,module,exports){
+},{"./Camera/CameraFactory":3,"./RendererHandler":10,"./RenderingLoop":11,"./Stage":12,"./StageContainer":13,"./Warderobe":17}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+const Actor_1 = require("./Actor");
+/**
+ *  This is a special actor type that gathers actors and allows for placing them
+ *  in a tiled distribution. This is useful for creating board games, chess, or
+ *  grid like display.
+ */
+class TiledActors extends Actor_1.default {
+    constructor(tileSize = 1, spacing = .05) {
+        super();
+        /**
+         *  The tile size that the actor can occupy.
+         */
+        this._tileSize = 1;
+        /**
+         *  The spacing between the tiles.
+         */
+        this._spacing = .1;
+        this._tileSize = tileSize;
+        this._spacing = spacing;
+    }
+    _initObject() {
+        return new three_1.Object3D();
+    }
+    /**
+     *  Insert an actor inside the tiles at given position.
+     *
+     *  @note x and y should be whole numbers to it to work correctly.
+     */
+    insert(actor, x, y) {
+        actor.attach(this._object);
+        const tileCenter = this.centerOf(x, y);
+        actor.moveTo(tileCenter.x, tileCenter.y);
+    }
+    /**
+     *  Spatial coordinates of the center of a specific tile.
+     */
+    centerOf(x, y) {
+        const tileX = x * (this._tileSize + this._spacing);
+        const tileY = y * (this._tileSize + this._spacing);
+        return { x: tileX - this._tileSize / 2, y: tileY - this._tileSize / 2 };
+    }
+}
+exports.default = TiledActors;
+;
+
+},{"./Actor":2,"three":19}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -726,14 +791,14 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"three":18}],17:[function(require,module,exports){
+},{"three":19}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.Actor = exports.TableTopCamera = void 0;
-var TopDownCamera_1 = require("./lib/Camera/TopDownCamera");
-Object.defineProperty(exports, "TableTopCamera", { enumerable: true, get: function () { return TopDownCamera_1.default; } });
+exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
+var TiledActors_1 = require("./lib/TiledActors");
+Object.defineProperty(exports, "TiledActors", { enumerable: true, get: function () { return TiledActors_1.default; } });
 var CompanionActor_1 = require("./lib/CompanionActor");
 Object.defineProperty(exports, "CompanionActor", { enumerable: true, get: function () { return CompanionActor_1.default; } });
 var Stage_1 = require("./lib/Stage");
@@ -745,7 +810,7 @@ Object.defineProperty(exports, "Position", { enumerable: true, get: function () 
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 
-},{"./lib/Actor":2,"./lib/Camera/TopDownCamera":4,"./lib/CompanionActor":6,"./lib/Position":8,"./lib/Stage":12,"./lib/Theatre":15,"./lib/Warderobe":16}],18:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/CompanionActor":6,"./lib/Position":8,"./lib/Stage":12,"./lib/Theatre":15,"./lib/TiledActors":16,"./lib/Warderobe":17}],19:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

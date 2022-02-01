@@ -1,4 +1,4 @@
-import { BoxGeometry, MeshBasicMaterial, Mesh } from "three";
+import { BoxGeometry, MeshBasicMaterial, Mesh, Event, Object3D } from "three";
 import Actor from "./Actor";
 
 /**
@@ -6,15 +6,11 @@ import Actor from "./Actor";
  */
 export default class CompanionActor extends Actor {
 
-    constructor() {
-
-        super();
+    protected _initObject(): Object3D {
 
         const geometry = new BoxGeometry(1, 1, 1);
         const material = new MeshBasicMaterial({ color: 'red' });
 
-        const mesh = new Mesh(geometry, material);
-
-        this._object.add(mesh);
+        return new Mesh(geometry, material);   
     }
 };

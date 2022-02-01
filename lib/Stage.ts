@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Scene } from "three";
+import { Scene } from "three";
 import Actor from './Actor';
 import StageAmbience from "./Stage/StageAmbience";
 import StageAmbienceProperties from "./StageAmbienceProperties";
@@ -24,19 +24,21 @@ export default class Stage {
      */
     private _ambience:StageAmbience|null = null;
 
-    constructor() {
-
-        const g = new BoxGeometry(1, 1, 1);
-        const m = new MeshBasicMaterial({ color: 0x0000ff });
-        const b = new Mesh(g, m);
-
-        this.scene.add(b);
-    }
+    constructor() { }
 
     /**
      *  The the current actors of the scene.
      */
     get actors() : Array<Actor> { return [...this._actors]; }
+
+    /**
+     *  Insert an actor into the scene.
+     */
+    insert(actor:Actor) {
+
+        this._actors.add(actor);
+        actor.attach(this.scene);
+    }
 
     /**
      *  Set Ambience.

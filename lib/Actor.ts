@@ -1,4 +1,4 @@
-import { Mesh, Object3D } from "three";
+import { Mesh, Object3D, UnsignedShort4444Type } from "three";
 import Position from "./Position";
 
 /**
@@ -10,7 +10,7 @@ export default abstract class Actor {
     /**
      *  The actual object that we are dealing with.
      */
-    protected readonly _object:Object3D = new Object3D();
+    protected readonly _object:Object3D = this._initObject();
 
     /**
      *  Get access to the position.
@@ -18,11 +18,36 @@ export default abstract class Actor {
     get position() : Position { return new Position(this._object.position); }
 
     /**
+     *  A function that is called to initialize the main object
+     *  of the actor.
+     */
+    protected abstract _initObject() : Object3D;
+
+    /**
+     *  Move actor to given spacial coordinates.
+     */
+    moveTo(x:number, y:number, z:number|undefined = undefined) {
+
+        this._object.position.x = x;
+        this._object.position.y = y;
+
+        if (z !== undefined) this._object.position.z;
+    }
+
+    /**
      *  Detach the actor
      */
     detach() : void {
 
         this._object.removeFromParent();
+    }
+
+    /**
+     *  Attach the actor to a parent object.
+     */
+    attach(parent:Object3D) {
+
+        parent.add(this._object);
     }
 
     /**
