@@ -1,6 +1,19 @@
 import { Object3D } from "three";
 import Actor from "./Actor";
 
+export interface TiledActorsOptions {
+
+    /**
+     *  The size of a tile that actor can occupy.
+     */
+    tileSize?:number;
+
+    /**
+     *  Spacing between tiles in X and Y dimension.
+     */
+    spacing?:number;
+};
+
 /**
  *  This is a special actor type that gathers actors and allows for placing them
  *  in a tiled distribution. This is useful for creating board games, chess, or 
@@ -9,25 +22,31 @@ import Actor from "./Actor";
 export default class TiledActors extends Actor {
 
     /**
-     *  The tile size that the actor can occupy.
+     *  Current values of options.
      */
     private _tileSize:number = 1;
-
-    /**
-     *  The spacing between the tiles.
-     */
     private _spacing:number = .1;
 
-    public constructor(tileSize:number = 1, spacing:number = .05) {
+    private _children:Map<string, Actor> = new Map();
+
+    public constructor(options:TiledActorsOptions = { }) {
 
         super();
 
-        this._tileSize = tileSize;
-        this._spacing = spacing;
+        this._tileSize = options.tileSize ?? 1;
+        this._spacing = options.spacing ?? .05;
     }
 
     protected _initObject(): Object3D {
         return new Object3D();
+    }
+
+    /**
+     *  The children of this tiled actors instance.
+     */
+    get actors() : Array<Actor> {
+
+        return [...this._children.values()];
     }
 
     /**
@@ -37,11 +56,29 @@ export default class TiledActors extends Actor {
      */
     insert(actor:Actor, x:number, y:number) {
 
-        actor.attach(this._object);
+        this._children.set(`${x}:${y}`, actor);
+
+        actor.attachTo(this._object);
 
         const tileCenter = this.centerOf(x, y);
 
         actor.moveTo(tileCenter.x, tileCenter.y);
+    }
+
+    /**
+     *  Get actor situated at specific tile coordinates.
+     */
+    at(x:number, y:number) : Actor|null {
+
+        return this._children.get(`${x}:${y}`) || null;
+    }
+
+    /**
+     *  Check if a specific tile position is filled with an actor.
+     */
+    filledAt(x:number, y:number) : boolean {
+
+        return this._children.has(`${x}:${y}`);
     }
 
     /**

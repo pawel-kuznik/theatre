@@ -1,13 +1,16 @@
 import { Scene } from "three";
 import Actor from './Actor';
+import RenderParticipant from "./RenderParticipant";
+import { RenderStep } from "./RenderStep";
 import StageAmbience from "./Stage/StageAmbience";
 import StageAmbienceProperties from "./StageAmbienceProperties";
+import Warderobe from "./Warderobe";
 
 /**
  *  This is the stage. This class represents the scene as well as definition for
  *  lights and actors.
  */
-export default class Stage {
+export default class Stage implements RenderParticipant {
 
     /**
      *  The current scene of the stage.
@@ -27,6 +30,14 @@ export default class Stage {
     constructor() { }
 
     /**
+     *  Make a render update for all actors.
+     */
+    renderUpdate(step: RenderStep): void {
+        
+        for (let actor of this._actors) actor.renderUpdate(step);
+    }
+
+    /**
      *  The the current actors of the scene.
      */
     get actors() : Array<Actor> { return [...this._actors]; }
@@ -37,7 +48,15 @@ export default class Stage {
     insert(actor:Actor) {
 
         this._actors.add(actor);
-        actor.attach(this.scene);
+        actor.attachTo(this.scene);
+    }
+
+    /**
+     *  Hydrate all actors with resources they need to function.
+     */
+    hydrate(warderobe:Warderobe) {
+
+        for (let actor of this._actors) actor.hydrate(warderobe);
     }
 
     /**

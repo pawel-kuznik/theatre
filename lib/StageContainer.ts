@@ -1,4 +1,6 @@
 import EmptyStage from "./EmptyStage";
+import RenderParticipant from "./RenderParticipant";
+import { RenderStep } from "./RenderStep";
 import Stage from "./Stage";
 
 /**
@@ -9,7 +11,7 @@ import Stage from "./Stage";
  * 
  *  @todo   make the transition/loader
  */
-export default class StageContainer {
+export default class StageContainer implements RenderParticipant {
     
     /**
      *  The current stage.
@@ -30,5 +32,13 @@ export default class StageContainer {
         this._stage = stage;
 
         return Promise.resolve();
+    }
+
+    /**
+     *  Make a render update.
+     */
+    renderUpdate(step: RenderStep): void {
+        
+        this._stage.renderUpdate(step);
     }
 };

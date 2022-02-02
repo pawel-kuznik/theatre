@@ -1,4 +1,4 @@
-import { Material, Texture } from "three";
+import { Material, Texture, TextureLoader } from "three";
 
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
@@ -13,11 +13,17 @@ export default class Warderobe {
      *  All of loaded textures.
      */
     private readonly _textures:Map<string,Texture> = new Map();
+    private readonly _loadingTextures:Map<string, Promise<Texture>> = new Map();
 
     /**
      *  All of registered materials.
      */
     private readonly _materials:Map<string,Material> = new Map();
+
+    /**
+     *  A texture loader.
+     */
+    private readonly _loader = new TextureLoader();
 
     /**
      *  Fetch texture by name.
@@ -49,5 +55,32 @@ export default class Warderobe {
     public registerMaterial(name:string, material:Material) : void {
 
         this._materials.set(name, material);
+    }
+
+    /**
+     *  Import texture to the warderobe.
+     */
+    public importTexture(name:string, url:string) : Promise<Texture> {
+
+        const promise = this._loader.loadAsync(url).then((texture:Texture) => {
+
+            this.registerTexture(name, texture);
+
+            this._loadingTextures.delete(name);
+
+            return texture;
+        });
+
+        this._loadingTextures.set(name, promise);
+
+        return promise;
+    }
+
+    /**
+     *  Wait for all resources to be proplery loaded.
+     */
+    public wait() : Promise<void> {
+
+        return Promise.all([...this._loadingTextures.values()]).then(() => { });
     }
 };

@@ -1,0 +1,12 @@
+div.example-explanation
+{
+    position:   fixed;
+    top:        5px;
+    right:      5px;
+
+    border:     1px solid orangered;
+    background: white;
+    border-radius: 2px;
+
+    padding:    5px;
+}

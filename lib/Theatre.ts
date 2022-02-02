@@ -82,6 +82,8 @@ export default class Theatre {
 
             this._camera.renderUpdate(step);
 
+            this._stageContainer.renderUpdate(step);
+
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
         });
 
@@ -130,5 +132,7 @@ export default class Theatre {
         if (!stage) throw new Error('Theatre: Stage with this name does not exists.');
 
         this._stageContainer.mount(stage);
+
+        this._stageContainer.stage.hydrate(this.warderobe);
     }
 };

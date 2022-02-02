@@ -9,18 +9,55 @@ const Position_1 = require("./Position");
 /**
  *  This is a class describing an actor on a stage. This is basically a collection of 3D models
  *  with some light logic around to get the very basic handling of an actors.
+ *
+ *  @todo check if Actor should implement Occupant interface.
  */
 class Actor {
     constructor() {
         /**
          *  The actual object that we are dealing with.
          */
-        this._object = this._initObject();
+        this._object = new three_1.Object3D();
     }
     /**
      *  Get access to the position.
      */
     get position() { return new Position_1.default(this._object.position); }
+    /**
+     *  A method to dispo actor's object.
+     */
+    _disposeObject() {
+        for (let child of this._object.children) {
+            if (child instanceof three_1.Mesh) {
+                child.geometry.dispose();
+                // @todo figure out if the material is owned by the actor. If so,
+                // we need to dispose it.
+            }
+        }
+    }
+    /**
+     *  A method to make a render update.
+     */
+    renderUpdate(step) {
+        // nothing. This one is to implement by extending classes when they need animations
+    }
+    /**
+     *  Hydrate the actor with needed data from the top-most resouce holders. This
+     *  can be done when everything is loaded and this method should be synchronous.
+     *
+     *  This method doesn't do much, but makes sure that current object
+     *  can be reinitialized.
+     */
+    hydrate(warderobe) {
+        const parentObject = this._object.parent;
+        const oldObject = this._object;
+        this._disposeObject();
+        this._object = this._initObject(warderobe);
+        this._object.position.x = oldObject.position.x;
+        this._object.position.y = oldObject.position.y;
+        this._object.position.z = oldObject.position.z;
+        parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._object);
+    }
     /**
      *  Move actor to given spacial coordinates.
      */
@@ -39,20 +76,14 @@ class Actor {
     /**
      *  Attach the actor to a parent object.
      */
-    attach(parent) {
+    attachTo(parent) {
         parent.add(this._object);
     }
     /**
      *  Dispose of the data allocated by the actor.
      */
     dispose() {
-        for (let child of this._object.children) {
-            if (child instanceof three_1.Mesh) {
-                child.geometry.dispose();
-                // @todo figure out if the material is owned by the actor. If so,
-                // we need to dispose it.
-            }
-        }
+        this._disposeObject();
     }
 }
 exports.default = Actor;
@@ -514,6 +545,13 @@ class Stage {
         this._ambience = null;
     }
     /**
+     *  Make a render update for all actors.
+     */
+    renderUpdate(step) {
+        for (let actor of this._actors)
+            actor.renderUpdate(step);
+    }
+    /**
      *  The the current actors of the scene.
      */
     get actors() { return [...this._actors]; }
@@ -522,7 +560,14 @@ class Stage {
      */
     insert(actor) {
         this._actors.add(actor);
-        actor.attach(this.scene);
+        actor.attachTo(this.scene);
+    }
+    /**
+     *  Hydrate all actors with resources they need to function.
+     */
+    hydrate(warderobe) {
+        for (let actor of this._actors)
+            actor.hydrate(warderobe);
     }
     /**
      *  Set Ambience.
@@ -567,6 +612,12 @@ class StageContainer {
     mount(stage) {
         this._stage = stage;
         return Promise.resolve();
+    }
+    /**
+     *  Make a render update.
+     */
+    renderUpdate(step) {
+        this._stage.renderUpdate(step);
     }
 }
 exports.default = StageContainer;
@@ -651,6 +702,7 @@ class Theatre {
         })).build();
         this._loop = new RenderingLoop_1.default((step) => {
             this._camera.renderUpdate(step);
+            this._stageContainer.renderUpdate(step);
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
         });
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
@@ -686,6 +738,7 @@ class Theatre {
         if (!stage)
             throw new Error('Theatre: Stage with this name does not exists.');
         this._stageContainer.mount(stage);
+        this._stageContainer.stage.hydrate(this.warderobe);
     }
 }
 exports.default = Theatre;
@@ -696,27 +749,33 @@ exports.default = Theatre;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
+;
 /**
  *  This is a special actor type that gathers actors and allows for placing them
  *  in a tiled distribution. This is useful for creating board games, chess, or
  *  grid like display.
  */
 class TiledActors extends Actor_1.default {
-    constructor(tileSize = 1, spacing = .05) {
+    constructor(options = {}) {
+        var _a, _b;
         super();
         /**
-         *  The tile size that the actor can occupy.
+         *  Current values of options.
          */
         this._tileSize = 1;
-        /**
-         *  The spacing between the tiles.
-         */
         this._spacing = .1;
-        this._tileSize = tileSize;
-        this._spacing = spacing;
+        this._children = new Map();
+        this._tileSize = (_a = options.tileSize) !== null && _a !== void 0 ? _a : 1;
+        this._spacing = (_b = options.spacing) !== null && _b !== void 0 ? _b : .05;
     }
     _initObject() {
         return new three_1.Object3D();
+    }
+    /**
+     *  The children of this tiled actors instance.
+     */
+    get actors() {
+        return [...this._children.values()];
     }
     /**
      *  Insert an actor inside the tiles at given position.
@@ -724,9 +783,22 @@ class TiledActors extends Actor_1.default {
      *  @note x and y should be whole numbers to it to work correctly.
      */
     insert(actor, x, y) {
-        actor.attach(this._object);
+        this._children.set(`${x}:${y}`, actor);
+        actor.attachTo(this._object);
         const tileCenter = this.centerOf(x, y);
         actor.moveTo(tileCenter.x, tileCenter.y);
+    }
+    /**
+     *  Get actor situated at specific tile coordinates.
+     */
+    at(x, y) {
+        return this._children.get(`${x}:${y}`) || null;
+    }
+    /**
+     *  Check if a specific tile position is filled with an actor.
+     */
+    filledAt(x, y) {
+        return this._children.has(`${x}:${y}`);
     }
     /**
      *  Spatial coordinates of the center of a specific tile.
@@ -757,10 +829,15 @@ class Warderobe {
          *  All of loaded textures.
          */
         this._textures = new Map();
+        this._loadingTextures = new Map();
         /**
          *  All of registered materials.
          */
         this._materials = new Map();
+        /**
+         *  A texture loader.
+         */
+        this._loader = new three_1.TextureLoader();
     }
     /**
      *  Fetch texture by name.
@@ -786,6 +863,24 @@ class Warderobe {
      */
     registerMaterial(name, material) {
         this._materials.set(name, material);
+    }
+    /**
+     *  Import texture to the warderobe.
+     */
+    importTexture(name, url) {
+        const promise = this._loader.loadAsync(url).then((texture) => {
+            this.registerTexture(name, texture);
+            this._loadingTextures.delete(name);
+            return texture;
+        });
+        this._loadingTextures.set(name, promise);
+        return promise;
+    }
+    /**
+     *  Wait for all resources to be proplery loaded.
+     */
+    wait() {
+        return Promise.all([...this._loadingTextures.values()]).then(() => { });
     }
 }
 exports.default = Warderobe;

@@ -1,16 +1,21 @@
-import { Mesh, Object3D, UnsignedShort4444Type } from "three";
+import { Mesh, Object3D } from "three";
 import Position from "./Position";
+import RenderParticipant from "./RenderParticipant";
+import { RenderStep } from "./RenderStep";
+import Warderobe from "./Warderobe";
 
 /**
  *  This is a class describing an actor on a stage. This is basically a collection of 3D models
  *  with some light logic around to get the very basic handling of an actors.
+ * 
+ *  @todo check if Actor should implement Occupant interface.
  */
-export default abstract class Actor {
+export default abstract class Actor implements RenderParticipant {
 
     /**
      *  The actual object that we are dealing with.
      */
-    protected readonly _object:Object3D = this._initObject();
+    protected _object:Object3D = new Object3D();
 
     /**
      *  Get access to the position.
@@ -21,7 +26,55 @@ export default abstract class Actor {
      *  A function that is called to initialize the main object
      *  of the actor.
      */
-    protected abstract _initObject() : Object3D;
+    protected abstract _initObject(warderobe:Warderobe) : Object3D;
+
+    /**
+     *  A method to dispo actor's object.
+     */
+    protected _disposeObject() : void {
+
+        for (let child of this._object.children) {
+
+            if (child instanceof Mesh) {
+
+                child.geometry.dispose();
+
+                // @todo figure out if the material is owned by the actor. If so,
+                // we need to dispose it.
+            }
+        }
+    }
+
+    /**
+     *  A method to make a render update.
+     */
+    renderUpdate(step: RenderStep): void {
+
+        // nothing. This one is to implement by extending classes when they need animations
+    }
+
+    /**
+     *  Hydrate the actor with needed data from the top-most resouce holders. This
+     *  can be done when everything is loaded and this method should be synchronous.
+     * 
+     *  This method doesn't do much, but makes sure that current object
+     *  can be reinitialized.
+     */
+    hydrate(warderobe:Warderobe) : void {
+
+        const parentObject = this._object.parent;
+        const oldObject = this._object;
+
+        this._disposeObject();
+
+        this._object = this._initObject(warderobe);
+
+        this._object.position.x = oldObject.position.x;
+        this._object.position.y = oldObject.position.y;
+        this._object.position.z = oldObject.position.z;
+
+        parentObject?.add(this._object);
+    }
 
     /**
      *  Move actor to given spacial coordinates.
@@ -45,7 +98,7 @@ export default abstract class Actor {
     /**
      *  Attach the actor to a parent object.
      */
-    attach(parent:Object3D) {
+    attachTo(parent:Object3D) {
 
         parent.add(this._object);
     }
@@ -55,15 +108,6 @@ export default abstract class Actor {
      */
     dispose() : void {
 
-        for (let child of this._object.children) {
-
-            if (child instanceof Mesh) {
-
-                child.geometry.dispose();
-
-                // @todo figure out if the material is owned by the actor. If so,
-                // we need to dispose it.
-            }
-        }
+        this._disposeObject();   
     }
 };
