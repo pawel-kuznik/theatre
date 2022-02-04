@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
     theatre.warderobe.importTexture('brazier:side', './brazier.png', 'pixelart');
     theatre.warderobe.importTexture('brazier:top', './brazier_top.png', 'pixelart');
+    theatre.warderobe.importTexture('floor:top', './floor.png', 'pixelart');
     theatre.warderobe.importTexture('brazier:flame', './brazier_flame.png', 'pixelart').then((texture) => {
 
         const material = theatre.warderobe.registerMaterial('brazier:flame', new THREE.MeshBasicMaterial({
@@ -97,11 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
         theatre.warderobe.registerTextureAnimator('brazier:flame');
     });
 
+    const floor = new THEATRE.TiledFloor('floor:top', 1001 * 1001);
+
+    mainStage.insert(floor);
+
     theatre.warderobe.wait().then(() => {
 
-
-
         theatre.transitionTo('main');
+
+        floor.fill(-500, -500, 500, 500);
 
         console.log(theatre);
     });

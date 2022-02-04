@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":20,"three":21}],2:[function(require,module,exports){
+},{"./build/theatre.js":21,"three":22}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -89,7 +89,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":9,"three":21}],3:[function(require,module,exports){
+},{"./Position":9,"three":22}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TopDownCamera_1 = require("./TopDownCamera");
@@ -260,7 +260,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":21}],5:[function(require,module,exports){
+},{"three":22}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -364,7 +364,7 @@ class WheelLifterCameraMover {
          *  The minimal and maximal height the camera could be on.
          */
         this._minHeight = 1;
-        this._maxHeight = 50;
+        this._maxHeight = 500;
     }
     /**
      *  Handle input event.
@@ -418,7 +418,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":21}],8:[function(require,module,exports){
+},{"./Actor":2,"three":22}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -558,7 +558,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":21}],12:[function(require,module,exports){
+},{"three":22}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -661,7 +661,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":15,"three":21}],14:[function(require,module,exports){
+},{"./Stage/StageAmbience":15,"three":22}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -731,7 +731,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":21}],16:[function(require,module,exports){
+},{"three":22}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -864,7 +864,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":19}],18:[function(require,module,exports){
+},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":20}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -932,7 +932,63 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":21}],19:[function(require,module,exports){
+},{"./Actor":2,"three":22}],19:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+const Actor_1 = require("./Actor");
+;
+/**
+ *  This is a special class that allows for creating a floor based on
+ */
+class TiledFloor extends Actor_1.default {
+    constructor(_texture, _size) {
+        super();
+        this._texture = _texture;
+        this._size = _size;
+        /**
+         *  A set containing all position the floor should show up.
+         */
+        this._positions = new Set();
+    }
+    /**
+     *  Initialize the object
+     */
+    _initObject(warderobe) {
+        console.log('initObject');
+        const geometry = new three_1.PlaneGeometry(1, 1);
+        const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture) });
+        const object = new three_1.InstancedMesh(geometry, material, this._size);
+        return object;
+    }
+    /**
+     *  Add a tile position to the floor.
+     */
+    add(x, y) {
+        this._positions.add(`${x}:${y}`);
+        const object = this._object;
+    }
+    /**
+     *  Fill the floor with positions
+     */
+    fill(xStart, yStart, xStop, yStop) {
+        console.log('fill');
+        console.log(this._object);
+        const object = this._object;
+        let idx = 0;
+        for (let y = yStart; y <= yStop; y++) {
+            for (let x = xStart; x <= xStop; x++) {
+                object.setMatrixAt(idx, new three_1.Matrix4().makeTranslation(x, y, -.5));
+                idx++;
+            }
+        }
+        object.instanceMatrix.needsUpdate = true;
+    }
+}
+exports.default = TiledFloor;
+;
+
+},{"./Actor":2,"three":22}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1034,10 +1090,10 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":16,"three":21}],20:[function(require,module,exports){
+},{"./TextureAnimator":16,"three":22}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
+exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var TiledActors_1 = require("./lib/TiledActors");
@@ -1052,8 +1108,10 @@ var Position_1 = require("./lib/Position");
 Object.defineProperty(exports, "Position", { enumerable: true, get: function () { return Position_1.default; } });
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
+var TiledFloor_1 = require("./lib/TiledFloor");
+Object.defineProperty(exports, "TiledFloor", { enumerable: true, get: function () { return TiledFloor_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":17,"./lib/TiledActors":18,"./lib/Warderobe":19}],21:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":17,"./lib/TiledActors":18,"./lib/TiledFloor":19,"./lib/Warderobe":20}],22:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

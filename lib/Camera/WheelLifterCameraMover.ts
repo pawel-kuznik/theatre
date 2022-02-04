@@ -36,7 +36,7 @@ export default class WheelLifterCameraMover implements CameraMover {
      *  The minimal and maximal height the camera could be on.
      */
     private _minHeight:number = 1;
-    private _maxHeight:number = 50;
+    private _maxHeight:number = 500;
 
     /**
      *  The constructor.
