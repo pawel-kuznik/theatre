@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":19,"three":20}],2:[function(require,module,exports){
+},{"./build/theatre.js":20,"three":21}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -89,7 +89,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":9,"three":20}],3:[function(require,module,exports){
+},{"./Position":9,"three":21}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TopDownCamera_1 = require("./TopDownCamera");
@@ -260,7 +260,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":20}],5:[function(require,module,exports){
+},{"three":21}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -359,7 +359,7 @@ class WheelLifterCameraMover {
         /**
          *  The speed of the camera in render units.
          */
-        this._speed = 0.25;
+        this._speed = 0.5;
         /**
          *  The minimal and maximal height the camera could be on.
          */
@@ -376,6 +376,8 @@ class WheelLifterCameraMover {
         const delta = wheelEvent.deltaY;
         let position = this._target !== undefined ? this._target : this._camera.height;
         this._target = position + delta * this._speed;
+        this._target = Math.max(this._minHeight, this._target);
+        this._target = Math.min(this._maxHeight, this._target);
         this._begin = performance.now();
         this._final = performance.now() + this._smoothing;
     }
@@ -392,11 +394,7 @@ class WheelLifterCameraMover {
             return;
         }
         const factor = step.difference / this._smoothing;
-        const move = (this._target - this._camera.height) * factor;
-        let height = this._camera.height + move;
-        height = Math.max(this._minHeight, height);
-        height = Math.min(this._maxHeight, height);
-        this._camera.liftTo(height);
+        this._camera.liftBy((this._target - this._camera.height) * factor);
     }
 }
 exports.default = WheelLifterCameraMover;
@@ -420,7 +418,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":20}],8:[function(require,module,exports){
+},{"./Actor":2,"three":21}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -560,7 +558,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":20}],12:[function(require,module,exports){
+},{"three":21}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -663,7 +661,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":15,"three":20}],14:[function(require,module,exports){
+},{"./Stage/StageAmbience":15,"three":21}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -733,7 +731,44 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":20}],16:[function(require,module,exports){
+},{"three":21}],16:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is a class that allows for animating textures like a sprite
+ *  sheet animation. The actual map has to be formatted in a strip of animation
+ *  steps.
+ */
+class TextureAnimator {
+    /**
+     *  The constructor.
+     */
+    constructor(_texture, _size) {
+        this._texture = _texture;
+        this._size = _size;
+        /**
+         *  The current step.
+         */
+        this._current = 0;
+        this._texture.repeat.set(1 / this._size, 1);
+    }
+    /**
+     *  Update the material map.
+     */
+    renderUpdate(step) {
+        if (this._lastTime === undefined)
+            this._lastTime = step.prev;
+        const current = Math.floor(step.now / 1000) % this._size;
+        if (current === this._current)
+            return;
+        this._texture.offset.x = current / this._size;
+        this._current = current;
+    }
+}
+exports.default = TextureAnimator;
+;
+
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -783,6 +818,7 @@ class Theatre {
         })).build();
         this._loop = new RenderingLoop_1.default((step) => {
             this._camera.renderUpdate(step);
+            this.warderobe.renderUpdate(step);
             this._stageContainer.renderUpdate(step);
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
         });
@@ -828,7 +864,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":18}],17:[function(require,module,exports){
+},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":19}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -896,10 +932,11 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":20}],18:[function(require,module,exports){
+},{"./Actor":2,"three":21}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
+const TextureAnimator_1 = require("./TextureAnimator");
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
  *  can be textures, materials, and so on. We use this centralized store cause there
@@ -918,6 +955,10 @@ class Warderobe {
          *  All of registered materials.
          */
         this._materials = new Map();
+        /**
+         *  All registered material animators.
+         */
+        this._animators = new Map();
         /**
          *  A texture loader.
          */
@@ -949,6 +990,18 @@ class Warderobe {
         this._materials.set(name, material);
     }
     /**
+     *  Register a new texture animator on a already defined texture.
+     */
+    registerTextureAnimator(name) {
+        const texture = this._textures.get(name);
+        if (!texture)
+            throw Error('Missing texture');
+        const animator = new TextureAnimator_1.default(texture, 2);
+        this._animators.set(name, animator);
+        return animator;
+    }
+    ;
+    /**
      *  Import texture to the warderobe.
      */
     importTexture(name, url, options = 'default') {
@@ -970,11 +1023,18 @@ class Warderobe {
     wait() {
         return Promise.all([...this._loadingTextures.values()]).then(() => { });
     }
+    /**
+     *  Make a render step.
+     */
+    renderUpdate(step) {
+        for (let [key, animator] of this._animators)
+            animator.renderUpdate(step);
+    }
 }
 exports.default = Warderobe;
 ;
 
-},{"three":20}],19:[function(require,module,exports){
+},{"./TextureAnimator":16,"three":21}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
@@ -993,7 +1053,7 @@ Object.defineProperty(exports, "Position", { enumerable: true, get: function () 
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":16,"./lib/TiledActors":17,"./lib/Warderobe":18}],20:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":17,"./lib/TiledActors":18,"./lib/Warderobe":19}],21:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

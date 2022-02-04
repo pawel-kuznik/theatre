@@ -37,22 +37,21 @@ class Brazier extends THEATRE.Actor {
             baseMaterial
         ]);
 
+        base.position.z = -.25;
+
         const bit = 1 / 32;
 
-        const flameGeo = new THREE.BoxGeometry(1 - 2 * bit, 1 - 2 * bit, .5);
-        const flameMaterial = this._flameMaterial_1 = new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('brazier:flame_1'), transparent: true });
-        this._flameMaterial_2 = new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('brazier:flame_2'), transparent: true });
+        const flameGeo = new THREE.PlaneGeometry(1 - 2 * bit, .5);
+        const flameMaterial = warderobe.fetchMaterial('brazier:flame');
 
-        const flame = this._flame = new THREE.Mesh(flameGeo, [
-            flameMaterial,
-            flameMaterial,
-            flameMaterial,
-            flameMaterial,
-            null,
-            null
-        ]);
+        const flame = this._flame = new THREE.Mesh(flameGeo, flameMaterial);
 
-        flame.position.z = .5;
+        console.log(flame);
+
+        flame.position.z = .25;
+        flame.rotateX(Math.PI / 2);
+        flame.rotateY(Math.PI / 4);
+        
         
         main.add(base);
         main.add(flame);
@@ -61,20 +60,6 @@ class Brazier extends THEATRE.Actor {
     }
 
     renderUpdate(step) {
-
-        const sek = Number.parseInt(step.now / 1000 % 2) + 1;
-
-        if (sek === 1 && this._flame.material === this._flameMaterial_2) {
-
-            this._flame.material = this._flameMaterial_1;
-            this._flame.material.needsUpdate = true;
-        } 
-
-        if (sek === 2 && this._flame.material === this._flameMaterial_1) {
-
-            this._flame.material = this._flameMaterial_2;
-            this._flame.material.needsUpdate = true;
-        }
 
     }
 };
@@ -97,7 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
     theatre.warderobe.importTexture('brazier:side', './brazier.png', 'pixelart');
     theatre.warderobe.importTexture('brazier:top', './brazier_top.png', 'pixelart');
-    theatre.warderobe.importTexture('brazier:flame_1', './brazier_flame_1.png', 'pixelart');
+    theatre.warderobe.importTexture('brazier:flame', './brazier_flame.png', 'pixelart').then((texture) => {
+
+        const material = theatre.warderobe.registerMaterial('brazier:flame', new THREE.MeshBasicMaterial({
+            transparent: true,
+            map:texture,
+            side: THREE.DoubleSide
+        }));
+
+        theatre.warderobe.registerTextureAnimator('brazier:flame');
+    });
 
     theatre.warderobe.wait().then(() => {
 

@@ -30,7 +30,7 @@ export default class WheelLifterCameraMover implements CameraMover {
     /**
      *  The speed of the camera in render units.
      */
-    private readonly _speed:number = 0.25;
+    private readonly _speed:number = 0.5;
 
     /**
      *  The minimal and maximal height the camera could be on.
@@ -58,6 +58,9 @@ export default class WheelLifterCameraMover implements CameraMover {
 
         this._target = position + delta * this._speed;
 
+        this._target = Math.max(this._minHeight, this._target);
+        this._target = Math.min(this._maxHeight, this._target);
+
         this._begin = performance.now();
         this._final = performance.now() + this._smoothing;
     }
@@ -79,14 +82,6 @@ export default class WheelLifterCameraMover implements CameraMover {
         }
 
         const factor = step.difference / this._smoothing;
-
-        const move = (this._target - this._camera.height) * factor;
-
-        let height = this._camera.height + move;
-
-        height = Math.max(this._minHeight, height);
-        height = Math.min(this._maxHeight, height);
-
-        this._camera.liftTo(height);
+        this._camera.liftBy((this._target - this._camera.height) * factor);
     }
 };

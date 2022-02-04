@@ -1,4 +1,7 @@
-import { Material, NearestFilter, Texture, TextureLoader } from "three";
+import { Material, MeshBasicMaterial, MeshPhongMaterial, NearestFilter, Texture, TextureLoader } from "three";
+import RenderParticipant from "./RenderParticipant";
+import { RenderStep } from "./RenderStep";
+import TextureAnimator from "./TextureAnimator";
 
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
@@ -7,7 +10,7 @@ import { Material, NearestFilter, Texture, TextureLoader } from "three";
  *  needs them. Instead we want to create them once and then reuse them when we need
  *  them again.
  */
-export default class Warderobe {
+export default class Warderobe implements RenderParticipant {
 
     /**
      *  All of loaded textures.
@@ -19,6 +22,11 @@ export default class Warderobe {
      *  All of registered materials.
      */
     private readonly _materials:Map<string,Material> = new Map();
+
+    /**
+     *  All registered material animators.
+     */
+    private readonly _animators:Map<string,TextureAnimator> = new Map();
 
     /**
      *  A texture loader.
@@ -52,10 +60,26 @@ export default class Warderobe {
     /**
      *  Register new material.
      */
-    public registerMaterial(name:string, material:Material) : void {
+    public registerMaterial(name:string, material:MeshBasicMaterial|MeshPhongMaterial) : void {
 
         this._materials.set(name, material);
     }
+
+    /**
+     *  Register a new texture animator on a already defined texture.
+     */
+    public registerTextureAnimator(name:string) : TextureAnimator {
+
+        const texture = this._textures.get(name);
+
+        if (!texture) throw Error('Missing texture');
+
+        const animator = new TextureAnimator(texture, 2);
+
+        this._animators.set(name, animator);
+
+        return animator;
+    };
 
     /**
      *  Import texture to the warderobe.
@@ -88,5 +112,13 @@ export default class Warderobe {
     public wait() : Promise<void> {
 
         return Promise.all([...this._loadingTextures.values()]).then(() => { });
+    }
+
+    /**
+     *  Make a render step.
+     */
+    renderUpdate(step: RenderStep): void {
+
+        for (let [key, animator] of this._animators) animator.renderUpdate(step);
     }
 };

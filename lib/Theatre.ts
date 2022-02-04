@@ -82,6 +82,8 @@ export default class Theatre {
 
             this._camera.renderUpdate(step);
 
+            this.warderobe.renderUpdate(step);
+
             this._stageContainer.renderUpdate(step);
 
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
