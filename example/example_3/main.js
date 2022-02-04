@@ -44,14 +44,18 @@ class Brazier extends THEATRE.Actor {
         const flameGeo = new THREE.PlaneGeometry(1 - 2 * bit, .5);
         const flameMaterial = warderobe.fetchMaterial('brazier:flame');
 
-        const flame = this._flame = new THREE.Mesh(flameGeo, flameMaterial);
+        const flame = this._flame = new THREE.InstancedMesh(flameGeo, flameMaterial, 2);
 
-        console.log(flame);
+        const xRotation = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+
+        flame.setMatrixAt(0, new THREE.Matrix4().multiply(xRotation).multiply(new THREE.Matrix4().makeRotationY(Math.PI / 4)));
+        flame.setMatrixAt(1, new THREE.Matrix4().multiply(xRotation).multiply(new THREE.Matrix4().makeRotationY(-1 * Math.PI / 4)));
+
+        flame.instanceMatrix.needsUpdate = true;
 
         flame.position.z = .25;
-        flame.rotateX(Math.PI / 2);
-        flame.rotateY(Math.PI / 4);
-        
+
+        console.log(flame);        
         
         main.add(base);
         main.add(flame);
