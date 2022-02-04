@@ -3,6 +3,8 @@ import CameraMoverOptions from "./CameraMoverOptions";
 import CameraOptions from "./CameraOptions";
 import FreefloatCamera from "./FreefloatCamera";
 import TopDownCamera from "./TopDownCamera";
+import WheelLifterCameraMover from "./WheelLifterCameraMover";
+import WheelLifterCamera from "./WheelLifterCameraMover";
 import WSADCameraMover from "./WSADCameraMover";
 
 export type CameraFactorySpecs = CameraOptions & {
@@ -51,6 +53,7 @@ export default class CameraFactory {
         for (let moverOptions of this._options.movers) {
 
             if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(camera, moverOptions));
+            if (moverOptions.type === 'wheellifter') camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
 
         return camera;
@@ -62,5 +65,13 @@ export default class CameraFactory {
     private buildWSADMover(camera:FreefloatCamera, options:CameraMoverOptions) : WSADCameraMover {
 
         return new WSADCameraMover(camera);
-    } 
+    }
+
+    /**
+     *  Build a camera mover that reacts to mouse wheel and lifts the camera up and down.
+     */
+    private buildWheelLifter(camera:FreefloatCamera, options:CameraMoverOptions) : WheelLifterCameraMover {
+
+        return new WheelLifterCameraMover(camera);
+    }
 };

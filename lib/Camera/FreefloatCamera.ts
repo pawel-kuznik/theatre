@@ -22,4 +22,19 @@ export default interface FreefloatCamera extends Camera {
      *  Move camera to a certain x and y values.
      */
     moveTo(x:number, y:number) : void;
+
+    /**
+     *  The current height the camera is on.
+     */
+    get height() : number;
+
+    /**
+     *  Lift camera to a certain height.
+     */
+    liftTo(height:number) : void;
+
+    /**
+     *  Lift by specific height.
+     */
+    liftBy(height:number) : void;
 };

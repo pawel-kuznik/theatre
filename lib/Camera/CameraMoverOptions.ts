@@ -3,5 +3,5 @@ export default interface CameraMoverOptions {
     /**
      *  The type of the camera mover.
      */
-    type: 'wsad';
+    type: 'wsad'|'wheellifter';
 };

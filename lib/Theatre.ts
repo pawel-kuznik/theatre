@@ -74,7 +74,7 @@ export default class Theatre {
         this._camera = (new CameraFactory({
             type:           'topdown',
             aspectRatio:    this._rendererHandler.aspectRatio,
-            movers:         [ { type: 'wsad' }]
+            movers:         [ { type: 'wsad' },  { type: 'wheellifter' }]
             
         })).build();
 
@@ -89,6 +89,11 @@ export default class Theatre {
 
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
         canvas.ownerDocument.body.addEventListener('keydown', (event:KeyboardEvent) => {
+
+            this._camera.handle(event);
+        });
+
+        canvas.ownerDocument.body.addEventListener('wheel', (event:WheelEvent) => {
 
             this._camera.handle(event);
         });

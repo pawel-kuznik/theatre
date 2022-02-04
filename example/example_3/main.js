@@ -94,10 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
     mainStage.insert(new Crate());
     mainStage.insert(new Brazier());
 
-    theatre.warderobe.importTexture('crate:side', './crate.png');
-    theatre.warderobe.importTexture('brazier:side', './brazier.png');
-    theatre.warderobe.importTexture('brazier:top', './brazier_top.png');
-    theatre.warderobe.importTexture('brazier:flame_1', './brazier_flame_1.png');
+    theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
+    theatre.warderobe.importTexture('brazier:side', './brazier.png', 'pixelart');
+    theatre.warderobe.importTexture('brazier:top', './brazier_top.png', 'pixelart');
+    theatre.warderobe.importTexture('brazier:flame_1', './brazier_flame_1.png', 'pixelart');
 
     theatre.warderobe.wait().then(() => {
 

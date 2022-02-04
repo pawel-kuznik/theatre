@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":18,"three":19}],2:[function(require,module,exports){
+},{"./build/theatre.js":19,"three":20}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -89,10 +89,11 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":8,"three":19}],3:[function(require,module,exports){
+},{"./Position":9,"three":20}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TopDownCamera_1 = require("./TopDownCamera");
+const WheelLifterCameraMover_1 = require("./WheelLifterCameraMover");
 const WSADCameraMover_1 = require("./WSADCameraMover");
 /**
  *  A special class to create a camera based
@@ -128,6 +129,8 @@ class CameraFactory {
         for (let moverOptions of this._options.movers) {
             if (moverOptions.type === 'wsad')
                 camera.appendMover(this.buildWSADMover(camera, moverOptions));
+            if (moverOptions.type === 'wheellifter')
+                camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
         return camera;
     }
@@ -137,11 +140,17 @@ class CameraFactory {
     buildWSADMover(camera, options) {
         return new WSADCameraMover_1.default(camera);
     }
+    /**
+     *  Build a camera mover that reacts to mouse wheel and lifts the camera up and down.
+     */
+    buildWheelLifter(camera, options) {
+        return new WheelLifterCameraMover_1.default(camera);
+    }
 }
 exports.default = CameraFactory;
 ;
 
-},{"./TopDownCamera":4,"./WSADCameraMover":5}],4:[function(require,module,exports){
+},{"./TopDownCamera":4,"./WSADCameraMover":5,"./WheelLifterCameraMover":6}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -192,11 +201,17 @@ class TopDownCamera {
      *  Set the height of the camera. Calling it with no param will reset the camera
      *  to the default height.
      */
-    lift(height = 10) {
+    liftTo(height = 10) {
         // set the height
         this._camera.position.z = height;
         // update where the camera is looking
         this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+    }
+    /**
+     *  Lift camera by specific height.
+     */
+    liftBy(height) {
+        this.liftTo(this.height + height);
     }
     /**
      *  Move the camera by certain x and y values.
@@ -245,7 +260,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":19}],5:[function(require,module,exports){
+},{"three":20}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -324,6 +339,72 @@ exports.default = WSADCameraMover;
 },{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is a camera mover that handlers lifting camera up/down in reaction
+ *  to a mouse wheel wheel.
+ */
+class WheelLifterCameraMover {
+    /**
+     *  The constructor.
+     */
+    constructor(_camera) {
+        this._camera = _camera;
+        /**
+         *  The smoothing of the camera in miliseconds. This is used to define
+         *  a time period from the key down till the animation would end. This
+         *  should be bigger than the speed at which the keydown repeats + some
+         *  more for giving it a slowing down effect.
+         */
+        this._smoothing = 600;
+        /**
+         *  The speed of the camera in render units.
+         */
+        this._speed = 0.25;
+        /**
+         *  The minimal and maximal height the camera could be on.
+         */
+        this._minHeight = 1;
+        this._maxHeight = 50;
+    }
+    /**
+     *  Handle input event.
+     */
+    handle(event) {
+        if (event.type !== 'wheel')
+            return;
+        const wheelEvent = event;
+        const delta = wheelEvent.deltaY;
+        let position = this._target !== undefined ? this._target : this._camera.height;
+        this._target = position + delta * this._speed;
+        this._begin = performance.now();
+        this._final = performance.now() + this._smoothing;
+    }
+    /**
+     *  Update the mover with render update.
+     */
+    renderUpdate(step) {
+        if (!this._target || !this._final || !this._begin)
+            return;
+        if (step.now > this._final) {
+            this._begin = undefined;
+            this._final = undefined;
+            this._target = undefined;
+            return;
+        }
+        const factor = step.difference / this._smoothing;
+        const move = (this._target - this._camera.height) * factor;
+        let height = this._camera.height + move;
+        height = Math.max(this._minHeight, height);
+        height = Math.min(this._maxHeight, height);
+        this._camera.liftTo(height);
+    }
+}
+exports.default = WheelLifterCameraMover;
+;
+
+},{}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
 /**
@@ -339,7 +420,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":19}],7:[function(require,module,exports){
+},{"./Actor":2,"three":20}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -355,7 +436,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":12}],8:[function(require,module,exports){
+},{"./Stage":13}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -385,7 +466,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -415,7 +496,7 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -479,7 +560,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":19}],11:[function(require,module,exports){
+},{"three":20}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -520,7 +601,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":9}],12:[function(require,module,exports){
+},{"./RenderStep":10}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -582,7 +663,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":14,"three":19}],13:[function(require,module,exports){
+},{"./Stage/StageAmbience":15,"three":20}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -623,7 +704,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":7}],14:[function(require,module,exports){
+},{"./EmptyStage":8}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -652,7 +733,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":19}],15:[function(require,module,exports){
+},{"three":20}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -698,7 +779,7 @@ class Theatre {
         this._camera = (new CameraFactory_1.default({
             type: 'topdown',
             aspectRatio: this._rendererHandler.aspectRatio,
-            movers: [{ type: 'wsad' }]
+            movers: [{ type: 'wsad' }, { type: 'wheellifter' }]
         })).build();
         this._loop = new RenderingLoop_1.default((step) => {
             this._camera.renderUpdate(step);
@@ -707,6 +788,9 @@ class Theatre {
         });
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
         canvas.ownerDocument.body.addEventListener('keydown', (event) => {
+            this._camera.handle(event);
+        });
+        canvas.ownerDocument.body.addEventListener('wheel', (event) => {
             this._camera.handle(event);
         });
         this._rendererHandler.onResize((x, y) => {
@@ -744,7 +828,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":3,"./RendererHandler":10,"./RenderingLoop":11,"./Stage":12,"./StageContainer":13,"./Warderobe":17}],16:[function(require,module,exports){
+},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":18}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -812,7 +896,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":19}],17:[function(require,module,exports){
+},{"./Actor":2,"three":20}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -867,8 +951,12 @@ class Warderobe {
     /**
      *  Import texture to the warderobe.
      */
-    importTexture(name, url) {
+    importTexture(name, url, options = 'default') {
         const promise = this._loader.loadAsync(url).then((texture) => {
+            if (options === 'pixelart') {
+                texture.minFilter = three_1.NearestFilter;
+                texture.magFilter = three_1.NearestFilter;
+            }
             this.registerTexture(name, texture);
             this._loadingTextures.delete(name);
             return texture;
@@ -886,7 +974,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"three":19}],18:[function(require,module,exports){
+},{"three":20}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
@@ -905,7 +993,7 @@ Object.defineProperty(exports, "Position", { enumerable: true, get: function () 
 var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":6,"./lib/Position":8,"./lib/Stage":12,"./lib/Theatre":15,"./lib/TiledActors":16,"./lib/Warderobe":17}],19:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":16,"./lib/TiledActors":17,"./lib/Warderobe":18}],20:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

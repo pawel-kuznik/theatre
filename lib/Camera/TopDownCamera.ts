@@ -73,13 +73,21 @@ export default class TopDownCamera implements FreefloatCamera {
      *  Set the height of the camera. Calling it with no param will reset the camera
      *  to the default height.
      */
-    public lift(height:number = 10) {
+    public liftTo(height:number = 10) {
 
         // set the height
         this._camera.position.z = height;
 
         // update where the camera is looking
         this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+    }
+
+    /**
+     *  Lift camera by specific height.
+     */
+    liftBy(height: number): void {
+        
+        this.liftTo(this.height + height);
     }
 
     /**
@@ -106,7 +114,7 @@ export default class TopDownCamera implements FreefloatCamera {
     /**
      *  Handle event related to the user input.
      */
-    public handle(event:KeyboardEvent|MouseEvent) {
+    public handle(event:KeyboardEvent|MouseEvent|WheelEvent) {
 
         for (let mover of this._movers) mover.handle(event);
     }

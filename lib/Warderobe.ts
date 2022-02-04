@@ -1,4 +1,4 @@
-import { Material, Texture, TextureLoader } from "three";
+import { Material, NearestFilter, Texture, TextureLoader } from "three";
 
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
@@ -60,9 +60,15 @@ export default class Warderobe {
     /**
      *  Import texture to the warderobe.
      */
-    public importTexture(name:string, url:string) : Promise<Texture> {
+    public importTexture(name:string, url:string, options:'pixelart'|'default' = 'default') : Promise<Texture> {
 
         const promise = this._loader.loadAsync(url).then((texture:Texture) => {
+
+            if (options === 'pixelart') {
+
+                texture.minFilter = NearestFilter;
+                texture.magFilter = NearestFilter;
+            }
 
             this.registerTexture(name, texture);
 
