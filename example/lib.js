@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":21,"three":22}],2:[function(require,module,exports){
+},{"./build/theatre.js":22,"three":23}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -89,7 +89,48 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":9,"three":22}],3:[function(require,module,exports){
+},{"./Position":10,"three":23}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class Translation {
+    /**
+     *  The constructor.
+     *
+     *  The duration is in miliseconds.
+     */
+    constructor(actor, initial, finish, duration) {
+        this.actor = actor;
+        this.initial = initial;
+        this.finish = finish;
+        this.duration = duration;
+    }
+    /**
+     *  Start the translation.
+     */
+    start() {
+        this._begin = performance.now();
+    }
+    /**
+     *  Handle render updates.
+     */
+    renderUpdate(step) {
+        if (!this._begin)
+            return;
+        if (this._begin + this.duration < step.now) {
+            this._begin = undefined;
+            return;
+        }
+        const factor = (step.difference) / (this.duration);
+        console.log(factor);
+        const move = this.finish.sub(this.initial).multiplyScalar(factor);
+        console.log('move by', move);
+        this.actor.position.vector.add(move);
+    }
+}
+exports.default = Translation;
+;
+
+},{}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TopDownCamera_1 = require("./TopDownCamera");
@@ -150,7 +191,7 @@ class CameraFactory {
 exports.default = CameraFactory;
 ;
 
-},{"./TopDownCamera":4,"./WSADCameraMover":5,"./WheelLifterCameraMover":6}],4:[function(require,module,exports){
+},{"./TopDownCamera":5,"./WSADCameraMover":6,"./WheelLifterCameraMover":7}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -260,7 +301,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":22}],5:[function(require,module,exports){
+},{"three":23}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -336,7 +377,7 @@ class WSADCameraMover {
 exports.default = WSADCameraMover;
 ;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -400,7 +441,7 @@ class WheelLifterCameraMover {
 exports.default = WheelLifterCameraMover;
 ;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -418,7 +459,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":22}],8:[function(require,module,exports){
+},{"./Actor":2,"three":23}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -434,7 +475,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":13}],9:[function(require,module,exports){
+},{"./Stage":14}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -464,7 +505,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -494,7 +535,7 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -558,7 +599,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":22}],12:[function(require,module,exports){
+},{"three":23}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -599,7 +640,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":10}],13:[function(require,module,exports){
+},{"./RenderStep":11}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -661,7 +702,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":15,"three":22}],14:[function(require,module,exports){
+},{"./Stage/StageAmbience":16,"three":23}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -702,7 +743,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":8}],15:[function(require,module,exports){
+},{"./EmptyStage":9}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -731,7 +772,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":22}],16:[function(require,module,exports){
+},{"three":23}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -768,7 +809,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -864,7 +905,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":3,"./RendererHandler":11,"./RenderingLoop":12,"./Stage":13,"./StageContainer":14,"./Warderobe":20}],18:[function(require,module,exports){
+},{"./Camera/CameraFactory":4,"./RendererHandler":12,"./RenderingLoop":13,"./Stage":14,"./StageContainer":15,"./Warderobe":21}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -932,7 +973,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":22}],19:[function(require,module,exports){
+},{"./Actor":2,"three":23}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -977,7 +1018,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":22}],20:[function(require,module,exports){
+},{"./Actor":2,"three":23}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1079,10 +1120,10 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":16,"three":22}],21:[function(require,module,exports){
+},{"./TextureAnimator":17,"three":23}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
+exports.ActorTranslation = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var TiledActors_1 = require("./lib/TiledActors");
@@ -1099,8 +1140,10 @@ var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 var TiledFloor_1 = require("./lib/TiledFloor");
 Object.defineProperty(exports, "TiledFloor", { enumerable: true, get: function () { return TiledFloor_1.default; } });
+var Translation_1 = require("./lib/ActorTransitions/Translation");
+Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/CompanionActor":7,"./lib/Position":9,"./lib/Stage":13,"./lib/Theatre":17,"./lib/TiledActors":18,"./lib/TiledFloor":19,"./lib/Warderobe":20}],22:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorTransitions/Translation":3,"./lib/CompanionActor":8,"./lib/Position":10,"./lib/Stage":14,"./lib/Theatre":18,"./lib/TiledActors":19,"./lib/TiledFloor":20,"./lib/Warderobe":21}],23:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

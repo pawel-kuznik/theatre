@@ -6,3 +6,7 @@ export { default as Warderobe } from "./lib/Warderobe";
 export { default as Position } from "./lib/Position";
 export { default as Theatre } from "./lib/Theatre";
 export { default as TiledFloor } from "./lib/TiledFloor";
+
+// spatial animations
+export { default as ActorTransition } from "./lib/ActorTransition";
+export { default as ActorTranslation } from "./lib/ActorTransitions/Translation";
