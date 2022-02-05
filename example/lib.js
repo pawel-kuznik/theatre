@@ -937,7 +937,6 @@ exports.default = TiledActors;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
-;
 /**
  *  This is a special class that allows for creating a floor based on
  */
@@ -955,25 +954,15 @@ class TiledFloor extends Actor_1.default {
      *  Initialize the object
      */
     _initObject(warderobe) {
-        console.log('initObject');
         const geometry = new three_1.PlaneGeometry(1, 1);
         const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture) });
         const object = new three_1.InstancedMesh(geometry, material, this._size);
         return object;
     }
     /**
-     *  Add a tile position to the floor.
-     */
-    add(x, y) {
-        this._positions.add(`${x}:${y}`);
-        const object = this._object;
-    }
-    /**
      *  Fill the floor with positions
      */
     fill(xStart, yStart, xStop, yStop) {
-        console.log('fill');
-        console.log(this._object);
         const object = this._object;
         let idx = 0;
         for (let y = yStart; y <= yStop; y++) {

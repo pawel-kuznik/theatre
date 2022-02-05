@@ -2,11 +2,6 @@ import { InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry, Texture } fro
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
 
-interface Position {
-    x:number;
-    y:number;
-};
-
 /**
  *  This is a special class that allows for creating a floor based on 
  */
@@ -34,16 +29,6 @@ export default class TiledFloor extends Actor {
 
         return object;
     } 
-
-    /**
-     *  Add a tile position to the floor.
-     */
-    add(x:number, y:number) {
-
-        this._positions.add(`${x}:${y}`);
-
-        const object = this._object as InstancedMesh;
-    }
 
     /**
      *  Fill the floor with positions
