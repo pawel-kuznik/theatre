@@ -27,8 +27,6 @@ export default class TiledFloor extends Actor {
      */
     protected _initObject(warderobe: Warderobe): InstancedMesh {
 
-        console.log('initObject');
-
         const geometry = new PlaneGeometry(1, 1);
         const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture) });
         
@@ -51,10 +49,6 @@ export default class TiledFloor extends Actor {
      *  Fill the floor with positions
      */
     fill(xStart:number, yStart:number, xStop:number, yStop:number) : void {
-
-        console.log('fill');
-
-        console.log(this._object);
 
         const object = this._object as InstancedMesh;
 
