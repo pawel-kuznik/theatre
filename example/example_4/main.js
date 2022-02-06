@@ -1,34 +1,29 @@
 class Carpet extends THEATRE.Actor {
 
-    _path = [];
-
-    _current = 0;
-
-    _currentAnimation = null;
-
-
     _initObject(warderobe) {
 
         const g = new THREE.PlaneGeometry(2, 1);
-        const m = new THREE.MeshBasicMaterial({ map: warderobe.fetchTexture('carpet:top') });
+        const m = new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('carpet:top'), shadowSide: THREE.DoubleSide });
 
-        return new THREE.Mesh(g, m);
+        const animation = this._animation = new THEATRE.TransitionCycle();
+        animation.add(new THEATRE.ActorTranslation(this, 1000, new THREE.Vector3(5, 0, 0)));
+        animation.add(new THEATRE.ActorTranslation(this, 1000, new THREE.Vector3(5, 5, 1)));
+        animation.add(new THEATRE.ActorTranslation(this, 1000, new THREE.Vector3(-5, 0, 1)));
+
+        animation.start();
+
+        const object = new THREE.Mesh(g, m);
+
+        object.castShadow = true;
+
+        return object;
     }
 
     renderUpdate(step) {
 
-        if (!this._currentAnimation) return;
+        if (!this._animation) return;
 
-        this._currentAnimation.renderUpdate(step);
-    }
-
-    cycle(path) {
-
-        this._path = path;
-
-        this._currentAnimation = new THEATRE.ActorTranslation(this, new THREE.Vector3(path[0].x, path[0].y, 0), new THREE.Vector3(path[1].x, path[1].y, 0), 2000);
-
-        this._currentAnimation.start();
+        this._animation.renderUpdate(step);
     }
 };
 
@@ -55,11 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const carpet = new Carpet();
 
     testStage.insert(carpet);
-
-    carpet.cycle([
-        { x: -5, y: 0 },
-        { x: 5, y: 0 }
-    ]);
 
     theatre.warderobe.wait().then(() => {
 

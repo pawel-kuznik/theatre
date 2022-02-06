@@ -1,4 +1,4 @@
-import { WebGLRenderer } from "three";
+import { PCFSoftShadowMap, WebGLRenderer } from "three";
 
 export type ResizeHandler = (width:number, height:number) => void;
 
@@ -19,6 +19,9 @@ export default class RendererHandler {
         this._renderer = new WebGLRenderer({
             canvas: this._canvas
         });
+
+        this._renderer.shadowMap.enabled = true;
+        this._renderer.shadowMap.type = PCFSoftShadowMap;
 
         this._observer = new ResizeObserver(() => void this._resize());
 

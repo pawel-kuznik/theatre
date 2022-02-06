@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":22,"three":23}],2:[function(require,module,exports){
+},{"./build/theatre.js":23,"three":24}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -89,7 +89,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":10,"three":23}],3:[function(require,module,exports){
+},{"./Position":10,"three":24}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Translation {
@@ -97,13 +97,22 @@ class Translation {
      *  The constructor.
      *
      *  The duration is in miliseconds.
+     *
+     *  When the initial position is not supplied, the transition will take the current position
+     *  of the actor at the time of the start.
      */
-    constructor(actor, initial, finish, duration) {
+    constructor(actor, duration, finish, initial = undefined) {
         this.actor = actor;
-        this.initial = initial;
-        this.finish = finish;
         this.duration = duration;
+        this.finish = finish;
+        this._initial = undefined;
+        this._providedInitial = undefined;
+        this._providedInitial = initial;
     }
+    /**
+     *  Is the transition active?
+     */
+    get active() { return !!this._begin; }
     /**
      *  Start the translation.
      */
@@ -118,12 +127,14 @@ class Translation {
             return;
         if (this._begin + this.duration < step.now) {
             this._begin = undefined;
+            this.actor.position.vector.copy(this.finish);
+            this._initial = undefined;
             return;
         }
+        if (this._initial === undefined)
+            this._initial = this._providedInitial || this.actor.position.vector.clone();
         const factor = (step.difference) / (this.duration);
-        console.log(factor);
-        const move = this.finish.sub(this.initial).multiplyScalar(factor);
-        console.log('move by', move);
+        const move = this.finish.clone().sub(this._initial).multiplyScalar(factor);
         this.actor.position.vector.add(move);
     }
 }
@@ -207,7 +218,7 @@ class TopDownCamera {
     constructor(options) {
         this._movers = [];
         // construct the actual camera instance
-        this._camera = new three_1.PerspectiveCamera(45, options.aspectRatio, 0.1, 8000);
+        this._camera = new three_1.PerspectiveCamera(65, options.aspectRatio, 0.1, 8000);
         // position the camera
         this._camera.position.x = 0;
         this._camera.position.y = -2.5;
@@ -301,7 +312,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":23}],6:[function(require,module,exports){
+},{"three":24}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -459,7 +470,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":23}],9:[function(require,module,exports){
+},{"./Actor":2,"three":24}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -549,6 +560,8 @@ class RendererHandler {
         this._renderer = new three_1.WebGLRenderer({
             canvas: this._canvas
         });
+        this._renderer.shadowMap.enabled = true;
+        this._renderer.shadowMap.type = three_1.PCFSoftShadowMap;
         this._observer = new ResizeObserver(() => void this._resize());
         this._resize();
         this._observer.observe(this._canvas);
@@ -599,7 +612,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":23}],13:[function(require,module,exports){
+},{"three":24}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -702,7 +715,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":16,"three":23}],15:[function(require,module,exports){
+},{"./Stage/StageAmbience":16,"three":24}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -754,25 +767,36 @@ const three_1 = require("three");
  */
 class StageAmbience {
     constructor(properties) {
-        this._ambientLight = new three_1.AmbientLight(properties.ambientColor);
+        this._ambientLight = new three_1.AmbientLight(properties.ambientColor, .5);
+        this._overheadLight = new three_1.DirectionalLight(0xffffff, .5);
+        this._overheadLight.position.set(0, 0, 10000);
+        this._overheadLight.lookAt(new three_1.Vector3(0, 0, 0));
+        this._overheadLight.castShadow = true;
+        this._overheadLight.shadow.mapSize.width = 512;
+        this._overheadLight.shadow.mapSize.height = 512;
+        this._overheadLight.shadow.camera.near = 0.5;
+        this._overheadLight.shadow.camera.far = 150000;
+        this._overheadLight.shadow.camera.position.set(0, 0, 10000);
     }
     /**
      *  Occupy/mount scene ambience.
      */
     occupy(scene) {
         scene.add(this._ambientLight);
+        scene.add(this._overheadLight);
     }
     /**
      *  Vacate/unmount the scene.
      */
     vacate() {
         this._ambientLight.removeFromParent();
+        this._overheadLight.removeFromParent();
     }
 }
 exports.default = StageAmbience;
 ;
 
-},{"three":23}],17:[function(require,module,exports){
+},{"three":24}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -905,7 +929,7 @@ class Theatre {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":4,"./RendererHandler":12,"./RenderingLoop":13,"./Stage":14,"./StageContainer":15,"./Warderobe":21}],19:[function(require,module,exports){
+},{"./Camera/CameraFactory":4,"./RendererHandler":12,"./RenderingLoop":13,"./Stage":14,"./StageContainer":15,"./Warderobe":22}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -973,7 +997,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":23}],20:[function(require,module,exports){
+},{"./Actor":2,"three":24}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -996,8 +1020,9 @@ class TiledFloor extends Actor_1.default {
      */
     _initObject(warderobe) {
         const geometry = new three_1.PlaneGeometry(1, 1);
-        const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture) });
+        const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: three_1.FrontSide });
         const object = new three_1.InstancedMesh(geometry, material, this._size);
+        object.receiveShadow = true;
         return object;
     }
     /**
@@ -1018,7 +1043,74 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":23}],21:[function(require,module,exports){
+},{"./Actor":2,"three":24}],21:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class TransitionCycle {
+    constructor() {
+        /**
+         *  The current transition in the cycle.
+         */
+        this._current = 0;
+        /**
+         *  The actual cycle of transitions to run.
+         */
+        this._transitions = [];
+    }
+    /**
+     *  Get the current transition.
+     */
+    get current() { return this._transitions[this._current]; }
+    /**
+     *  Start the cycle.
+     */
+    start() {
+        var _a;
+        (_a = this.current) === null || _a === void 0 ? void 0 : _a.start();
+    }
+    /**
+     *  Add a new transition to the cycle.
+     */
+    add(transition) {
+        this._transitions.push(transition);
+    }
+    /**
+     *  Clear a specific transition from the cycle.
+     */
+    clear(transition) {
+        const idx = this._transitions.indexOf(transition);
+        if (idx === -1)
+            return;
+        if (idx === this._current)
+            this.next();
+        this._transitions.splice(idx, 1);
+    }
+    /**
+     *  Immediately proceed to the next transition.
+     */
+    next() {
+        var _a;
+        if (this._current >= this._transitions.length - 1)
+            this._current = 0;
+        else
+            this._current++;
+        (_a = this.current) === null || _a === void 0 ? void 0 : _a.start();
+    }
+    /**
+     *  Make a render update.
+     */
+    renderUpdate(step) {
+        const transition = this._transitions[this._current];
+        if (transition)
+            transition.renderUpdate(step);
+        if (!transition.active)
+            this.next();
+    }
+}
+exports.default = TransitionCycle;
+;
+
+},{}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1120,10 +1212,10 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":17,"three":23}],22:[function(require,module,exports){
+},{"./TextureAnimator":17,"three":24}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var TiledActors_1 = require("./lib/TiledActors");
@@ -1140,10 +1232,13 @@ var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 var TiledFloor_1 = require("./lib/TiledFloor");
 Object.defineProperty(exports, "TiledFloor", { enumerable: true, get: function () { return TiledFloor_1.default; } });
+// spatial animations
+var TransitionCycle_1 = require("./lib/TransitionCycle");
+Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: function () { return TransitionCycle_1.default; } });
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorTransitions/Translation":3,"./lib/CompanionActor":8,"./lib/Position":10,"./lib/Stage":14,"./lib/Theatre":18,"./lib/TiledActors":19,"./lib/TiledFloor":20,"./lib/Warderobe":21}],23:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorTransitions/Translation":3,"./lib/CompanionActor":8,"./lib/Position":10,"./lib/Stage":14,"./lib/Theatre":18,"./lib/TiledActors":19,"./lib/TiledFloor":20,"./lib/TransitionCycle":21,"./lib/Warderobe":22}],24:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

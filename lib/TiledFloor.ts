@@ -1,4 +1,4 @@
-import { InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry, Texture } from "three";
+import { DoubleSide, FrontSide, InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry, Texture } from "three";
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
 
@@ -23,9 +23,11 @@ export default class TiledFloor extends Actor {
     protected _initObject(warderobe: Warderobe): InstancedMesh {
 
         const geometry = new PlaneGeometry(1, 1);
-        const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture) });
+        const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: FrontSide });
         
         const object = new InstancedMesh(geometry, material, this._size);
+
+        object.receiveShadow = true;
 
         return object;
     } 

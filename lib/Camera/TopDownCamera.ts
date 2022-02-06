@@ -29,7 +29,7 @@ export default class TopDownCamera implements FreefloatCamera {
     constructor(options:TopDownCameraOptions) {
 
         // construct the actual camera instance
-        this._camera = new PerspectiveCamera(45, options.aspectRatio, 0.1, 8000);
+        this._camera = new PerspectiveCamera(65, options.aspectRatio, 0.1, 8000);
 
         // position the camera
         this._camera.position.x = 0;

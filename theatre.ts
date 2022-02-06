@@ -8,5 +8,6 @@ export { default as Theatre } from "./lib/Theatre";
 export { default as TiledFloor } from "./lib/TiledFloor";
 
 // spatial animations
+export { default as TransitionCycle } from "./lib/TransitionCycle";
 export { default as ActorTransition } from "./lib/ActorTransition";
 export { default as ActorTranslation } from "./lib/ActorTransitions/Translation";

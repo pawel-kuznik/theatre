@@ -6,6 +6,11 @@ import RenderParticipant from "./RenderParticipant";
 export default interface ActorTransition extends RenderParticipant {
 
     /**
+     *  Is the transition currently running.
+     */
+    active : boolean;
+
+    /**
      *  Start transition.
      */
     start() : void;
