@@ -1,5 +1,6 @@
 import { Scene } from "three";
 import Actor from './Actor';
+import ActorsHolder from "./ActorsHolder";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
 import StageAmbience from "./Stage/StageAmbience";
@@ -10,7 +11,7 @@ import Warderobe from "./Warderobe";
  *  This is the stage. This class represents the scene as well as definition for
  *  lights and actors.
  */
-export default class Stage implements RenderParticipant {
+export default class Stage implements RenderParticipant, ActorsHolder {
 
     /**
      *  The current scene of the stage.
@@ -28,6 +29,19 @@ export default class Stage implements RenderParticipant {
     private _ambience:StageAmbience|null = null;
 
     constructor() { }
+
+    /**
+     *  Fetch an actor by uuid of it's main object.
+     */
+    fetch(uuid:string) : Actor|undefined {
+
+        for (let actor of this._actors) {
+            
+            if (actor.object.uuid === uuid) return actor;
+        }
+
+        return undefined;
+    }
 
     /**
      *  Make a render update for all actors.

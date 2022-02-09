@@ -1,6 +1,11 @@
-import { DoubleSide, FrontSide, InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry, Texture } from "three";
+import { FrontSide, InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry } from "three";
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
+
+interface TilePosition {
+    x:number;
+    y:number;
+};
 
 /**
  *  This is a special class that allows for creating a floor based on 
@@ -8,9 +13,9 @@ import Warderobe from "./Warderobe";
 export default class TiledFloor extends Actor {
 
     /**
-     *  A set containing all position the floor should show up.
+     *  Mapping of all positions inside the floor.
      */
-    private _positions:Set<string> = new Set();
+    private _positions:Map<number, TilePosition> = new Map();
 
     constructor(private _texture:string, private _size:number) {
 
@@ -25,7 +30,7 @@ export default class TiledFloor extends Actor {
         const geometry = new PlaneGeometry(1, 1);
         const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: FrontSide });
         
-        const object = new InstancedMesh(geometry, material, this._size);
+        const object = new InstancedMesh(geometry, material, this._size + 1);
 
         object.receiveShadow = true;
 
@@ -46,10 +51,32 @@ export default class TiledFloor extends Actor {
 
                 object.setMatrixAt(idx, new Matrix4().makeTranslation(x, y, -.5));
 
+                this._positions.set(idx, { x, y });
+
                 idx++;
             }
         }
 
         object.instanceMatrix.needsUpdate = true;
     }
+
+    /**
+     *  Remove an instance from the floor;
+     */
+    remove(position: TilePosition) : void;
+    remove(x:number, y:number) : void;
+    remove(idx:number) : void;
+    remove(x:any, y?:any) : void {
+
+        // @todo implement
+
+    };
+
+    /**
+     *  Translate a possible idx into a position in this floor.
+     */
+    positionFromIdx(idx:number) : { x: number, y:number }|undefined {
+
+        return this._positions.get(idx);
+    };
 };

@@ -1,15 +1,19 @@
+import { Emitter } from "iventy";
+import ActorsHolder from "../ActorsHolder";
 import Camera from "../Camera";
+import CameraMousePicker from "./CameraMousePicker";
 import CameraMoverOptions from "./CameraMoverOptions";
 import CameraOptions from "./CameraOptions";
 import FreefloatCamera from "./FreefloatCamera";
 import TopDownCamera from "./TopDownCamera";
 import WheelLifterCameraMover from "./WheelLifterCameraMover";
-import WheelLifterCamera from "./WheelLifterCameraMover";
 import WSADCameraMover from "./WSADCameraMover";
 
 export type CameraFactorySpecs = CameraOptions & {
 
     movers:Array<CameraMoverOptions>;
+
+    mousePicker?:boolean;
 };
 
 /**
@@ -21,7 +25,7 @@ export default class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(private readonly _options:CameraFactorySpecs) {
+    constructor(private readonly _options:CameraFactorySpecs, private readonly _actorsHolder:ActorsHolder, private readonly _eventTarget:Emitter) {
 
     }
 
@@ -45,7 +49,7 @@ export default class CameraFactory {
 
         const options = Object.assign({ }, {
             type:           this._options.type,
-            aspectRatio:    this._options.aspectRatio
+            mousePicker:    this._options.mousePicker
         });
 
         const camera = new TopDownCamera(options);
@@ -54,6 +58,15 @@ export default class CameraFactory {
 
             if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(camera, moverOptions));
             if (moverOptions.type === 'wheellifter') camera.appendMover(this.buildWheelLifter(camera, moverOptions));
+        }
+
+        if (options.mousePicker) {
+
+            const picker = new CameraMousePicker(camera, this._actorsHolder);
+
+            picker.bubbleTo(this._eventTarget);
+            
+            camera.appendPicker(picker);
         }
 
         return camera;

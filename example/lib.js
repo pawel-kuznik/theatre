@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":23,"three":24}],2:[function(require,module,exports){
+},{"./build/theatre.js":25,"three":32}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -19,6 +19,10 @@ class Actor {
          */
         this._object = new three_1.Object3D();
     }
+    /**
+     *  Get the object associated with the actor.
+     */
+    get object() { return this._object; }
     /**
      *  Get access to the position.
      */
@@ -89,7 +93,23 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":10,"three":24}],3:[function(require,module,exports){
+},{"./Position":12,"three":32}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  This is a structure that we get when we intersect something with an actor. This is useful,
+ *  cause in some cases the intersection is made with a specific subobject of the actor and
+ *  we want to know about it.
+ */
+class ActorIntersection {
+    constructor(actor, child = undefined) {
+        this.actor = actor;
+        this.child = child;
+    }
+}
+exports.default = ActorIntersection;
+
+},{}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Translation {
@@ -141,9 +161,10 @@ class Translation {
 exports.default = Translation;
 ;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const CameraMousePicker_1 = require("./CameraMousePicker");
 const TopDownCamera_1 = require("./TopDownCamera");
 const WheelLifterCameraMover_1 = require("./WheelLifterCameraMover");
 const WSADCameraMover_1 = require("./WSADCameraMover");
@@ -155,8 +176,10 @@ class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(_options) {
+    constructor(_options, _actorsHolder, _eventTarget) {
         this._options = _options;
+        this._actorsHolder = _actorsHolder;
+        this._eventTarget = _eventTarget;
     }
     /**
      *  Build an instance of the camera based
@@ -175,7 +198,7 @@ class CameraFactory {
     buildTopDown() {
         const options = Object.assign({}, {
             type: this._options.type,
-            aspectRatio: this._options.aspectRatio
+            mousePicker: this._options.mousePicker
         });
         const camera = new TopDownCamera_1.default(options);
         for (let moverOptions of this._options.movers) {
@@ -183,6 +206,11 @@ class CameraFactory {
                 camera.appendMover(this.buildWSADMover(camera, moverOptions));
             if (moverOptions.type === 'wheellifter')
                 camera.appendMover(this.buildWheelLifter(camera, moverOptions));
+        }
+        if (options.mousePicker) {
+            const picker = new CameraMousePicker_1.default(camera, this._actorsHolder);
+            picker.bubbleTo(this._eventTarget);
+            camera.appendPicker(picker);
         }
         return camera;
     }
@@ -202,7 +230,52 @@ class CameraFactory {
 exports.default = CameraFactory;
 ;
 
-},{"./TopDownCamera":5,"./WSADCameraMover":6,"./WheelLifterCameraMover":7}],5:[function(require,module,exports){
+},{"./CameraMousePicker":6,"./TopDownCamera":7,"./WSADCameraMover":8,"./WheelLifterCameraMover":9}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const iventy_1 = require("iventy");
+const three_1 = require("three");
+const ActorIntersection_1 = require("../ActorIntersection");
+/**
+ *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
+ *  or similar.
+ */
+class CameraMousePicker extends iventy_1.Emitter {
+    /**
+     *  The constructor.
+     */
+    constructor(_camera, _actorsHolder) {
+        super();
+        this._camera = _camera;
+        this._actorsHolder = _actorsHolder;
+        /**
+         *  The raycaster that will do the checking.
+         */
+        this._raycaster = new three_1.Raycaster();
+    }
+    /**
+     *  Handle mouse event and try to pick actors.
+     */
+    handle(event) {
+        if (event.type !== 'click')
+            return;
+        const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+        this._raycaster.setFromCamera(screenClick, this._camera.native);
+        const objects = this._actorsHolder.actors.map((actor) => actor.object);
+        const intersections = this._raycaster.intersectObjects(objects, true).map((value) => {
+            const actor = this._actorsHolder.fetch(value.object.uuid);
+            const child = value.object instanceof three_1.InstancedMesh ? value.instanceId : undefined;
+            if (!actor)
+                return undefined;
+            return new ActorIntersection_1.default(actor, child);
+        }).filter((value) => !!value);
+        this.trigger('pick', { intersections });
+    }
+}
+exports.default = CameraMousePicker;
+;
+
+},{"../ActorIntersection":3,"iventy":26,"three":32}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -217,8 +290,9 @@ class TopDownCamera {
      */
     constructor(options) {
         this._movers = [];
+        this._pickers = [];
         // construct the actual camera instance
-        this._camera = new three_1.PerspectiveCamera(65, options.aspectRatio, 0.1, 8000);
+        this._camera = new three_1.PerspectiveCamera(65, 45, 0.1, 8000);
         // position the camera
         this._camera.position.x = 0;
         this._camera.position.y = -2.5;
@@ -287,6 +361,9 @@ class TopDownCamera {
     handle(event) {
         for (let mover of this._movers)
             mover.handle(event);
+        if (event.type === 'click')
+            for (let picker of this._pickers)
+                picker.handle(event);
     }
     /**
      *  A method to update aspect ratio of the camera.
@@ -302,6 +379,12 @@ class TopDownCamera {
         this._movers.push(mover);
     }
     /**
+     *  Append an actor picker.
+     */
+    appendPicker(picker) {
+        this._pickers.push(picker);
+    }
+    /**
      *  Update the camera on render step.
      */
     renderUpdate(step) {
@@ -312,7 +395,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":24}],6:[function(require,module,exports){
+},{"three":32}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -388,7 +471,7 @@ class WSADCameraMover {
 exports.default = WSADCameraMover;
 ;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -452,7 +535,7 @@ class WheelLifterCameraMover {
 exports.default = WheelLifterCameraMover;
 ;
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -470,7 +553,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":24}],9:[function(require,module,exports){
+},{"./Actor":2,"three":32}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -486,7 +569,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":14}],10:[function(require,module,exports){
+},{"./Stage":16}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -516,7 +599,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -546,7 +629,7 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -612,7 +695,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":24}],13:[function(require,module,exports){
+},{"three":32}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -653,7 +736,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":11}],14:[function(require,module,exports){
+},{"./RenderStep":13}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -676,6 +759,16 @@ class Stage {
          *  The current scene ambience.
          */
         this._ambience = null;
+    }
+    /**
+     *  Fetch an actor by uuid of it's main object.
+     */
+    fetch(uuid) {
+        for (let actor of this._actors) {
+            if (actor.object.uuid === uuid)
+                return actor;
+        }
+        return undefined;
     }
     /**
      *  Make a render update for all actors.
@@ -715,7 +808,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":16,"three":24}],15:[function(require,module,exports){
+},{"./Stage/StageAmbience":18,"three":32}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -739,12 +832,22 @@ class StageContainer {
      */
     get stage() { return this._stage; }
     /**
+     *  The actors inside this container.
+     */
+    get actors() { return this._stage.actors; }
+    /**
      *  Mount new stage. A promise of fully mounted stage is returned.
      *  This promise resolves when the provided stage is fully loaded.
      */
     mount(stage) {
         this._stage = stage;
         return Promise.resolve();
+    }
+    /**
+     *  Fetch an actor by it's object uuid.
+     */
+    fetch(uuid) {
+        return this._stage.fetch(uuid);
     }
     /**
      *  Make a render update.
@@ -756,7 +859,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":9}],16:[function(require,module,exports){
+},{"./EmptyStage":11}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -796,7 +899,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":24}],17:[function(require,module,exports){
+},{"three":32}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -833,7 +936,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -842,6 +945,7 @@ const Stage_1 = require("./Stage");
 const StageContainer_1 = require("./StageContainer");
 const Warderobe_1 = require("./Warderobe");
 const CameraFactory_1 = require("./Camera/CameraFactory");
+const iventy_1 = require("iventy");
 ;
 /**
  *  This is the main class that creates the theater and allows
@@ -855,13 +959,14 @@ const CameraFactory_1 = require("./Camera/CameraFactory");
  *  - defining resources that actors can use
  *  - providing a way to transition actors between scenes
  */
-class Theatre {
+class Theatr extends iventy_1.Emitter {
     /**
      *  The constructor
      *
      *  @throw  Error   When initialization fails. The message contains the reason.
      */
-    constructor(canvas) {
+    constructor(canvas, options) {
+        super();
         /**
          *  The warderobe for the theathre.
          */
@@ -876,11 +981,14 @@ class Theatre {
          */
         this._stages = new Map();
         this._rendererHandler = new RendererHandler_1.default(canvas);
-        this._camera = (new CameraFactory_1.default({
+        const cameraDefaults = {
             type: 'topdown',
-            aspectRatio: this._rendererHandler.aspectRatio,
-            movers: [{ type: 'wsad' }, { type: 'wheellifter' }]
-        })).build();
+            movers: [{ type: 'wsad' }, { type: 'wheellifter' }],
+            mousePicker: true
+        };
+        const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
+        this._camera = (new CameraFactory_1.default(cameraOptions, this._stageContainer, this)).build();
+        this._camera.updateAspectRatio(this._rendererHandler.aspectRatio);
         this._loop = new RenderingLoop_1.default((step) => {
             this._camera.renderUpdate(step);
             this.warderobe.renderUpdate(step);
@@ -892,6 +1000,9 @@ class Theatre {
             this._camera.handle(event);
         });
         canvas.ownerDocument.body.addEventListener('wheel', (event) => {
+            this._camera.handle(event);
+        });
+        canvas.ownerDocument.body.addEventListener('click', (event) => {
             this._camera.handle(event);
         });
         this._rendererHandler.onResize((x, y) => {
@@ -926,10 +1037,10 @@ class Theatre {
         this._stageContainer.stage.hydrate(this.warderobe);
     }
 }
-exports.default = Theatre;
+exports.default = Theatr;
 ;
 
-},{"./Camera/CameraFactory":4,"./RendererHandler":12,"./RenderingLoop":13,"./Stage":14,"./StageContainer":15,"./Warderobe":22}],19:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":14,"./RenderingLoop":15,"./Stage":16,"./StageContainer":17,"./Warderobe":24,"iventy":26}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -997,11 +1108,12 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":24}],20:[function(require,module,exports){
+},{"./Actor":2,"three":32}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
+;
 /**
  *  This is a special class that allows for creating a floor based on
  */
@@ -1011,9 +1123,9 @@ class TiledFloor extends Actor_1.default {
         this._texture = _texture;
         this._size = _size;
         /**
-         *  A set containing all position the floor should show up.
+         *  Mapping of all positions inside the floor.
          */
-        this._positions = new Set();
+        this._positions = new Map();
     }
     /**
      *  Initialize the object
@@ -1021,7 +1133,7 @@ class TiledFloor extends Actor_1.default {
     _initObject(warderobe) {
         const geometry = new three_1.PlaneGeometry(1, 1);
         const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: three_1.FrontSide });
-        const object = new three_1.InstancedMesh(geometry, material, this._size);
+        const object = new three_1.InstancedMesh(geometry, material, this._size + 1);
         object.receiveShadow = true;
         return object;
     }
@@ -1034,16 +1146,28 @@ class TiledFloor extends Actor_1.default {
         for (let y = yStart; y <= yStop; y++) {
             for (let x = xStart; x <= xStop; x++) {
                 object.setMatrixAt(idx, new three_1.Matrix4().makeTranslation(x, y, -.5));
+                this._positions.set(idx, { x, y });
                 idx++;
             }
         }
         object.instanceMatrix.needsUpdate = true;
     }
+    remove(x, y) {
+        // @todo implement
+    }
+    ;
+    /**
+     *  Translate a possible idx into a position in this floor.
+     */
+    positionFromIdx(idx) {
+        return this._positions.get(idx);
+    }
+    ;
 }
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":24}],21:[function(require,module,exports){
+},{"./Actor":2,"three":32}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1110,7 +1234,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1212,10 +1336,10 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":17,"three":24}],23:[function(require,module,exports){
+},{"./TextureAnimator":19,"three":32}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TransitionCycle = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var TiledActors_1 = require("./lib/TiledActors");
@@ -1232,13 +1356,576 @@ var Theatre_1 = require("./lib/Theatre");
 Object.defineProperty(exports, "Theatre", { enumerable: true, get: function () { return Theatre_1.default; } });
 var TiledFloor_1 = require("./lib/TiledFloor");
 Object.defineProperty(exports, "TiledFloor", { enumerable: true, get: function () { return TiledFloor_1.default; } });
+var ActorIntersection_1 = require("./lib/ActorIntersection");
+Object.defineProperty(exports, "ActorIntersection", { enumerable: true, get: function () { return ActorIntersection_1.default; } });
 // spatial animations
 var TransitionCycle_1 = require("./lib/TransitionCycle");
 Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: function () { return TransitionCycle_1.default; } });
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorTransitions/Translation":3,"./lib/CompanionActor":8,"./lib/Position":10,"./lib/Stage":14,"./lib/Theatre":18,"./lib/TiledActors":19,"./lib/TiledFloor":20,"./lib/TransitionCycle":21,"./lib/Warderobe":22}],24:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":10,"./lib/Position":12,"./lib/Stage":16,"./lib/Theatre":20,"./lib/TiledActors":21,"./lib/TiledFloor":22,"./lib/TransitionCycle":23,"./lib/Warderobe":24}],26:[function(require,module,exports){
+"use strict";
+/**
+ *  This is an entry file for the whole library. This file exposes (and kicks in
+ *  the compilation process) all of the public classes of the library. This means
+ *  that if something should be exposed outside, it should be exported via this
+ *  file.
+ *
+ *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+// export all of the public classes.
+var Event_1 = require("./lib/Event");
+Object.defineProperty(exports, "Event", { enumerable: true, get: function () { return Event_1.Event; } });
+var Emitter_1 = require("./lib/Emitter");
+Object.defineProperty(exports, "Emitter", { enumerable: true, get: function () { return Emitter_1.Emitter; } });
+var Federation_1 = require("./lib/Federation");
+Object.defineProperty(exports, "Federation", { enumerable: true, get: function () { return Federation_1.Federation; } });
+
+},{"./lib/Emitter":29,"./lib/Event":30,"./lib/Federation":31}],27:[function(require,module,exports){
+"use strict";
+/**
+ *  This is a class to handle a single channel. A single channel is a collection
+ *  of callbacks that an event instance might be triggered on.
+ *
+ *  The channel can handle tags. These tags are associated with callbacks and
+ *  define if an event can be triggered in certain handlers.
+ *
+ *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Channel = void 0;
+// export the class
+class Channel {
+    constructor() {
+        /**
+         * An array containing all registered callbacks for each tag. Callbacks
+         * registered under no callback are stored under null instead of tag name.
+         * Each item in the array is a tuple tagname-callback.
+         * @var Array
+         */
+        this._callbacks = [];
+    }
+    // the implementation
+    register(...args) {
+        // destruct the parameters
+        let [handler, t] = args;
+        // is the tag input an array? then we need to special handle it
+        if (Array.isArray(t)) {
+            // register callback for each tag
+            if (t.length)
+                t.forEach(tag => this.register(handler, tag));
+            // no tags to register? then just call the register method
+            else
+                this.register(handler);
+        }
+        // just register it under the tag
+        else
+            this._callbacks.push([t || null, handler]);
+        // allow chaining
+        return this;
+    }
+    // the implementation
+    unregister(...args) {
+        // destruct the arguments into pieces
+        let [handler, t] = args;
+        // do we have an array of tags to unregister we need to call the method many times
+        if (Array.isArray(t)) {
+            // call the unregister for each tag
+            t.forEach(tag => void this.unregister(handler, tag));
+            // allow chaining
+            return this;
+        }
+        // filter out all callbacks matching the passed handler
+        this._callbacks = this._callbacks.filter(([tag, callback]) => {
+            // tags don't match? then it's ok
+            if (t && t != tag)
+                return true;
+            // there is a matching tag, check if it's a different handler
+            if (t && t == tag)
+                return handler != callback;
+            // we want to remove all callbackas matching the handler
+            return handler != callback;
+        });
+        // allow chaining
+        return this;
+    }
+    /**
+     *  Trigger a specific event on this channel.
+     *  @param Event   The event to trigger on this channel.
+     */
+    trigger(event) {
+        // iterate over the callbacks and try to trigger the event properly
+        for (let [tag, handler] of this._callbacks) {
+            // the tag of the handler we want to call the event handler
+            // if the tag of the handler is null or the event tags include
+            if (tag == null || event.tags.includes(tag))
+                handler(event);
+        }
+    }
+    /**
+     * How many different callbacks are registered in this channel?
+     * @return int
+     */
+    get size() {
+        // return the length of our callbacks
+        return this._callbacks.length;
+    }
+}
+exports.Channel = Channel;
+;
+
+},{}],28:[function(require,module,exports){
+"use strict";
+/**
+ *  This is a class that handles an event designator. An event designator is
+ *  a string that deifnes event name and tags. This is very important cause the
+ *  whole event system works on the idea of a event/channel name and set of
+ *  tags that provide additional meta data about the event or handler association.
+ *
+ *  The format that the designator can take is :
+ *
+ *      channel-name.tag1.tag2.tagX
+ *
+ *  The first part is the channel name and then there is a list of dot-separated
+ *  tags that define meta information about the event or channel handler.
+ *
+ *  @author Paweł Kuźnik <pawel.kuznik@cgmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Designator = void 0;
+/**
+ *  Helper function to turn a name and array of tags into a string version of
+ *  the designator.
+ */
+function constructString(name, tags) {
+    // output the name and then glue all tags with dots between
+    return name + (tags ? '.' + tags.join('.') : '');
+}
+// export the class
+class Designator {
+    /**
+     *  The constructor.
+     *  @param  sting   The input string
+     */
+    constructor(designator) {
+        // split the string into type and tags
+        let [type, ...tags] = designator.split('.');
+        // assign type and tags. The set will make sure that the tags are unique
+        this._type = type;
+        this._tags = new Set(tags);
+    }
+    /**
+     *  Get access to the event name.
+     *  @return string
+     */
+    get name() {
+        // return the type as name
+        return this._type;
+    }
+    /**
+     *  Get access to an array of tags associated with this designator.
+     *  @return Array
+     */
+    get tags() {
+        // copy an array so nobody can modify it
+        return Array.from(this._tags);
+    }
+    // the implementation
+    extend(t) {
+        // not an array? then wrap it in an array
+        if (!Array.isArray(t))
+            t = [t];
+        // construct new designator based on a string. It doesn't really matter
+        // the tags are unique or not cause our constructor will make sure that
+        // they are.
+        return new Designator(constructString(this._type, [...t, ...this._tags]));
+    }
+    /**
+     *  Reduce the designatro by a specific tag.
+     *  @param  sting   Tag string
+     *  @return Designator
+     */
+    reduce(tag) {
+        // clone tags
+        const newTags = new Set(this._tags);
+        // remove the tag to reduce
+        newTags.delete(tag);
+        // return new designator based on string
+        return new Designator(constructString(this._type, [...newTags]));
+    }
+    /**
+     *  Check if the designator has a specific tag.
+     *  @param  string the tag
+     *  @return bool
+     */
+    has(tag) {
+        // check if we have a tag
+        return this._tags.has(tag);
+    }
+    /**
+     *  Does this designator is withing another designator? The name must match
+     *  and the other one should have all of tags that this one has (at least).
+     *  @param Designator   The other designator.
+     *  @return bool
+     */
+    isWithin(other) {
+        // names don't match? then they don't match
+        if (this._type != other._type)
+            return false;
+        // we have more tags than the other one? then no way we can match
+        if (this._tags.size > other._tags.size)
+            return false;
+        // we want to check if all our tags are witin the other one
+        for (let tag of this._tags) {
+            // the other one doesn't have one of our tags? then no match
+            if (!other._tags.has(tag))
+                return false;
+        }
+        // we pass all the checks, we are within the other one
+        return true;
+    }
+    /**
+     *  Does other designator matches this one? The name must match and it should
+     *  have same tags (both tags lists much contains same number of tags and have
+     *  same tags. The don't have to be in the same order).
+     *  @param  Designator  The other desinator
+     *  @return bool
+     */
+    equals(other) {
+        // names don't match? then they don't match
+        if (this._type != other._type)
+            return false;
+        // the size of tags need to be exactly the same
+        if (this._tags.size != other._tags.size)
+            return false;
+        // we want to check if all our tags are witin the other one
+        for (let tag of this._tags) {
+            // the other one doesn't have one of our tags? then no match
+            if (!other._tags.has(tag))
+                return false;
+        }
+        // we pass all the checks, we are within the other one
+        return true;
+    }
+    /**
+     *  Create a string representation of the designator.
+     *  @return string
+     */
+    toString() {
+        // construct string version
+        return constructString(this._type, Array.from(this._tags));
+    }
+}
+exports.Designator = Designator;
+
+},{}],29:[function(require,module,exports){
+"use strict";
+/**
+ *  A class that can be used as event emitter on client and server side. An
+ *  event emitter allows to register a number of callbacks that should be
+ *  triggered when an event on specific channel is triggered. It's possible
+ *  to distinguish channels by names.
+ *
+ *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Emitter = void 0;
+const Event_1 = require("./Event");
+const Channel_1 = require("./Channel");
+// export the class
+class Emitter {
+    /**
+     *  The constructor
+     */
+    constructor() {
+        /**
+         *  A map container arrays of callbacks per callback channel.
+         *  @var    Map
+         */
+        this._channels = new Map();
+        /**
+         *  All instances we want to bubble our events to.
+         *  @var    Set<Emitter>
+         */
+        this._bubbleTo = new Set();
+        // nothing special
+    }
+    // the actual implementation
+    trigger(...args) {
+        // destruct arguments
+        let [name, data, prev] = args;
+        // check if we have a string
+        if (typeof (name) == 'string')
+            return this.trigger(this.createEvent(name, data || {}, prev || null));
+        // we are in the first overload
+        let event = name;
+        // try to fetch callbacks
+        let callbacks = this._channels.get(event.type);
+        // if we have them we can iterate over them and call each of tuem with event
+        if (callbacks)
+            callbacks.trigger(event);
+        // should we bubble the event further? but only when it was not stopped
+        if (!event.isStopped)
+            this._bubbleTo.forEach(([handler, tags]) => {
+                // make the handler trigger an extended event (with the tags)
+                handler.trigger(event.extendEvent(tags));
+            });
+        // return the triggered event
+        return event;
+    }
+    ;
+    /**
+     *  Install callback on given channel.
+     *
+     *  @param  string      The channel name.
+     *  @param  function    The callback to call when the event is triggered
+     */
+    on(name, callback) {
+        // split the name and tags
+        let [channelName, ...tags] = name.split('.');
+        // get the callbacks
+        let callbacks = this._channels.get(channelName);
+        // no channels? then we have to create a new one
+        if (!callbacks) {
+            // construct new channel
+            callbacks = new Channel_1.Channel();
+            // store the channel for later use
+            this._channels.set(channelName, callbacks);
+        }
+        // do we have callbacks? then use the method. Otherwise, we assume we
+        // don't have any callbacks
+        if (tags.length)
+            callbacks.register(callback, tags);
+        // register the callback on all
+        else
+            callbacks.register(callback);
+        // allow chaining
+        return this;
+    }
+    /**
+     *  Uninstall callback on given channel.
+     *
+     *  @param  string      The channel name.
+     *  @param  function    The callback to uninstall.
+     *  @return Emitter
+     *
+     *  ---------------------------------------------
+     *
+     *  Uninstall all registered callbacks.
+     *
+     *  @return Emitter
+     */
+    off(name, callback = null) {
+        // split the name and tags
+        let [channelName, ...tags] = name.split('.');
+        // get the callbacks
+        let callbacks = this._channels.get(channelName);
+        // not a single callback on given channel? we are done then
+        if (!callbacks)
+            return this;
+        // do we have a channel name and no callback or tags? then remove the whole
+        // channel from this emitter.
+        if (channelName && callback == null && tags.length == 0)
+            this._channels.delete(channelName);
+        // do we have a channel name and callback? they ask the callbacks to unregister it (with possible tags)
+        if (channelName && callback)
+            callbacks.unregister(callback, tags.length ? tags : null);
+        // allow chaining
+        return this;
+    }
+    /**
+     *  This is a function that will allow to bubble an event to another emitter
+     *  @param  EventEmitter    The emitter it should bubble to.
+     *  @param  Array           An optional array of tags (or single tag) that
+     *                          the bubbled event will be extended with.
+     *  @return Emitter
+     */
+    bubbleTo(target, tags = null) {
+        // make sure tags are an array
+        if (typeof (tags) == 'string')
+            tags = [tags];
+        // no tags at all? then just assign an array
+        if (tags == null)
+            tags = [];
+        // set new target
+        this._bubbleTo.add([target, tags ? tags : []]);
+        // allow chaining
+        return this;
+    }
+    /**
+     *  A method to create an event based on this emitter.
+     *
+     *  @param  string  The name of the channel of the event.
+     *  @param  mixed   (Optional) The object of the event.
+     *  @param  Event   (Optional) The previous event in the chain. If none
+     *                  is provided then event has no previous event.
+     *
+     *  @return Event   The constructed event.
+     */
+    createEvent(name, data = {}, previousEvent = null) {
+        // construct new event
+        return new Event_1.Event(name, data, this, previousEvent);
+    }
+}
+exports.Emitter = Emitter;
+;
+
+},{"./Channel":27,"./Event":30}],30:[function(require,module,exports){
+"use strict";
+/**
+ *  This is a class to acompany the Emitter class. The Event has important
+ *  properties:
+ *
+ *  type:string             The type of the event (basically the event/chanel name)
+ *  data:mixed              The additional data assigned to the event.
+ *  target:Emitter          The emitter that ignited the event.
+ *  currentTarget:Emitter   The last emitter in bubble chaing
+ *
+ *  The type provided to this class can contain tags. They can be provided by
+ *  dot separating them from the actual type. Follow this pattern:
+ *
+ *      type.tag1.tag2.tag3
+ *
+ *  @author Paweł Kuźnik <pawel.kuznik@gmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Event = void 0;
+const Designator_1 = require("./Designator");
+// return the class
+class Event {
+    /**
+     *  The constructor
+     *
+     *  @param  sting   The channel type of the event.
+     *  @param  object   The data associated with the event.
+     *  @param  Emitter The emitter that triggers this event.
+     *  @param  Event   The previous event in chain that lead to this event.
+     */
+    constructor(type, data, target = null, prev = null) {
+        /**
+         *  Flags to tell if the event is stopped or prevented.
+         */
+        this._prevented = false;
+        this._stopped = false;
+        // construct event designator
+        this._designator = new Designator_1.Designator(type);
+        // assign additional data
+        this._data = data;
+        this._target = target;
+        this._prev = prev;
+    }
+    /**
+     *  Prevent the event.
+     *  @return Event   The prevented event.
+     */
+    prevent() {
+        // mark the event as prevented
+        this._prevented = true;
+        // return same event
+        return this;
+    }
+    /**
+     *  Is the event prevented.
+     *  @return bool
+     */
+    get isPrevented() { return this._prevented; }
+    /**
+     *  Stop the event
+     *  @return Event   Same event for chaining
+     */
+    stop() {
+        // mark the event as stopped
+        this._stopped = true;
+        // allow chaining
+        return this;
+    }
+    /**
+     *  Is the event stopped.
+     */
+    get isStopped() { return this._stopped; }
+    /**
+     *  Return the type of the event.
+     *  @return string
+     */
+    get type() { return this._designator.name; }
+    /**
+     *  Get access to tags assigend to this event.
+     *  @return Array
+     */
+    get tags() { return this._designator.tags; }
+    /**
+     *  The data associated with the event.
+     *
+     *  @return mixed
+     */
+    get data() { return this._data; }
+    /**
+     *  Get the target of the event.
+     *
+     *  @return Emitter
+     */
+    get target() { return this._target; }
+    /**
+     *  Get the previos event in the chain.
+     *
+     *  @return Event
+     */
+    get previous() { return this._prev; }
+    /**
+     *  Create new event based on this one.
+     *
+     *  @param  string  The name of the event's channel.
+     *  @param  mixed   (Optional) The associated data.
+     *  @param  Emitter (Optional) The emitter instance that is the target of the event. If
+     *                  no target is provided, the current event target is used.
+     */
+    createEvent(name, data = {}, target = null) {
+        // return new event instance
+        return new Event(name, data, target || this._target, this);
+    }
+    /**
+     *  Create a new extended event. An extended event is same as this one, but
+     *  it has an additional set of tags. This is useful when we want to bubble
+     *  events but as they bubble they need to get more tags assigned to them.
+     *  @param  Array   An array of tag strings.
+     */
+    extendEvent(tags) {
+        // create a new event that is based on an extended
+        return new Event(this._designator.extend(tags).toString(), this._data, this._target, this._prev);
+    }
+}
+exports.Event = Event;
+;
+
+},{"./Designator":28}],31:[function(require,module,exports){
+"use strict";
+/**
+ *  This is a class describing a federation of one or many emitters. A federation
+ *  is an interface that allows for listening for events from a collection of
+ *  emitters. This allows for creation of very large event system.
+ *
+ *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Federation = void 0;
+const Emitter_1 = require("./Emitter");
+// export the class
+class Federation extends Emitter_1.Emitter {
+    // the actual implementation
+    add(...args) {
+        // destruct the arguments
+        let [target, t] = args;
+        // make the target bubble to this federation
+        target.bubbleTo(this, t);
+        // allow chaining
+        return this;
+    }
+}
+exports.Federation = Federation;
+
+},{"./Emitter":29}],32:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

@@ -1,3 +1,5 @@
+import Actor from "./Actor";
+import ActorsHolder from "./ActorsHolder";
 import EmptyStage from "./EmptyStage";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
@@ -11,7 +13,8 @@ import Stage from "./Stage";
  * 
  *  @todo   make the transition/loader
  */
-export default class StageContainer implements RenderParticipant {
+export default class StageContainer implements RenderParticipant, ActorsHolder {
+    
     
     /**
      *  The current stage.
@@ -24,6 +27,11 @@ export default class StageContainer implements RenderParticipant {
     get stage() : Stage { return this._stage; }
 
     /**
+     *  The actors inside this container.
+     */
+    get actors(): Array<Actor> { return this._stage.actors; } 
+
+    /**
      *  Mount new stage. A promise of fully mounted stage is returned.
      *  This promise resolves when the provided stage is fully loaded.
      */
@@ -32,6 +40,14 @@ export default class StageContainer implements RenderParticipant {
         this._stage = stage;
 
         return Promise.resolve();
+    }
+
+    /**
+     *  Fetch an actor by it's object uuid.
+     */
+    fetch(uuid: string): Actor | undefined {
+
+        return this._stage.fetch(uuid);
     }
 
     /**

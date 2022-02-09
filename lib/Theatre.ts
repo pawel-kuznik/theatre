@@ -4,16 +4,16 @@ import Stage from "./Stage";
 import StageContainer from "./StageContainer";
 import Warderobe from "./Warderobe";
 import Camera from "./Camera";
-import CameraSpecs from "./Camera/CameraOptions";
-import CameraFactory from "./Camera/CameraFactory";
+import CameraFactory, { CameraFactorySpecs } from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
+import { Emitter } from 'iventy';
 
 /**
  *  The options for the main object.
  */
 export interface TheatreOptions {
 
-    camera:CameraSpecs;
+    camera:CameraFactorySpecs;
 };
 
 /**
@@ -28,7 +28,7 @@ export interface TheatreOptions {
  *  - defining resources that actors can use
  *  - providing a way to transition actors between scenes
  */
-export default class Theatre {
+export default class Theatr extends Emitter  {
 
     /**
      *  The warderobe for the theathre.
@@ -67,16 +67,23 @@ export default class Theatre {
      *
      *  @throw  Error   When initialization fails. The message contains the reason.
      */
-    constructor(canvas:HTMLCanvasElement) {
+    constructor(canvas:HTMLCanvasElement, options?:TheatreOptions) {
+
+        super();
 
         this._rendererHandler = new RendererHandler(canvas);
 
-        this._camera = (new CameraFactory({
+        const cameraDefaults:CameraFactorySpecs = {
             type:           'topdown',
-            aspectRatio:    this._rendererHandler.aspectRatio,
-            movers:         [ { type: 'wsad' },  { type: 'wheellifter' }]
-            
-        })).build();
+            movers:         [ { type: 'wsad' },  { type: 'wheellifter' }],
+            mousePicker:    true
+        };
+
+        const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
+
+        this._camera = (new CameraFactory(cameraOptions, this._stageContainer, this)).build();
+
+        this._camera.updateAspectRatio(this._rendererHandler.aspectRatio);
 
         this._loop = new RenderingLoop((step:RenderStep) => {
 
@@ -96,6 +103,11 @@ export default class Theatre {
         });
 
         canvas.ownerDocument.body.addEventListener('wheel', (event:WheelEvent) => {
+
+            this._camera.handle(event);
+        });
+
+        canvas.ownerDocument.body.addEventListener('click', (event:MouseEvent) => {
 
             this._camera.handle(event);
         });

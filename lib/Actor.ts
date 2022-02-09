@@ -18,6 +18,11 @@ export default abstract class Actor implements RenderParticipant {
     protected _object:Object3D = new Object3D();
 
     /**
+     *  Get the object associated with the actor.
+     */
+    get object() : Object3D { return this._object; }
+
+    /**
      *  Get access to the position.
      */
     get position() : Position { return new Position(this._object.position); }
