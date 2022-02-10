@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('carpet:top', './carpet.png', 'pixelart');
     theatre.warderobe.importTexture('tiles:top', './tiles.png', 'pixelart');
 
-    const floor = new THEATRE.TiledFloor('tiles:top', 21 * 21);
+    const floor = new THEATRE.TiledFloor('tiles:top', { size: 21 * 21 });
 
     testStage.insert(floor);
 

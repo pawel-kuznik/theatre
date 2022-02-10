@@ -46,7 +46,7 @@ export default class WheelLifterCameraMover implements CameraMover {
     /**
      *  Handle input event.
      */
-    public handle(event:KeyboardEvent|MouseEvent|WheelEvent) {
+    public handle(event:KeyboardEvent|PointerEvent|WheelEvent) {
 
         if (event.type !== 'wheel') return;
 

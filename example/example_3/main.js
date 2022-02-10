@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         theatre.warderobe.registerTextureAnimator('brazier:flame');
     });
 
-    const floor = new THEATRE.TiledFloor('floor:top', 1001 * 1001);
+    const floor = new THEATRE.TiledFloor('floor:top', { size: 1001 * 1001 });
 
     mainStage.insert(floor);
 

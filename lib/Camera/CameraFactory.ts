@@ -1,6 +1,7 @@
 import { Emitter } from "iventy";
 import ActorsHolder from "../ActorsHolder";
 import Camera from "../Camera";
+import CameraHoverPicker from "./CameraHoverPicker";
 import CameraMousePicker from "./CameraMousePicker";
 import CameraMoverOptions from "./CameraMoverOptions";
 import CameraOptions from "./CameraOptions";
@@ -13,7 +14,7 @@ export type CameraFactorySpecs = CameraOptions & {
 
     movers:Array<CameraMoverOptions>;
 
-    mousePicker?:boolean;
+    pickers:Array<"primary"|"hover">
 };
 
 /**
@@ -49,7 +50,7 @@ export default class CameraFactory {
 
         const options = Object.assign({ }, {
             type:           this._options.type,
-            mousePicker:    this._options.mousePicker
+            pickers:        this._options.pickers
         });
 
         const camera = new TopDownCamera(options);
@@ -60,12 +61,21 @@ export default class CameraFactory {
             if (moverOptions.type === 'wheellifter') camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
 
-        if (options.mousePicker) {
+        if (options.pickers.includes('primary')) {
 
             const picker = new CameraMousePicker(camera, this._actorsHolder);
 
             picker.bubbleTo(this._eventTarget);
             
+            camera.appendPicker(picker);
+        }
+
+        if (options.pickers.includes('hover')) {
+
+            const picker = new CameraHoverPicker(camera, this._actorsHolder);
+
+            picker.bubbleTo(this._eventTarget);
+
             camera.appendPicker(picker);
         }
 

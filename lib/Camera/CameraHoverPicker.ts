@@ -10,7 +10,7 @@ import CameraPicker from "./CameraPicker";
  *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
  *  or similar.
  */
-export default class CameraMousePicker extends Emitter implements CameraPicker {
+ export default class CameraHoverPicker extends Emitter implements CameraPicker {
 
     /**
      *  The raycaster that will do the checking.
@@ -30,10 +30,9 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
      */
     handle(event:PointerEvent) {
 
-        if (event.type !== 'click') return;
+        if (event.type !== 'pointermove') return;
 
-        // only handle primary button clicks
-        if (event.button !== 0) return;
+        if (event.button !== -1) return;
 
         const screenClick = new Vector2((event.clientX / window.innerWidth) * 2 - 1, - (event.clientY / window.innerHeight) * 2 + 1);
 
@@ -43,6 +42,6 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
 
         const intersections = this._raycaster.intersectObjects(objects, true);
 
-        this.trigger('pick', buildPickEventData(intersections, this._actorsHolder));
+        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder));
     }
 };

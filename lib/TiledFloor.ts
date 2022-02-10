@@ -1,10 +1,23 @@
-import { FrontSide, InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry } from "three";
+import { Color, FrontSide, InstancedMesh, Matrix4, MeshPhongMaterial, PlaneGeometry } from "three";
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
 
 interface TilePosition {
     x:number;
     y:number;
+};
+
+interface TileFloorOptions {
+
+    /**
+     *  The max number of tiles in the whole floor.
+     */
+    size:number;
+
+    /**
+     *  The color in which the tiles should be higlighted.
+     */
+    highlightColor?:Color;
 };
 
 /**
@@ -17,9 +30,17 @@ export default class TiledFloor extends Actor {
      */
     private _positions:Map<number, TilePosition> = new Map();
 
-    constructor(private _texture:string, private _size:number) {
+    private readonly _size:number;
+
+    private readonly _highlighted:Array<number> = [];
+    private readonly _highlightColor:Color;
+
+    constructor(private _texture:string, options:TileFloorOptions) {
 
         super();
+
+        this._size = options.size;
+        this._highlightColor = options.highlightColor || new Color(0x00ff00);
     }
 
     /**
@@ -50,6 +71,7 @@ export default class TiledFloor extends Actor {
             for (let x = xStart; x <= xStop; x++) {
 
                 object.setMatrixAt(idx, new Matrix4().makeTranslation(x, y, -.5));
+                object.setColorAt(idx, new Color(0xffffff));
 
                 this._positions.set(idx, { x, y });
 
@@ -58,6 +80,38 @@ export default class TiledFloor extends Actor {
         }
 
         object.instanceMatrix.needsUpdate = true;
+        if (object.instanceColor) object.instanceColor.needsUpdate = true;
+    }
+
+    /**
+     *  Set highligted tiles.
+     */
+    setHighlight(ids:Array<number>) {
+
+        const sorted = [...ids].sort();
+        
+        if (sorted.toString() === this._highlighted.toString()) return;
+
+        const object = this._object as InstancedMesh;
+
+        this._highlighted.splice(0, this._highlighted.length, ...this._highlighted.filter((value:number) => {
+            
+            if (sorted.includes(value)) return true;
+
+            object.setColorAt(value, new Color(0xffffff));
+
+            return false;
+        }));
+
+        for (let idx of sorted) {
+
+            if (this._highlighted.includes(idx)) continue;
+
+            this._highlighted.push(idx);
+            object.setColorAt(idx, this._highlightColor);
+        }
+
+        if (object.instanceColor) object.instanceColor.needsUpdate = true;
     }
 
     /**

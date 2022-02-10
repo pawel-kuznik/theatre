@@ -17,16 +17,18 @@ export interface TheatreOptions {
 };
 
 /**
- *  This is the main class that creates the theater and allows
- *  to compose the scene. The theatre in our case is the whole
- *  3D rendering frame inside a canvas element.
+ *  This is the main class that creates the theater and allows to compose the scene.
+ *  The theatre in our case is the whole 3D rendering frame inside a canvas element.
  * 
- *  This class is here to provide a high-level api to everything
- *  that is happening inside the rendering frame:
+ *  This class is here to provide a high-level api to everything that is happening
+ *  inside the rendering frame:
  *
  *  - scene switching
  *  - defining resources that actors can use
  *  - providing a way to transition actors between scenes
+ * 
+ *  @event  resize      This event triggers when the canvas resizes and the renderer
+ *                      updated to the new size.
  */
 export default class Theatr extends Emitter  {
 
@@ -76,7 +78,7 @@ export default class Theatr extends Emitter  {
         const cameraDefaults:CameraFactorySpecs = {
             type:           'topdown',
             movers:         [ { type: 'wsad' },  { type: 'wheellifter' }],
-            mousePicker:    true
+            pickers:        ['primary', 'hover']
         };
 
         const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
@@ -107,14 +109,33 @@ export default class Theatr extends Emitter  {
             this._camera.handle(event);
         });
 
-        canvas.ownerDocument.body.addEventListener('click', (event:MouseEvent) => {
+        canvas.addEventListener('click', (e:MouseEvent) => {
+
+            e.preventDefault();
+
+            // @note we cast the event as a pointer event, cause indeed it's a pointer event.
+            // For some (most likely historical) reason, TS lib thinks it's a MouseEvent, but
+            // modern browsers emit a PointerEvent instead.
+            const event = e as PointerEvent;
 
             this._camera.handle(event);
         });
 
+        canvas.addEventListener('pointermove', (event:PointerEvent) => {
+
+            this._camera.handle(event);
+        });
+
+        // @todo figure out how to deal with double-click. TS doesn't like this event handler
+        // canvas.addEventListener('dblclick ', (e:PointerEvent) => { });
+        
         this._rendererHandler.onResize((x:number, y:number) => {
 
-            this._camera.updateAspectRatio(x/y);
+            const aspectRatio = x/y;
+
+            this._camera.updateAspectRatio(aspectRatio);
+
+            this.trigger('resize', { width:x, height:y, aspectRatio });
         });
 
         this._loop.start();

@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":25,"three":32}],2:[function(require,module,exports){
+},{"./build/theatre.js":27,"three":34}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -93,7 +93,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":12,"three":32}],3:[function(require,module,exports){
+},{"./Position":14,"three":34}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -164,6 +164,7 @@ exports.default = Translation;
 },{}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const CameraHoverPicker_1 = require("./CameraHoverPicker");
 const CameraMousePicker_1 = require("./CameraMousePicker");
 const TopDownCamera_1 = require("./TopDownCamera");
 const WheelLifterCameraMover_1 = require("./WheelLifterCameraMover");
@@ -198,7 +199,7 @@ class CameraFactory {
     buildTopDown() {
         const options = Object.assign({}, {
             type: this._options.type,
-            mousePicker: this._options.mousePicker
+            pickers: this._options.pickers
         });
         const camera = new TopDownCamera_1.default(options);
         for (let moverOptions of this._options.movers) {
@@ -207,8 +208,13 @@ class CameraFactory {
             if (moverOptions.type === 'wheellifter')
                 camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
-        if (options.mousePicker) {
+        if (options.pickers.includes('primary')) {
             const picker = new CameraMousePicker_1.default(camera, this._actorsHolder);
+            picker.bubbleTo(this._eventTarget);
+            camera.appendPicker(picker);
+        }
+        if (options.pickers.includes('hover')) {
+            const picker = new CameraHoverPicker_1.default(camera, this._actorsHolder);
             picker.bubbleTo(this._eventTarget);
             camera.appendPicker(picker);
         }
@@ -230,12 +236,53 @@ class CameraFactory {
 exports.default = CameraFactory;
 ;
 
-},{"./CameraMousePicker":6,"./TopDownCamera":7,"./WSADCameraMover":8,"./WheelLifterCameraMover":9}],6:[function(require,module,exports){
+},{"./CameraHoverPicker":6,"./CameraMousePicker":7,"./TopDownCamera":8,"./WSADCameraMover":9,"./WheelLifterCameraMover":10}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("iventy");
 const three_1 = require("three");
-const ActorIntersection_1 = require("../ActorIntersection");
+const buildPickEventData_1 = require("./buildPickEventData");
+/**
+ *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
+ *  or similar.
+ */
+class CameraHoverPicker extends iventy_1.Emitter {
+    /**
+     *  The constructor.
+     */
+    constructor(_camera, _actorsHolder) {
+        super();
+        this._camera = _camera;
+        this._actorsHolder = _actorsHolder;
+        /**
+         *  The raycaster that will do the checking.
+         */
+        this._raycaster = new three_1.Raycaster();
+    }
+    /**
+     *  Handle mouse event and try to pick actors.
+     */
+    handle(event) {
+        if (event.type !== 'pointermove')
+            return;
+        if (event.button !== -1)
+            return;
+        const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+        this._raycaster.setFromCamera(screenClick, this._camera.native);
+        const objects = this._actorsHolder.actors.map((actor) => actor.object);
+        const intersections = this._raycaster.intersectObjects(objects, true);
+        this.trigger('hover', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
+    }
+}
+exports.default = CameraHoverPicker;
+;
+
+},{"./buildPickEventData":11,"iventy":28,"three":34}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const iventy_1 = require("iventy");
+const three_1 = require("three");
+const buildPickEventData_1 = require("./buildPickEventData");
 /**
  *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
  *  or similar.
@@ -259,23 +306,20 @@ class CameraMousePicker extends iventy_1.Emitter {
     handle(event) {
         if (event.type !== 'click')
             return;
+        // only handle primary button clicks
+        if (event.button !== 0)
+            return;
         const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
         this._raycaster.setFromCamera(screenClick, this._camera.native);
         const objects = this._actorsHolder.actors.map((actor) => actor.object);
-        const intersections = this._raycaster.intersectObjects(objects, true).map((value) => {
-            const actor = this._actorsHolder.fetch(value.object.uuid);
-            const child = value.object instanceof three_1.InstancedMesh ? value.instanceId : undefined;
-            if (!actor)
-                return undefined;
-            return new ActorIntersection_1.default(actor, child);
-        }).filter((value) => !!value);
-        this.trigger('pick', { intersections });
+        const intersections = this._raycaster.intersectObjects(objects, true);
+        this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
     }
 }
 exports.default = CameraMousePicker;
 ;
 
-},{"../ActorIntersection":3,"iventy":26,"three":32}],7:[function(require,module,exports){
+},{"./buildPickEventData":11,"iventy":28,"three":34}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -364,6 +408,9 @@ class TopDownCamera {
         if (event.type === 'click')
             for (let picker of this._pickers)
                 picker.handle(event);
+        if (event.type === 'pointermove')
+            for (let picker of this._pickers)
+                picker.handle(event);
     }
     /**
      *  A method to update aspect ratio of the camera.
@@ -395,7 +442,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":32}],8:[function(require,module,exports){
+},{"three":34}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -471,7 +518,7 @@ class WSADCameraMover {
 exports.default = WSADCameraMover;
 ;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -535,7 +582,32 @@ class WheelLifterCameraMover {
 exports.default = WheelLifterCameraMover;
 ;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = require("three");
+const ActorIntersection_1 = require("../ActorIntersection");
+/**
+ *  This is a helper function that allows for preparing data for pick-like event
+ *  of different CameraPickers.
+ */
+function buildPickEventData(intersections, holder) {
+    const result = intersections.map((value) => {
+        const actor = holder.fetch(value.object.uuid);
+        if (!actor)
+            return undefined;
+        const child = value.object instanceof three_1.InstancedMesh ? value.instanceId : undefined;
+        return new ActorIntersection_1.default(actor, child);
+    }).filter((value) => !!value);
+    return {
+        intersections: result,
+        first: result[0]
+    };
+}
+exports.default = buildPickEventData;
+;
+
+},{"../ActorIntersection":3,"three":34}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -553,7 +625,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":32}],11:[function(require,module,exports){
+},{"./Actor":2,"three":34}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -569,7 +641,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":16}],12:[function(require,module,exports){
+},{"./Stage":18}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -599,7 +671,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -629,7 +701,7 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -695,7 +767,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":32}],15:[function(require,module,exports){
+},{"three":34}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -736,7 +808,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":13}],16:[function(require,module,exports){
+},{"./RenderStep":15}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -808,7 +880,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":18,"three":32}],17:[function(require,module,exports){
+},{"./Stage/StageAmbience":20,"three":34}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -859,7 +931,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":11}],18:[function(require,module,exports){
+},{"./EmptyStage":13}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -899,7 +971,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":32}],19:[function(require,module,exports){
+},{"three":34}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -936,7 +1008,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -948,16 +1020,18 @@ const CameraFactory_1 = require("./Camera/CameraFactory");
 const iventy_1 = require("iventy");
 ;
 /**
- *  This is the main class that creates the theater and allows
- *  to compose the scene. The theatre in our case is the whole
- *  3D rendering frame inside a canvas element.
+ *  This is the main class that creates the theater and allows to compose the scene.
+ *  The theatre in our case is the whole 3D rendering frame inside a canvas element.
  *
- *  This class is here to provide a high-level api to everything
- *  that is happening inside the rendering frame:
+ *  This class is here to provide a high-level api to everything that is happening
+ *  inside the rendering frame:
  *
  *  - scene switching
  *  - defining resources that actors can use
  *  - providing a way to transition actors between scenes
+ *
+ *  @event  resize      This event triggers when the canvas resizes and the renderer
+ *                      updated to the new size.
  */
 class Theatr extends iventy_1.Emitter {
     /**
@@ -984,7 +1058,7 @@ class Theatr extends iventy_1.Emitter {
         const cameraDefaults = {
             type: 'topdown',
             movers: [{ type: 'wsad' }, { type: 'wheellifter' }],
-            mousePicker: true
+            pickers: ['primary', 'hover']
         };
         const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
         this._camera = (new CameraFactory_1.default(cameraOptions, this._stageContainer, this)).build();
@@ -1002,11 +1076,23 @@ class Theatr extends iventy_1.Emitter {
         canvas.ownerDocument.body.addEventListener('wheel', (event) => {
             this._camera.handle(event);
         });
-        canvas.ownerDocument.body.addEventListener('click', (event) => {
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            // @note we cast the event as a pointer event, cause indeed it's a pointer event.
+            // For some (most likely historical) reason, TS lib thinks it's a MouseEvent, but
+            // modern browsers emit a PointerEvent instead.
+            const event = e;
             this._camera.handle(event);
         });
+        canvas.addEventListener('pointermove', (event) => {
+            this._camera.handle(event);
+        });
+        // @todo figure out how to deal with double-click. TS doesn't like this event handler
+        // canvas.addEventListener('dblclick ', (e:PointerEvent) => { });
         this._rendererHandler.onResize((x, y) => {
-            this._camera.updateAspectRatio(x / y);
+            const aspectRatio = x / y;
+            this._camera.updateAspectRatio(aspectRatio);
+            this.trigger('resize', { width: x, height: y, aspectRatio });
         });
         this._loop.start();
     }
@@ -1040,7 +1126,7 @@ class Theatr extends iventy_1.Emitter {
 exports.default = Theatr;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":14,"./RenderingLoop":15,"./Stage":16,"./StageContainer":17,"./Warderobe":24,"iventy":26}],21:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./Stage":18,"./StageContainer":19,"./Warderobe":26,"iventy":28}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1108,24 +1194,27 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":32}],22:[function(require,module,exports){
+},{"./Actor":2,"three":34}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
 ;
+;
 /**
  *  This is a special class that allows for creating a floor based on
  */
 class TiledFloor extends Actor_1.default {
-    constructor(_texture, _size) {
+    constructor(_texture, options) {
         super();
         this._texture = _texture;
-        this._size = _size;
         /**
          *  Mapping of all positions inside the floor.
          */
         this._positions = new Map();
+        this._highlighted = [];
+        this._size = options.size;
+        this._highlightColor = options.highlightColor || new three_1.Color(0x00ff00);
     }
     /**
      *  Initialize the object
@@ -1146,11 +1235,37 @@ class TiledFloor extends Actor_1.default {
         for (let y = yStart; y <= yStop; y++) {
             for (let x = xStart; x <= xStop; x++) {
                 object.setMatrixAt(idx, new three_1.Matrix4().makeTranslation(x, y, -.5));
+                object.setColorAt(idx, new three_1.Color(0xffffff));
                 this._positions.set(idx, { x, y });
                 idx++;
             }
         }
         object.instanceMatrix.needsUpdate = true;
+        if (object.instanceColor)
+            object.instanceColor.needsUpdate = true;
+    }
+    /**
+     *  Set highligted tiles.
+     */
+    setHighlight(ids) {
+        const sorted = [...ids].sort();
+        if (sorted.toString() === this._highlighted.toString())
+            return;
+        const object = this._object;
+        this._highlighted.splice(0, this._highlighted.length, ...this._highlighted.filter((value) => {
+            if (sorted.includes(value))
+                return true;
+            object.setColorAt(value, new three_1.Color(0xffffff));
+            return false;
+        }));
+        for (let idx of sorted) {
+            if (this._highlighted.includes(idx))
+                continue;
+            this._highlighted.push(idx);
+            object.setColorAt(idx, this._highlightColor);
+        }
+        if (object.instanceColor)
+            object.instanceColor.needsUpdate = true;
     }
     remove(x, y) {
         // @todo implement
@@ -1167,7 +1282,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":32}],23:[function(require,module,exports){
+},{"./Actor":2,"three":34}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1234,7 +1349,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1336,7 +1451,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":19,"three":32}],25:[function(require,module,exports){
+},{"./TextureAnimator":21,"three":34}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
@@ -1364,7 +1479,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":10,"./lib/Position":12,"./lib/Stage":16,"./lib/Theatre":20,"./lib/TiledActors":21,"./lib/TiledFloor":22,"./lib/TransitionCycle":23,"./lib/Warderobe":24}],26:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":12,"./lib/Position":14,"./lib/Stage":18,"./lib/Theatre":22,"./lib/TiledActors":23,"./lib/TiledFloor":24,"./lib/TransitionCycle":25,"./lib/Warderobe":26}],28:[function(require,module,exports){
 "use strict";
 /**
  *  This is an entry file for the whole library. This file exposes (and kicks in
@@ -1383,7 +1498,7 @@ Object.defineProperty(exports, "Emitter", { enumerable: true, get: function () {
 var Federation_1 = require("./lib/Federation");
 Object.defineProperty(exports, "Federation", { enumerable: true, get: function () { return Federation_1.Federation; } });
 
-},{"./lib/Emitter":29,"./lib/Event":30,"./lib/Federation":31}],27:[function(require,module,exports){
+},{"./lib/Emitter":31,"./lib/Event":32,"./lib/Federation":33}],29:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class to handle a single channel. A single channel is a collection
@@ -1476,7 +1591,7 @@ class Channel {
 exports.Channel = Channel;
 ;
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class that handles an event designator. An event designator is
@@ -1620,7 +1735,7 @@ class Designator {
 }
 exports.Designator = Designator;
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 /**
  *  A class that can be used as event emitter on client and server side. An
@@ -1772,7 +1887,7 @@ class Emitter {
 exports.Emitter = Emitter;
 ;
 
-},{"./Channel":27,"./Event":30}],30:[function(require,module,exports){
+},{"./Channel":29,"./Event":32}],32:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class to acompany the Emitter class. The Event has important
@@ -1899,7 +2014,7 @@ class Event {
 exports.Event = Event;
 ;
 
-},{"./Designator":28}],31:[function(require,module,exports){
+},{"./Designator":30}],33:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class describing a federation of one or many emitters. A federation
@@ -1925,7 +2040,7 @@ class Federation extends Emitter_1.Emitter {
 }
 exports.Federation = Federation;
 
-},{"./Emitter":29}],32:[function(require,module,exports){
+},{"./Emitter":31}],34:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

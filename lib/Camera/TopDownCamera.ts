@@ -1,8 +1,8 @@
 import { PerspectiveCamera, Camera as ThreeJSCamera  } from "three";
 import { RenderStep } from "../RenderStep";
-import CameraMousePicker from "./CameraMousePicker";
 import CameraMover from "./CameraMover";
 import CameraOptions from "./CameraOptions";
+import CameraPicker from "./CameraPicker";
 import FreefloatCamera from "./FreefloatCamera";
 
 /**
@@ -24,7 +24,7 @@ export default class TopDownCamera implements FreefloatCamera {
 
     private readonly _movers:Array<CameraMover> = [];
 
-    private readonly _pickers:Array<CameraMousePicker> = [];
+    private readonly _pickers:Array<CameraPicker> = [];
 
     /**
      *  The construct of the camera.
@@ -117,11 +117,13 @@ export default class TopDownCamera implements FreefloatCamera {
     /**
      *  Handle event related to the user input.
      */
-    public handle(event:KeyboardEvent|MouseEvent|WheelEvent) {
+    public handle(event:KeyboardEvent|PointerEvent|WheelEvent) {
 
         for (let mover of this._movers) mover.handle(event);
 
-        if (event.type === 'click') for (let picker of this._pickers) picker.handle(event as MouseEvent);
+        if (event.type === 'click') for (let picker of this._pickers) picker.handle(event as PointerEvent);
+
+        if (event.type === 'pointermove') for (let picker of this._pickers) picker.handle(event as PointerEvent);
     }
 
     /**
@@ -145,7 +147,7 @@ export default class TopDownCamera implements FreefloatCamera {
     /**
      *  Append an actor picker.
      */
-    public appendPicker(picker:CameraMousePicker) {
+    public appendPicker(picker:CameraPicker) {
 
         this._pickers.push(picker);
     }

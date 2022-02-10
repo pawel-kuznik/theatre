@@ -12,8 +12,6 @@ class Crate extends THEATRE.Actor {
 
     toggle() {
 
-        console.log('toggle');
-
         this._toggled = !this._toggled;
 
         if (this._toggled) this._object.material.color = new THREE.Color(0xff0000);
@@ -38,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
     theatre.warderobe.importTexture('floor:top', './floor.png', 'pixelart');
 
-    const floor = new THEATRE.TiledFloor('floor:top', 21 * 21);
+    const floor = new THEATRE.TiledFloor('floor:top', { size: 21 * 21 });
 
     testStage.insert(floor);
 
@@ -74,5 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if ('toggle' in int.actor) int.actor.toggle();
         }
+    });
+
+    theatre.on('hover', event => {
+
+        const f = event.data.first;
+
+        if (!f) return;
+
+        floor.setHighlight([ f.child ]);
     });
 });
