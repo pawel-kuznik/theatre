@@ -1,6 +1,6 @@
 {
   "name": "theatre",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "theathre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
   "main": "build/theatre.js",
   "types": "build/theatre.d.ts",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "example": "tsc -p tsconfig.example.json && browserify example/bootstrap.js -o example/lib.js",
     "example-server": "http-server ./example -o"
@@ -24,14 +25,18 @@
   },
   "homepage": "https://github.com/pawel-kuznik/theatre#readme",
   "devDependencies": {
+    "@types/three": "^0.133.1",
     "browserify": "^17.0.0",
     "http-server": "^14.0.0",
-    "typescript": "^4.4.4"
+    "typescript": "^4.4.4",
+    "three": "^0.133.1" 
   },
   "dependencies": {
     "@types/resize-observer-browser": "^0.1.6",
-    "@types/three": "^0.133.1",
-    "iventy": "github:pawel-kuznik/iventy",
-    "three": "^0.133.1"
+    "iventy": "github:pawel-kuznik/iventy"
+    
+  },
+  "peerDependencies": {
+    "three": "^0.133.1" 
   }
 }

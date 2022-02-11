@@ -30,7 +30,7 @@ export interface TheatreOptions {
  *  @event  resize      This event triggers when the canvas resizes and the renderer
  *                      updated to the new size.
  */
-export default class Theatr extends Emitter  {
+export default class Theatre extends Emitter  {
 
     /**
      *  The warderobe for the theathre.
