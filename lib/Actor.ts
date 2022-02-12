@@ -51,6 +51,15 @@ export default abstract class Actor implements RenderParticipant {
     }
 
     /**
+     *  A method called after the actor is hydrated. It might be that the child class
+     *  has some special logic to wrap up initialization.
+     */
+    protected _afterHydrate() {
+
+        // ... nothing really. The child class can implement special logic if it wishes.
+    }
+
+    /**
      *  A method to make a render update.
      */
     renderUpdate(step: RenderStep): void {
@@ -79,6 +88,8 @@ export default abstract class Actor implements RenderParticipant {
         this._object.position.z = oldObject.position.z;
 
         parentObject?.add(this._object);
+
+        this._afterHydrate();
     }
 
     /**

@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('floor:top', './floor.png', 'pixelart');
 
     const floor = new THEATRE.TiledFloor('floor:top', { size: 21 * 21 });
+    floor.fill(-10, -10, 10, 10);
 
     testStage.insert(floor);
 
@@ -58,8 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.wait().then(() => {
 
         theatre.transitionTo('test');
-
-        floor.fill(-10, -10, 10, 10);
 
         console.log(theatre);
     });

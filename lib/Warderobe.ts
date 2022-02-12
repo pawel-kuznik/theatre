@@ -82,23 +82,28 @@ export default class Warderobe implements RenderParticipant {
     };
 
     /**
-     *  Import texture to the warderobe.
+     *  Import texture to the warderobe by an url or a promise of a url. The promise
+     *  of an url is useful when the url has to be detected in some kind of async
+     *  way.
      */
-    public importTexture(name:string, url:string, options:'pixelart'|'default' = 'default') : Promise<Texture> {
+    public importTexture(name:string, url:string|Promise<string>, options:'pixelart'|'default' = 'default') : Promise<Texture> {
 
-        const promise = this._loader.loadAsync(url).then((texture:Texture) => {
+        const promise = (url instanceof Promise ? url : Promise.resolve(url)).then((url:string) => {
 
-            if (options === 'pixelart') {
+            return this._loader.loadAsync(url).then((texture:Texture) => {
 
-                texture.minFilter = NearestFilter;
-                texture.magFilter = NearestFilter;
-            }
-
-            this.registerTexture(name, texture);
-
-            this._loadingTextures.delete(name);
-
-            return texture;
+                if (options === 'pixelart') {
+    
+                    texture.minFilter = NearestFilter;
+                    texture.magFilter = NearestFilter;
+                }
+    
+                this.registerTexture(name, texture);
+    
+                this._loadingTextures.delete(name);
+    
+                return texture;
+            });
         });
 
         this._loadingTextures.set(name, promise);

@@ -40,6 +40,13 @@ class Actor {
         }
     }
     /**
+     *  A method called after the actor is hydrated. It might be that the child class
+     *  has some special logic to wrap up initialization.
+     */
+    _afterHydrate() {
+        // ... nothing really. The child class can implement special logic if it wishes.
+    }
+    /**
      *  A method to make a render update.
      */
     renderUpdate(step) {
@@ -61,6 +68,7 @@ class Actor {
         this._object.position.y = oldObject.position.y;
         this._object.position.z = oldObject.position.z;
         parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._object);
+        this._afterHydrate();
     }
     /**
      *  Move actor to given spacial coordinates.
@@ -1033,7 +1041,7 @@ const iventy_1 = require("iventy");
  *  @event  resize      This event triggers when the canvas resizes and the renderer
  *                      updated to the new size.
  */
-class Theatr extends iventy_1.Emitter {
+class Theatre extends iventy_1.Emitter {
     /**
      *  The constructor
      *
@@ -1123,7 +1131,7 @@ class Theatr extends iventy_1.Emitter {
         this._stageContainer.stage.hydrate(this.warderobe);
     }
 }
-exports.default = Theatr;
+exports.default = Theatre;
 ;
 
 },{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./Stage":18,"./StageContainer":19,"./Warderobe":26,"iventy":28}],23:[function(require,module,exports){
@@ -1202,17 +1210,31 @@ const Actor_1 = require("./Actor");
 ;
 ;
 /**
- *  This is a special class that allows for creating a floor based on
+ *  This is a special class that allows for creating a floor based on a specific texture.
+ *  This is useful for creting the actual floor of a stage and then placing actors on top
+ *  of it.
  */
 class TiledFloor extends Actor_1.default {
     constructor(_texture, options) {
         super();
         this._texture = _texture;
         /**
+         *  Was the floor already initialized?
+         */
+        this._initialized = false;
+        /**
          *  Mapping of all positions inside the floor.
          */
         this._positions = new Map();
+        /**
+         *  The options related to highlighting specific tiles.
+         */
         this._highlighted = [];
+        /**
+         *  A special set we keep to remember which tile positions we need to
+         *  fill when the object is fully initialized.
+         */
+        this._toFill = new Set();
         this._size = options.size;
         this._highlightColor = options.highlightColor || new three_1.Color(0x00ff00);
     }
@@ -1220,6 +1242,7 @@ class TiledFloor extends Actor_1.default {
      *  Initialize the object
      */
     _initObject(warderobe) {
+        this._initialized = true;
         const geometry = new three_1.PlaneGeometry(1, 1);
         const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: three_1.FrontSide });
         const object = new three_1.InstancedMesh(geometry, material, this._size + 1);
@@ -1227,23 +1250,56 @@ class TiledFloor extends Actor_1.default {
         return object;
     }
     /**
+     *  Wrap up initialization after hydrate.
+     */
+    _afterHydrate() {
+        if (this._toFill)
+            this._doFill([...this._toFill]);
+        super._afterHydrate();
+    }
+    /**
+     *  Dispose of the object.
+     */
+    dispose() {
+        this._initialized = false;
+        return super.dispose();
+    }
+    /**
      *  Fill the floor with positions
      */
     fill(xStart, yStart, xStop, yStop) {
-        const object = this._object;
-        let idx = 0;
+        const positions = [];
         for (let y = yStart; y <= yStop; y++) {
             for (let x = xStart; x <= xStop; x++) {
-                object.setMatrixAt(idx, new three_1.Matrix4().makeTranslation(x, y, -.5));
-                object.setColorAt(idx, new three_1.Color(0xffffff));
-                this._positions.set(idx, { x, y });
-                idx++;
+                positions.push({ x, y });
             }
         }
+        this._prepareFill(positions);
+        if (this._initialized)
+            this._doFill(positions);
+    }
+    /**
+     *  Prepare positions to fill when the tiled floor is initialized.
+     */
+    _prepareFill(positions) {
+        this._toFill = new Set(positions);
+    }
+    /**
+     *  Actually fill in the floor with positions.
+     */
+    _doFill(positions) {
+        const object = this._object;
+        positions.forEach((value, index) => {
+            object.setMatrixAt(index, new three_1.Matrix4().makeTranslation(value.x, value.y, -.5));
+            object.setColorAt(index, new three_1.Color(0xffffff));
+            this._positions.set(index, value);
+        });
+        console.log(object);
         object.instanceMatrix.needsUpdate = true;
         if (object.instanceColor)
             object.instanceColor.needsUpdate = true;
     }
+    ;
     /**
      *  Set highligted tiles.
      */
@@ -1419,17 +1475,21 @@ class Warderobe {
     }
     ;
     /**
-     *  Import texture to the warderobe.
+     *  Import texture to the warderobe by an url or a promise of a url. The promise
+     *  of an url is useful when the url has to be detected in some kind of async
+     *  way.
      */
     importTexture(name, url, options = 'default') {
-        const promise = this._loader.loadAsync(url).then((texture) => {
-            if (options === 'pixelart') {
-                texture.minFilter = three_1.NearestFilter;
-                texture.magFilter = three_1.NearestFilter;
-            }
-            this.registerTexture(name, texture);
-            this._loadingTextures.delete(name);
-            return texture;
+        const promise = (url instanceof Promise ? url : Promise.resolve(url)).then((url) => {
+            return this._loader.loadAsync(url).then((texture) => {
+                if (options === 'pixelart') {
+                    texture.minFilter = three_1.NearestFilter;
+                    texture.magFilter = three_1.NearestFilter;
+                }
+                this.registerTexture(name, texture);
+                this._loadingTextures.delete(name);
+                return texture;
+            });
         });
         this._loadingTextures.set(name, promise);
         return promise;
