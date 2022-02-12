@@ -28,6 +28,11 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      */
     private _ambience:StageAmbience|null = null;
 
+    /**
+     *  Cached warderobe.
+     */
+    private _warderobe:Warderobe|undefined;
+
     constructor() { }
 
     /**
@@ -62,13 +67,20 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     insert(actor:Actor) {
 
         this._actors.add(actor);
+
         actor.attachTo(this.scene);
+
+        if (this._warderobe) actor.hydrate(this._warderobe);
     }
 
     /**
-     *  Hydrate all actors with resources they need to function.
+     *  Hydrate all actors with resources they need to function. This method will
+     *  also ensure that all actors inserted into the scene after it's called, will
+     *  be hydrated with the same pool of resources.
      */
     hydrate(warderobe:Warderobe) {
+
+        this._warderobe = warderobe;
 
         for (let actor of this._actors) actor.hydrate(warderobe);
     }
