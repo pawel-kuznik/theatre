@@ -151,11 +151,11 @@ export default class Theatre extends Emitter  {
      * 
      *  @throws Error   When a stage of a given name already exists.
      */
-    createStage(name:string) : Stage {
+    createStage(name:string, Constructor:new (...args:any[]) => Stage = Stage, ...args:any[]) : Stage {
 
         if (this._stages.has(name)) throw new Error('Theatre: Stage with this name already exists.');
 
-        const stage = new Stage();
+        const stage = new Constructor(...args);
 
         this._stages.set(name, stage);
 
