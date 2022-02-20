@@ -18,6 +18,12 @@ interface TileFloorOptions {
      *  The color in which the tiles should be higlighted.
      */
     highlightColor?:Color;
+
+    /**
+     *  Should there be an out of the box support for receiving shadows
+     *  on this floor?
+     */
+    shadows?:boolean;
 };
 
 /**
@@ -49,6 +55,11 @@ export default class TiledFloor extends Actor {
     private readonly _highlightColor:Color;
 
     /**
+     *  Options related to shadows support.
+     */
+    private readonly _shadows:boolean;
+
+    /**
      *  A special set we keep to remember which tile positions we need to
      *  fill when the object is fully initialized.
      */
@@ -60,6 +71,7 @@ export default class TiledFloor extends Actor {
 
         this._size = options.size;
         this._highlightColor = options.highlightColor || new Color(0x00ff00);
+        this._shadows = options.shadows || true; 
     }
 
     /**
@@ -70,12 +82,12 @@ export default class TiledFloor extends Actor {
         this._initialized = true;
 
         const geometry = new PlaneGeometry(1, 1);
-        const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: FrontSide });
+        const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: this._shadows ? FrontSide : undefined });
         
         const object = new InstancedMesh(geometry, material, this._size + 1);
 
-        object.receiveShadow = true;
-
+        if (this._shadows) object.receiveShadow = true;
+            
         return object;
     }
 

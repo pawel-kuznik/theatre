@@ -35,7 +35,7 @@ export default class WSADCameraMover implements CameraMover {
     /**
      *  The speed of the camera in render units.
      */
-    private readonly _speed:number = 1.25;
+    private readonly _speed:number = .25;
 
     /**
      *  How far ahead the target position could be from the current position?
@@ -61,14 +61,20 @@ export default class WSADCameraMover implements CameraMover {
         const kick = this._target ? 1 : 2.5;
         const position = this._target || { x: this._camera.x, y: this._camera.y };
 
-        if (keyboardEvent.code === 'KeyA') position.x -= this._speed * kick;
-        if (keyboardEvent.code === 'KeyD') position.x += this._speed * kick;
-        if (keyboardEvent.code === 'KeyW') position.y += this._speed * kick;
-        if (keyboardEvent.code === 'KeyS') position.y -= this._speed * kick;
+        const factor = this._camera.native.position.z;
+
+        const speed = this._speed * factor;
+
+        if (keyboardEvent.code === 'KeyA') position.x -= speed * kick;
+        if (keyboardEvent.code === 'KeyD') position.x += speed * kick;
+        if (keyboardEvent.code === 'KeyW') position.y += speed * kick;
+        if (keyboardEvent.code === 'KeyS') position.y -= speed * kick;
+
+        const rangeLimit = this._rangeLimit * factor;
 
         this._target = {
-            x: Math.min(Math.max(position.x, this._camera.x - this._rangeLimit), this._camera.x + this._rangeLimit),
-            y: Math.min(Math.max(position.y, this._camera.y - this._rangeLimit), this._camera.y + this._rangeLimit)
+            x: Math.min(Math.max(position.x, this._camera.x - rangeLimit), this._camera.x + rangeLimit),
+            y: Math.min(Math.max(position.y, this._camera.y - rangeLimit), this._camera.y + rangeLimit)
         };
 
         this._begin = performance.now();

@@ -1,6 +1,7 @@
 import { Scene } from "three";
 import Actor from './Actor';
 import ActorsHolder from "./ActorsHolder";
+import Camera from "./Camera";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
 import StageAmbience from "./Stage/StageAmbience";
@@ -83,6 +84,14 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         this._warderobe = warderobe;
 
         for (let actor of this._actors) actor.hydrate(warderobe);
+    }
+
+    /**
+     *  Update shadow camera to be in-line with another camera.
+     */
+    updateShadowCamera(camera:Camera) { 
+
+        if (this._ambience) this._ambience.updateShadowCamera(camera);
     }
 
     /**

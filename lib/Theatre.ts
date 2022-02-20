@@ -89,6 +89,7 @@ export default class Theatre extends Emitter  {
 
         this._loop = new RenderingLoop((step:RenderStep) => {
 
+            this._stageContainer.stage.updateShadowCamera(this._camera);
             this._camera.renderUpdate(step);
 
             this.warderobe.renderUpdate(step);

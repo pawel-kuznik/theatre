@@ -343,6 +343,8 @@ class TopDownCamera {
     constructor(options) {
         this._movers = [];
         this._pickers = [];
+        this._looktAt = new three_1.Vector3();
+        this._moved = true;
         // construct the actual camera instance
         this._camera = new three_1.PerspectiveCamera(65, 45, 0.1, 8000);
         // position the camera
@@ -352,6 +354,14 @@ class TopDownCamera {
         // make it look at the center of the board
         this._camera.lookAt(0, 0, 0);
     }
+    /**
+     *  The point the camera looks at.
+     */
+    getLookAt() { return this._looktAt.clone(); }
+    /**
+     *  Did camera moved in current render pass?
+     */
+    get moved() { return this._moved; }
     /**
      *  Get access to the Three.js camera instance.
      */
@@ -380,10 +390,10 @@ class TopDownCamera {
      *  to the default height.
      */
     liftTo(height = 10) {
-        // set the height
         this._camera.position.z = height;
-        // update where the camera is looking
-        this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._looktAt = new three_1.Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._camera.lookAt(this._looktAt);
+        this._moved = true;
     }
     /**
      *  Lift camera by specific height.
@@ -401,11 +411,11 @@ class TopDownCamera {
      *  Move camera to a certain x and y values.
      */
     moveTo(x, y) {
-        // update camera position
         this._camera.position.x = x;
         this._camera.position.y = y;
-        // update where the camera is looking
-        this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._looktAt = new three_1.Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._camera.lookAt(this._looktAt);
+        this._moved = true;
     }
     /**
      *  Handle event related to the user input.
@@ -445,6 +455,7 @@ class TopDownCamera {
     renderUpdate(step) {
         for (let mover of this._movers)
             mover.renderUpdate(step);
+        this._moved = false;
     }
 }
 exports.default = TopDownCamera;
@@ -474,7 +485,7 @@ class WSADCameraMover {
         /**
          *  The speed of the camera in render units.
          */
-        this._speed = 1.25;
+        this._speed = .25;
         /**
          *  How far ahead the target position could be from the current position?
          */
@@ -491,17 +502,20 @@ class WSADCameraMover {
             return;
         const kick = this._target ? 1 : 2.5;
         const position = this._target || { x: this._camera.x, y: this._camera.y };
+        const factor = this._camera.native.position.z;
+        const speed = this._speed * factor;
         if (keyboardEvent.code === 'KeyA')
-            position.x -= this._speed * kick;
+            position.x -= speed * kick;
         if (keyboardEvent.code === 'KeyD')
-            position.x += this._speed * kick;
+            position.x += speed * kick;
         if (keyboardEvent.code === 'KeyW')
-            position.y += this._speed * kick;
+            position.y += speed * kick;
         if (keyboardEvent.code === 'KeyS')
-            position.y -= this._speed * kick;
+            position.y -= speed * kick;
+        const rangeLimit = this._rangeLimit * factor;
         this._target = {
-            x: Math.min(Math.max(position.x, this._camera.x - this._rangeLimit), this._camera.x + this._rangeLimit),
-            y: Math.min(Math.max(position.y, this._camera.y - this._rangeLimit), this._camera.y + this._rangeLimit)
+            x: Math.min(Math.max(position.x, this._camera.x - rangeLimit), this._camera.x + rangeLimit),
+            y: Math.min(Math.max(position.y, this._camera.y - rangeLimit), this._camera.y + rangeLimit)
         };
         this._begin = performance.now();
         this._final = performance.now() + this._smoothing;
@@ -867,13 +881,25 @@ class Stage {
     insert(actor) {
         this._actors.add(actor);
         actor.attachTo(this.scene);
+        if (this._warderobe)
+            actor.hydrate(this._warderobe);
     }
     /**
-     *  Hydrate all actors with resources they need to function.
+     *  Hydrate all actors with resources they need to function. This method will
+     *  also ensure that all actors inserted into the scene after it's called, will
+     *  be hydrated with the same pool of resources.
      */
     hydrate(warderobe) {
+        this._warderobe = warderobe;
         for (let actor of this._actors)
             actor.hydrate(warderobe);
+    }
+    /**
+     *  Update shadow camera to be in-line with another camera.
+     */
+    updateShadowCamera(camera) {
+        if (this._ambience)
+            this._ambience.updateShadowCamera(camera);
     }
     /**
      *  Set Ambience.
@@ -952,14 +978,36 @@ class StageAmbience {
     constructor(properties) {
         this._ambientLight = new three_1.AmbientLight(properties.ambientColor, .5);
         this._overheadLight = new three_1.DirectionalLight(0xffffff, .5);
-        this._overheadLight.position.set(0, 0, 10000);
+        this._overheadLight.position.set(0, 0, 10);
         this._overheadLight.lookAt(new three_1.Vector3(0, 0, 0));
         this._overheadLight.castShadow = true;
         this._overheadLight.shadow.mapSize.width = 512;
         this._overheadLight.shadow.mapSize.height = 512;
-        this._overheadLight.shadow.camera.near = 0.5;
-        this._overheadLight.shadow.camera.far = 150000;
-        this._overheadLight.shadow.camera.position.set(0, 0, 10000);
+        this._overheadLight.shadow.camera.near = 0.1;
+        this._overheadLight.shadow.camera.far = 15;
+        this._overheadLight.shadow.camera.left = -10;
+        this._overheadLight.shadow.camera.right = 10;
+        this._overheadLight.shadow.camera.top = 10;
+        this._overheadLight.shadow.camera.bottom = -10;
+    }
+    /**
+     *  Update shadow camera to be in-line with another camera.
+     */
+    updateShadowCamera(camera) {
+        // @todo: at height 10 we want to have a radius of 10 units around the camera with
+        // shadows. This however is very specific to top-down camera and we will need
+        // a different ration for cameras dealing with first person view.
+        // Or we could ask the camera what kind of radius of shadows it wants...
+        const radius = 10 * (camera.native.position.z / 10);
+        // to make sure that the shadows render we need to "move" the frustrum (field of view)
+        // of the shadow camera to match our actual camera. However, we don't want to move
+        // the directional light. 
+        this._overheadLight.shadow.camera.left = -radius * 2 + camera.native.position.x;
+        this._overheadLight.shadow.camera.right = radius * 2 + camera.native.position.x;
+        this._overheadLight.shadow.camera.top = radius + camera.native.position.y;
+        this._overheadLight.shadow.camera.bottom = -radius + camera.native.position.y;
+        // @todo check if this makes performance issues?
+        this._overheadLight.shadow.camera.updateProjectionMatrix();
     }
     /**
      *  Occupy/mount scene ambience.
@@ -967,6 +1015,9 @@ class StageAmbience {
     occupy(scene) {
         scene.add(this._ambientLight);
         scene.add(this._overheadLight);
+        scene.add(this._overheadLight.target);
+        // @debug this is useful when debugging shadow camera
+        // scene.add(new CameraHelper(this._overheadLight.shadow.camera));
     }
     /**
      *  Vacate/unmount the scene.
@@ -1072,6 +1123,7 @@ class Theatre extends iventy_1.Emitter {
         this._camera = (new CameraFactory_1.default(cameraOptions, this._stageContainer, this)).build();
         this._camera.updateAspectRatio(this._rendererHandler.aspectRatio);
         this._loop = new RenderingLoop_1.default((step) => {
+            this._stageContainer.stage.updateShadowCamera(this._camera);
             this._camera.renderUpdate(step);
             this.warderobe.renderUpdate(step);
             this._stageContainer.renderUpdate(step);
@@ -1113,10 +1165,10 @@ class Theatre extends iventy_1.Emitter {
      *
      *  @throws Error   When a stage of a given name already exists.
      */
-    createStage(name) {
+    createStage(name, Constructor = Stage_1.default, ...args) {
         if (this._stages.has(name))
             throw new Error('Theatre: Stage with this name already exists.');
-        const stage = new Stage_1.default();
+        const stage = new Constructor(...args);
         this._stages.set(name, stage);
         return stage;
     }
@@ -1237,6 +1289,7 @@ class TiledFloor extends Actor_1.default {
         this._toFill = new Set();
         this._size = options.size;
         this._highlightColor = options.highlightColor || new three_1.Color(0x00ff00);
+        this._shadows = options.shadows || true;
     }
     /**
      *  Initialize the object
@@ -1244,9 +1297,10 @@ class TiledFloor extends Actor_1.default {
     _initObject(warderobe) {
         this._initialized = true;
         const geometry = new three_1.PlaneGeometry(1, 1);
-        const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: three_1.FrontSide });
+        const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: this._shadows ? three_1.FrontSide : undefined });
         const object = new three_1.InstancedMesh(geometry, material, this._size + 1);
-        object.receiveShadow = true;
+        if (this._shadows)
+            object.receiveShadow = true;
         return object;
     }
     /**

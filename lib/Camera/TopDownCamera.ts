@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Camera as ThreeJSCamera  } from "three";
+import { PerspectiveCamera, Camera as ThreeJSCamera, Vector3  } from "three";
 import { RenderStep } from "../RenderStep";
 import CameraMover from "./CameraMover";
 import CameraOptions from "./CameraOptions";
@@ -26,6 +26,10 @@ export default class TopDownCamera implements FreefloatCamera {
 
     private readonly _pickers:Array<CameraPicker> = [];
 
+    private _looktAt:Vector3 = new Vector3();
+
+    private _moved:boolean = true;
+
     /**
      *  The construct of the camera.
      */
@@ -42,6 +46,16 @@ export default class TopDownCamera implements FreefloatCamera {
         // make it look at the center of the board
         this._camera.lookAt(0, 0, 0);
     }
+
+    /**
+     *  The point the camera looks at.
+     */
+    getLookAt(): Vector3 { return this._looktAt.clone(); }
+
+    /**
+     *  Did camera moved in current render pass?
+     */
+    get moved(): boolean { return this._moved; }
 
     /**
      *  Get access to the Three.js camera instance.
@@ -78,11 +92,11 @@ export default class TopDownCamera implements FreefloatCamera {
      */
     public liftTo(height:number = 10) {
 
-        // set the height
         this._camera.position.z = height;
+        this._looktAt= new Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._camera.lookAt(this._looktAt);
 
-        // update where the camera is looking
-        this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._moved = true;
     }
 
     /**
@@ -106,12 +120,12 @@ export default class TopDownCamera implements FreefloatCamera {
      */
     public moveTo(x:number, y:number) {
 
-        // update camera position
         this._camera.position.x = x;
         this._camera.position.y = y;
-
-        // update where the camera is looking
-        this._camera.lookAt(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._looktAt= new Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
+        this._camera.lookAt(this._looktAt);
+        
+        this._moved = true;
     }
 
     /**
@@ -158,5 +172,7 @@ export default class TopDownCamera implements FreefloatCamera {
     renderUpdate(step:RenderStep) : void {
 
         for (let mover of this._movers) mover.renderUpdate(step);
+
+        this._moved = false;
     }
 };
