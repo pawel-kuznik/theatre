@@ -7,11 +7,14 @@ import Camera from "./Camera";
 import CameraFactory, { CameraFactorySpecs } from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
 import { Emitter } from 'iventy';
+import RenderingQualitySettings, { PowerPreferenceSetting, ShaderPrecisionSetting } from "./RenderingQualitySettings";
 
 /**
  *  The options for the main object.
  */
 export interface TheatreOptions {
+
+    quality?:Partial<RenderingQualitySettings>;
 
     camera:CameraFactorySpecs;
 };
@@ -73,7 +76,11 @@ export default class Theatre extends Emitter  {
 
         super();
 
-        this._rendererHandler = new RendererHandler(canvas);
+        this._rendererHandler = new RendererHandler(canvas, Object.assign({ }, {
+            antialiasing:       true,
+            shaderPrecision:    ShaderPrecisionSetting.high,
+            powerPreference:    PowerPreferenceSetting.default      
+        }));
 
         const cameraDefaults:CameraFactorySpecs = {
             type:           'topdown',

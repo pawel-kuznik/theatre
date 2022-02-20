@@ -1,4 +1,5 @@
 import { PCFSoftShadowMap, WebGLRenderer } from "three";
+import RenderingQualitySettings from "./RenderingQualitySettings";
 
 export type ResizeHandler = (width:number, height:number) => void;
 
@@ -14,10 +15,13 @@ export default class RendererHandler {
 
     private _resizeHandler:ResizeHandler|undefined;
 
-    public constructor(private _canvas:HTMLCanvasElement) {
+    public constructor(private _canvas:HTMLCanvasElement, options:RenderingQualitySettings) {
 
         this._renderer = new WebGLRenderer({
-            canvas: this._canvas
+            canvas:             this._canvas,
+            antialias:          options.antialiasing,
+            precision:          options.shaderPrecision,
+            powerPreference:    options.powerPreference
         });
 
         this._renderer.shadowMap.enabled = true;

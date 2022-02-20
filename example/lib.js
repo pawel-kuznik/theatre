@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":27,"three":34}],2:[function(require,module,exports){
+},{"./build/theatre.js":28,"three":35}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -101,7 +101,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":14,"three":34}],3:[function(require,module,exports){
+},{"./Position":14,"three":35}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -285,7 +285,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
 exports.default = CameraHoverPicker;
 ;
 
-},{"./buildPickEventData":11,"iventy":28,"three":34}],7:[function(require,module,exports){
+},{"./buildPickEventData":11,"iventy":29,"three":35}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("iventy");
@@ -327,7 +327,7 @@ class CameraMousePicker extends iventy_1.Emitter {
 exports.default = CameraMousePicker;
 ;
 
-},{"./buildPickEventData":11,"iventy":28,"three":34}],8:[function(require,module,exports){
+},{"./buildPickEventData":11,"iventy":29,"three":35}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -461,7 +461,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":34}],9:[function(require,module,exports){
+},{"three":35}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -629,7 +629,7 @@ function buildPickEventData(intersections, holder) {
 exports.default = buildPickEventData;
 ;
 
-},{"../ActorIntersection":3,"three":34}],12:[function(require,module,exports){
+},{"../ActorIntersection":3,"three":35}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -647,7 +647,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":34}],13:[function(require,module,exports){
+},{"./Actor":2,"three":35}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -663,7 +663,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":18}],14:[function(require,module,exports){
+},{"./Stage":19}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -732,10 +732,13 @@ const three_1 = require("three");
  *  for us.
  */
 class RendererHandler {
-    constructor(_canvas) {
+    constructor(_canvas, options) {
         this._canvas = _canvas;
         this._renderer = new three_1.WebGLRenderer({
-            canvas: this._canvas
+            canvas: this._canvas,
+            antialias: options.antialiasing,
+            precision: options.shaderPrecision,
+            powerPreference: options.powerPreference
         });
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = three_1.PCFSoftShadowMap;
@@ -789,7 +792,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":34}],17:[function(require,module,exports){
+},{"three":35}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -831,6 +834,26 @@ exports.default = RenderingLoop;
 ;
 
 },{"./RenderStep":15}],18:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PowerPreferenceSetting = exports.ShaderPrecisionSetting = void 0;
+;
+var ShaderPrecisionSetting;
+(function (ShaderPrecisionSetting) {
+    ShaderPrecisionSetting["low"] = "lowp";
+    ShaderPrecisionSetting["medium"] = "mediump";
+    ShaderPrecisionSetting["high"] = "highp";
+})(ShaderPrecisionSetting = exports.ShaderPrecisionSetting || (exports.ShaderPrecisionSetting = {}));
+;
+var PowerPreferenceSetting;
+(function (PowerPreferenceSetting) {
+    PowerPreferenceSetting["default"] = "default";
+    PowerPreferenceSetting["high"] = "high-performance";
+    PowerPreferenceSetting["low"] = "low-power";
+})(PowerPreferenceSetting = exports.PowerPreferenceSetting || (exports.PowerPreferenceSetting = {}));
+;
+
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -914,7 +937,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":20,"three":34}],19:[function(require,module,exports){
+},{"./Stage/StageAmbience":21,"three":35}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -965,7 +988,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":13}],20:[function(require,module,exports){
+},{"./EmptyStage":13}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -984,7 +1007,7 @@ class StageAmbience {
         this._overheadLight.shadow.mapSize.width = 512;
         this._overheadLight.shadow.mapSize.height = 512;
         this._overheadLight.shadow.camera.near = 0;
-        this._overheadLight.shadow.camera.far = 15;
+        this._overheadLight.shadow.camera.far = 250;
         this._overheadLight.shadow.camera.left = -10;
         this._overheadLight.shadow.camera.right = 10;
         this._overheadLight.shadow.camera.top = 10;
@@ -1006,6 +1029,7 @@ class StageAmbience {
         this._overheadLight.shadow.camera.right = radius * 2 + camera.native.position.x;
         this._overheadLight.shadow.camera.top = radius + camera.native.position.y;
         this._overheadLight.shadow.camera.bottom = -radius + camera.native.position.y;
+        this._overheadLight.position.z = Math.max(camera.native.position.z, 10);
         // @todo check if this makes performance issues?
         this._overheadLight.shadow.camera.updateProjectionMatrix();
     }
@@ -1030,7 +1054,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":34}],21:[function(require,module,exports){
+},{"three":35}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -1067,7 +1091,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -1077,6 +1101,7 @@ const StageContainer_1 = require("./StageContainer");
 const Warderobe_1 = require("./Warderobe");
 const CameraFactory_1 = require("./Camera/CameraFactory");
 const iventy_1 = require("iventy");
+const RenderingQualitySettings_1 = require("./RenderingQualitySettings");
 ;
 /**
  *  This is the main class that creates the theater and allows to compose the scene.
@@ -1113,7 +1138,11 @@ class Theatre extends iventy_1.Emitter {
          *  The stages created inside the theatre.
          */
         this._stages = new Map();
-        this._rendererHandler = new RendererHandler_1.default(canvas);
+        this._rendererHandler = new RendererHandler_1.default(canvas, Object.assign({}, {
+            antialiasing: true,
+            shaderPrecision: RenderingQualitySettings_1.ShaderPrecisionSetting.high,
+            powerPreference: RenderingQualitySettings_1.PowerPreferenceSetting.default
+        }));
         const cameraDefaults = {
             type: 'topdown',
             movers: [{ type: 'wsad' }, { type: 'wheellifter' }],
@@ -1186,7 +1215,7 @@ class Theatre extends iventy_1.Emitter {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./Stage":18,"./StageContainer":19,"./Warderobe":26,"iventy":28}],23:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./RenderingQualitySettings":18,"./Stage":19,"./StageContainer":20,"./Warderobe":27,"iventy":29}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1254,7 +1283,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":34}],24:[function(require,module,exports){
+},{"./Actor":2,"three":35}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1392,7 +1421,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":34}],25:[function(require,module,exports){
+},{"./Actor":2,"three":35}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1459,7 +1488,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1565,7 +1594,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":21,"three":34}],27:[function(require,module,exports){
+},{"./TextureAnimator":22,"three":35}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
@@ -1593,7 +1622,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":12,"./lib/Position":14,"./lib/Stage":18,"./lib/Theatre":22,"./lib/TiledActors":23,"./lib/TiledFloor":24,"./lib/TransitionCycle":25,"./lib/Warderobe":26}],28:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":12,"./lib/Position":14,"./lib/Stage":19,"./lib/Theatre":23,"./lib/TiledActors":24,"./lib/TiledFloor":25,"./lib/TransitionCycle":26,"./lib/Warderobe":27}],29:[function(require,module,exports){
 "use strict";
 /**
  *  This is an entry file for the whole library. This file exposes (and kicks in
@@ -1612,7 +1641,7 @@ Object.defineProperty(exports, "Emitter", { enumerable: true, get: function () {
 var Federation_1 = require("./lib/Federation");
 Object.defineProperty(exports, "Federation", { enumerable: true, get: function () { return Federation_1.Federation; } });
 
-},{"./lib/Emitter":31,"./lib/Event":32,"./lib/Federation":33}],29:[function(require,module,exports){
+},{"./lib/Emitter":32,"./lib/Event":33,"./lib/Federation":34}],30:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class to handle a single channel. A single channel is a collection
@@ -1705,7 +1734,7 @@ class Channel {
 exports.Channel = Channel;
 ;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class that handles an event designator. An event designator is
@@ -1849,7 +1878,7 @@ class Designator {
 }
 exports.Designator = Designator;
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 "use strict";
 /**
  *  A class that can be used as event emitter on client and server side. An
@@ -2001,7 +2030,7 @@ class Emitter {
 exports.Emitter = Emitter;
 ;
 
-},{"./Channel":29,"./Event":32}],32:[function(require,module,exports){
+},{"./Channel":30,"./Event":33}],33:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class to acompany the Emitter class. The Event has important
@@ -2128,7 +2157,7 @@ class Event {
 exports.Event = Event;
 ;
 
-},{"./Designator":30}],33:[function(require,module,exports){
+},{"./Designator":31}],34:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class describing a federation of one or many emitters. A federation
@@ -2154,7 +2183,7 @@ class Federation extends Emitter_1.Emitter {
 }
 exports.Federation = Federation;
 
-},{"./Emitter":31}],34:[function(require,module,exports){
+},{"./Emitter":32}],35:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

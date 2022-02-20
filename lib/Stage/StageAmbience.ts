@@ -26,7 +26,7 @@ export default class StageAmbience implements Occupant {
         this._overheadLight.shadow.mapSize.width = 512;
         this._overheadLight.shadow.mapSize.height = 512;
         this._overheadLight.shadow.camera.near = 0;
-        this._overheadLight.shadow.camera.far = 15;
+        this._overheadLight.shadow.camera.far = 250;
 
         this._overheadLight.shadow.camera.left = -10;
         this._overheadLight.shadow.camera.right = 10;

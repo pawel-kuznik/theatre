@@ -32,8 +32,8 @@ class Pillar extends THEATRE.Actor {
     _initObject(warderobe) {
 
         const g = new THREE.BoxGeometry(1, 1, 3);
-        const sideMaterial = new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('pillar:side'), shadowSide: THREE.DoubleSide });
-        const topMaterial = new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('pillar:top'), shadowSide: THREE.DoubleSide });
+        const sideMaterial = new THREE.MeshLambertMaterial({ map: warderobe.fetchTexture('pillar:side'), shadowSide: THREE.FrontSide, color: 0xffffff });
+        const topMaterial = new THREE.MeshLambertMaterial({ map: warderobe.fetchTexture('pillar:top'), shadowSide: THREE.FrontSide, color: 0xffffff });
 
         const object = new THREE.Mesh(g, [
             sideMaterial,
