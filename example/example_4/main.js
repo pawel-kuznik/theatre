@@ -27,7 +27,6 @@ class Carpet extends THEATRE.Actor {
     }
 };
 
-
 document.addEventListener('DOMContentLoaded', () => {
 
     const canvas = document.querySelector('canvas');

@@ -983,7 +983,7 @@ class StageAmbience {
         this._overheadLight.castShadow = true;
         this._overheadLight.shadow.mapSize.width = 512;
         this._overheadLight.shadow.mapSize.height = 512;
-        this._overheadLight.shadow.camera.near = 0.1;
+        this._overheadLight.shadow.camera.near = 0;
         this._overheadLight.shadow.camera.far = 15;
         this._overheadLight.shadow.camera.left = -10;
         this._overheadLight.shadow.camera.right = 10;
@@ -998,7 +998,7 @@ class StageAmbience {
         // shadows. This however is very specific to top-down camera and we will need
         // a different ration for cameras dealing with first person view.
         // Or we could ask the camera what kind of radius of shadows it wants...
-        const radius = 10 * (camera.native.position.z / 10);
+        const radius = Math.max(10 * (camera.native.position.z / 10), 5);
         // to make sure that the shadows render we need to "move" the frustrum (field of view)
         // of the shadow camera to match our actual camera. However, we don't want to move
         // the directional light. 
