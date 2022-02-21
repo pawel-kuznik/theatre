@@ -740,6 +740,7 @@ class RendererHandler {
             precision: options.shaderPrecision,
             powerPreference: options.powerPreference
         });
+        three_1.Object3D.DefaultUp = new three_1.Vector3(0, 0, 1);
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = three_1.PCFSoftShadowMap;
         this._observer = new ResizeObserver(() => void this._resize());
@@ -1029,7 +1030,6 @@ class StageAmbience {
         this._overheadLight.shadow.camera.right = radius * 2 + camera.native.position.x;
         this._overheadLight.shadow.camera.top = radius + camera.native.position.y;
         this._overheadLight.shadow.camera.bottom = -radius + camera.native.position.y;
-        this._overheadLight.position.z = Math.max(camera.native.position.z, 10);
         // @todo check if this makes performance issues?
         this._overheadLight.shadow.camera.updateProjectionMatrix();
     }

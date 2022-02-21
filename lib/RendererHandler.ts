@@ -1,4 +1,4 @@
-import { PCFSoftShadowMap, WebGLRenderer } from "three";
+import { Object3D, PCFSoftShadowMap, Vector3, WebGLRenderer } from "three";
 import RenderingQualitySettings from "./RenderingQualitySettings";
 
 export type ResizeHandler = (width:number, height:number) => void;
@@ -23,6 +23,8 @@ export default class RendererHandler {
             precision:          options.shaderPrecision,
             powerPreference:    options.powerPreference
         });
+
+        Object3D.DefaultUp = new Vector3(0, 0, 1);
 
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = PCFSoftShadowMap;
