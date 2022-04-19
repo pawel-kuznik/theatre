@@ -75,6 +75,20 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     }
 
     /**
+     *  Destroy a target actor residing in this scene. If the actor is not inside
+     *  the scene no action will be done.
+     */
+    destroy(actor:Actor) {
+
+        if (!this._actors.has(actor)) return;
+
+        this._actors.delete(actor);
+
+        actor.detach();
+        actor.dispose();
+    }
+
+    /**
      *  Hydrate all actors with resources they need to function. This method will
      *  also ensure that all actors inserted into the scene after it's called, will
      *  be hydrated with the same pool of resources.
