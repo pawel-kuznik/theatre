@@ -609,13 +609,23 @@ exports.default = WheelLifterCameraMover;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const ActorIntersection_1 = require("../ActorIntersection");
+function lookUp(object, holder) {
+    const find = holder.fetch(object.uuid);
+    if (find)
+        return find;
+    const parent = object.parent;
+    if (parent)
+        return lookUp(parent, holder);
+    return null;
+}
+;
 /**
  *  This is a helper function that allows for preparing data for pick-like event
  *  of different CameraPickers.
  */
 function buildPickEventData(intersections, holder) {
     const result = intersections.map((value) => {
-        const actor = holder.fetch(value.object.uuid);
+        const actor = lookUp(value.object, holder);
         if (!actor)
             return undefined;
         const child = value.object instanceof three_1.InstancedMesh ? value.instanceId : undefined;
@@ -907,6 +917,17 @@ class Stage {
         actor.attachTo(this.scene);
         if (this._warderobe)
             actor.hydrate(this._warderobe);
+    }
+    /**
+     *  Destroy a target actor residing in this scene. If the actor is not inside
+     *  the scene no action will be done.
+     */
+    destroy(actor) {
+        if (!this._actors.has(actor))
+            return;
+        this._actors.delete(actor);
+        actor.detach();
+        actor.dispose();
     }
     /**
      *  Hydrate all actors with resources they need to function. This method will

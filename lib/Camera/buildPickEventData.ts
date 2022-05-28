@@ -1,6 +1,25 @@
 import { InstancedMesh, Intersection, Object3D } from "three";
+import Actor from "../Actor";
 import ActorIntersection from "../ActorIntersection";
 import ActorsHolder from "../ActorsHolder";
+
+/**
+ *  This is a helper function to get the actor based on an intersected object.
+ *  We need to check the immediate object but then start looking at the parent
+ *  of the handed object cause actors can be constructed out of many objects.
+ */
+function lookUp(object:Object3D, holder:ActorsHolder) : Actor|null {
+
+    const find = holder.fetch(object.uuid);
+
+    if (find) return find;
+
+    const parent = object.parent;
+
+    if (parent) return lookUp(parent, holder);
+
+    return null;
+};
 
 /**
  *  This is a helper function that allows for preparing data for pick-like event
@@ -10,7 +29,7 @@ export default function buildPickEventData(intersections:Array<Intersection<Obje
 
     const result = intersections.map((value:Intersection<Object3D>) => {
 
-        const actor = holder.fetch(value.object.uuid);
+        const actor = lookUp(value.object, holder);
 
         if (!actor) return undefined;
 
