@@ -8,5 +8,5 @@ export default interface CameraMover extends RenderParticipant {
     /**
      *  Handle a user input event.
      */
-    handle(event:KeyboardEvent|PointerEvent|WheelEvent) : void;
+    handlePointer(event:KeyboardEvent|PointerEvent|WheelEvent) : void;
 };

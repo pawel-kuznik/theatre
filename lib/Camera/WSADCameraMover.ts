@@ -50,7 +50,7 @@ export default class WSADCameraMover implements CameraMover {
     /**
      *  Handle input event.
      */
-    public handle(event:KeyboardEvent|PointerEvent) {
+    public handlePointer(event:KeyboardEvent|PointerEvent) {
 
         if (event.type !== 'keydown') return;
 

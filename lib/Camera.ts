@@ -18,7 +18,7 @@ export default interface Camera extends RenderParticipant {
     /**
      *  Handle an input event related to the camera.
      */
-    handle(event:KeyboardEvent|PointerEvent|WheelEvent) : void;
+    handlePointer(event:KeyboardEvent|PointerEvent|WheelEvent) : void;
 
     /**
      *  Update camera aspect ratio.

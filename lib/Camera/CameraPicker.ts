@@ -7,5 +7,5 @@ export default interface CameraPicker {
     /**
      *  Handle a pointer event.
      */
-    handle(event:PointerEvent) : void;
+    handlePointer(event:PointerEvent) : void;
 };

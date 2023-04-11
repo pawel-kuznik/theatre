@@ -1,5 +1,5 @@
 {
-  "name": "theatre",
+  "name": "@pawel-kuznik/theatre",
   "version": "0.1.7",
   "description": "theathre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
   "main": "build/theatre.js",
@@ -28,15 +28,14 @@
     "@types/three": "^0.133.1",
     "browserify": "^17.0.0",
     "http-server": "^14.0.0",
-    "typescript": "^4.4.4",
-    "three": "^0.133.1" 
+    "three": "^0.133.1",
+    "typescript": "^4.4.4"
   },
   "dependencies": {
-    "@types/resize-observer-browser": "^0.1.6",
-    "iventy": "github:pawel-kuznik/iventy"
-    
+    "@pawel-kuznik/iventy": "^3.0.3",
+    "@types/resize-observer-browser": "^0.1.6"
   },
   "peerDependencies": {
-    "three": "^0.133.1" 
+    "three": "^0.133.1"
   }
 }

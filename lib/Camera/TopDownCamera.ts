@@ -131,13 +131,13 @@ export default class TopDownCamera implements FreefloatCamera {
     /**
      *  Handle event related to the user input.
      */
-    public handle(event:KeyboardEvent|PointerEvent|WheelEvent) {
+    public handlePointer(event:KeyboardEvent|PointerEvent|WheelEvent) {
 
-        for (let mover of this._movers) mover.handle(event);
+        for (let mover of this._movers) mover.handlePointer(event);
 
-        if (event.type === 'click') for (let picker of this._pickers) picker.handle(event as PointerEvent);
+        if (event.type === 'click') for (let picker of this._pickers) picker.handlePointer(event as PointerEvent);
 
-        if (event.type === 'pointermove') for (let picker of this._pickers) picker.handle(event as PointerEvent);
+        if (event.type === 'pointermove') for (let picker of this._pickers) picker.handlePointer(event as PointerEvent);
     }
 
     /**

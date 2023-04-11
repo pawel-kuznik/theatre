@@ -6,7 +6,7 @@ import Warderobe from "./Warderobe";
 import Camera from "./Camera";
 import CameraFactory, { CameraFactorySpecs } from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
-import { Emitter } from 'iventy';
+import { Emitter } from '@pawel-kuznik/iventy';
 import RenderingQualitySettings, { PowerPreferenceSetting, ShaderPrecisionSetting } from "./RenderingQualitySettings";
 
 /**
@@ -109,12 +109,12 @@ export default class Theatre extends Emitter  {
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
         canvas.ownerDocument.body.addEventListener('keydown', (event:KeyboardEvent) => {
 
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
 
         canvas.ownerDocument.body.addEventListener('wheel', (event:WheelEvent) => {
 
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
 
         canvas.addEventListener('click', (e:MouseEvent) => {
@@ -126,12 +126,12 @@ export default class Theatre extends Emitter  {
             // modern browsers emit a PointerEvent instead.
             const event = e as PointerEvent;
 
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
 
         canvas.addEventListener('pointermove', (event:PointerEvent) => {
 
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
 
         // @todo figure out how to deal with double-click. TS doesn't like this event handler

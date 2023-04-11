@@ -1,4 +1,4 @@
-import { Emitter } from "iventy";
+import { Emitter } from "@pawel-kuznik/iventy";
 import ActorsHolder from "../ActorsHolder";
 import Camera from "../Camera";
 import CameraHoverPicker from "./CameraHoverPicker";

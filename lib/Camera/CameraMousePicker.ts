@@ -1,4 +1,4 @@
-import { Emitter } from "iventy";
+import { Emitter } from "@pawel-kuznik/iventy";
 import { Raycaster, Vector2 } from "three";
 import Actor from "../Actor";
 import ActorsHolder from "../ActorsHolder";
@@ -28,7 +28,7 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
     /**
      *  Handle mouse event and try to pick actors.
      */
-    handle(event:PointerEvent) {
+    handlePointer(event:PointerEvent) {
 
         if (event.type !== 'click') return;
 

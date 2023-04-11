@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":28,"three":35}],2:[function(require,module,exports){
+},{"./build/theatre.js":28,"three":37}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -101,7 +101,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":14,"three":35}],3:[function(require,module,exports){
+},{"./Position":14,"three":37}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -247,7 +247,7 @@ exports.default = CameraFactory;
 },{"./CameraHoverPicker":6,"./CameraMousePicker":7,"./TopDownCamera":8,"./WSADCameraMover":9,"./WheelLifterCameraMover":10}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const iventy_1 = require("iventy");
+const iventy_1 = require("@pawel-kuznik/iventy");
 const three_1 = require("three");
 const buildPickEventData_1 = require("./buildPickEventData");
 /**
@@ -270,7 +270,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
     /**
      *  Handle mouse event and try to pick actors.
      */
-    handle(event) {
+    handlePointer(event) {
         if (event.type !== 'pointermove')
             return;
         if (event.button !== -1)
@@ -285,10 +285,10 @@ class CameraHoverPicker extends iventy_1.Emitter {
 exports.default = CameraHoverPicker;
 ;
 
-},{"./buildPickEventData":11,"iventy":29,"three":35}],7:[function(require,module,exports){
+},{"./buildPickEventData":11,"@pawel-kuznik/iventy":29,"three":37}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const iventy_1 = require("iventy");
+const iventy_1 = require("@pawel-kuznik/iventy");
 const three_1 = require("three");
 const buildPickEventData_1 = require("./buildPickEventData");
 /**
@@ -311,7 +311,7 @@ class CameraMousePicker extends iventy_1.Emitter {
     /**
      *  Handle mouse event and try to pick actors.
      */
-    handle(event) {
+    handlePointer(event) {
         if (event.type !== 'click')
             return;
         // only handle primary button clicks
@@ -327,7 +327,7 @@ class CameraMousePicker extends iventy_1.Emitter {
 exports.default = CameraMousePicker;
 ;
 
-},{"./buildPickEventData":11,"iventy":29,"three":35}],8:[function(require,module,exports){
+},{"./buildPickEventData":11,"@pawel-kuznik/iventy":29,"three":37}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -420,15 +420,15 @@ class TopDownCamera {
     /**
      *  Handle event related to the user input.
      */
-    handle(event) {
+    handlePointer(event) {
         for (let mover of this._movers)
-            mover.handle(event);
+            mover.handlePointer(event);
         if (event.type === 'click')
             for (let picker of this._pickers)
-                picker.handle(event);
+                picker.handlePointer(event);
         if (event.type === 'pointermove')
             for (let picker of this._pickers)
-                picker.handle(event);
+                picker.handlePointer(event);
     }
     /**
      *  A method to update aspect ratio of the camera.
@@ -461,7 +461,7 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":35}],9:[function(require,module,exports){
+},{"three":37}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ;
@@ -494,7 +494,7 @@ class WSADCameraMover {
     /**
      *  Handle input event.
      */
-    handle(event) {
+    handlePointer(event) {
         if (event.type !== 'keydown')
             return;
         const keyboardEvent = event;
@@ -573,7 +573,7 @@ class WheelLifterCameraMover {
     /**
      *  Handle input event.
      */
-    handle(event) {
+    handlePointer(event) {
         if (event.type !== 'wheel')
             return;
         const wheelEvent = event;
@@ -609,6 +609,11 @@ exports.default = WheelLifterCameraMover;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const ActorIntersection_1 = require("../ActorIntersection");
+/**
+ *  This is a helper function to get the actor based on an intersected object.
+ *  We need to check the immediate object but then start looking at the parent
+ *  of the handed object cause actors can be constructed out of many objects.
+ */
 function lookUp(object, holder) {
     const find = holder.fetch(object.uuid);
     if (find)
@@ -639,7 +644,7 @@ function buildPickEventData(intersections, holder) {
 exports.default = buildPickEventData;
 ;
 
-},{"../ActorIntersection":3,"three":35}],12:[function(require,module,exports){
+},{"../ActorIntersection":3,"three":37}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -657,7 +662,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":35}],13:[function(require,module,exports){
+},{"./Actor":2,"three":37}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -803,7 +808,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":35}],17:[function(require,module,exports){
+},{"three":37}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -959,58 +964,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":21,"three":35}],20:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const EmptyStage_1 = require("./EmptyStage");
-/**
- *  This is a special class that makes sure there is always
- *  a stage and allows for switching between stages. The switch
- *  can be done with a specific transition or loading state
- *  which is not a stage of itself.
- *
- *  @todo   make the transition/loader
- */
-class StageContainer {
-    constructor() {
-        /**
-         *  The current stage.
-         */
-        this._stage = new EmptyStage_1.default();
-    }
-    /**
-     *  Expose the stage.
-     */
-    get stage() { return this._stage; }
-    /**
-     *  The actors inside this container.
-     */
-    get actors() { return this._stage.actors; }
-    /**
-     *  Mount new stage. A promise of fully mounted stage is returned.
-     *  This promise resolves when the provided stage is fully loaded.
-     */
-    mount(stage) {
-        this._stage = stage;
-        return Promise.resolve();
-    }
-    /**
-     *  Fetch an actor by it's object uuid.
-     */
-    fetch(uuid) {
-        return this._stage.fetch(uuid);
-    }
-    /**
-     *  Make a render update.
-     */
-    renderUpdate(step) {
-        this._stage.renderUpdate(step);
-    }
-}
-exports.default = StageContainer;
-;
-
-},{"./EmptyStage":13}],21:[function(require,module,exports){
+},{"./Stage/StageAmbience":20,"three":37}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1075,7 +1029,58 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":35}],22:[function(require,module,exports){
+},{"three":37}],21:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const EmptyStage_1 = require("./EmptyStage");
+/**
+ *  This is a special class that makes sure there is always
+ *  a stage and allows for switching between stages. The switch
+ *  can be done with a specific transition or loading state
+ *  which is not a stage of itself.
+ *
+ *  @todo   make the transition/loader
+ */
+class StageContainer {
+    constructor() {
+        /**
+         *  The current stage.
+         */
+        this._stage = new EmptyStage_1.default();
+    }
+    /**
+     *  Expose the stage.
+     */
+    get stage() { return this._stage; }
+    /**
+     *  The actors inside this container.
+     */
+    get actors() { return this._stage.actors; }
+    /**
+     *  Mount new stage. A promise of fully mounted stage is returned.
+     *  This promise resolves when the provided stage is fully loaded.
+     */
+    mount(stage) {
+        this._stage = stage;
+        return Promise.resolve();
+    }
+    /**
+     *  Fetch an actor by it's object uuid.
+     */
+    fetch(uuid) {
+        return this._stage.fetch(uuid);
+    }
+    /**
+     *  Make a render update.
+     */
+    renderUpdate(step) {
+        this._stage.renderUpdate(step);
+    }
+}
+exports.default = StageContainer;
+;
+
+},{"./EmptyStage":13}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -1121,7 +1126,7 @@ const Stage_1 = require("./Stage");
 const StageContainer_1 = require("./StageContainer");
 const Warderobe_1 = require("./Warderobe");
 const CameraFactory_1 = require("./Camera/CameraFactory");
-const iventy_1 = require("iventy");
+const iventy_1 = require("@pawel-kuznik/iventy");
 const RenderingQualitySettings_1 = require("./RenderingQualitySettings");
 ;
 /**
@@ -1181,10 +1186,10 @@ class Theatre extends iventy_1.Emitter {
         });
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
         canvas.ownerDocument.body.addEventListener('keydown', (event) => {
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
         canvas.ownerDocument.body.addEventListener('wheel', (event) => {
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
         canvas.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1192,10 +1197,10 @@ class Theatre extends iventy_1.Emitter {
             // For some (most likely historical) reason, TS lib thinks it's a MouseEvent, but
             // modern browsers emit a PointerEvent instead.
             const event = e;
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
         canvas.addEventListener('pointermove', (event) => {
-            this._camera.handle(event);
+            this._camera.handlePointer(event);
         });
         // @todo figure out how to deal with double-click. TS doesn't like this event handler
         // canvas.addEventListener('dblclick ', (e:PointerEvent) => { });
@@ -1236,7 +1241,7 @@ class Theatre extends iventy_1.Emitter {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./RenderingQualitySettings":18,"./Stage":19,"./StageContainer":20,"./Warderobe":27,"iventy":29}],24:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./RenderingQualitySettings":18,"./Stage":19,"./StageContainer":21,"./Warderobe":27,"@pawel-kuznik/iventy":29}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1304,7 +1309,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":35}],25:[function(require,module,exports){
+},{"./Actor":2,"three":37}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1442,7 +1447,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":35}],26:[function(require,module,exports){
+},{"./Actor":2,"three":37}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1615,7 +1620,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":22,"three":35}],28:[function(require,module,exports){
+},{"./TextureAnimator":22,"three":37}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
@@ -1650,10 +1655,9 @@ Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: func
  *  the compilation process) all of the public classes of the library. This means
  *  that if something should be exposed outside, it should be exported via this
  *  file.
- *
- *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SignalController = exports.Federation = exports.Emitter = exports.Event = void 0;
 // export all of the public classes.
 var Event_1 = require("./lib/Event");
 Object.defineProperty(exports, "Event", { enumerable: true, get: function () { return Event_1.Event; } });
@@ -1661,32 +1665,39 @@ var Emitter_1 = require("./lib/Emitter");
 Object.defineProperty(exports, "Emitter", { enumerable: true, get: function () { return Emitter_1.Emitter; } });
 var Federation_1 = require("./lib/Federation");
 Object.defineProperty(exports, "Federation", { enumerable: true, get: function () { return Federation_1.Federation; } });
+var Signal_1 = require("./lib/Signal");
+Object.defineProperty(exports, "SignalController", { enumerable: true, get: function () { return Signal_1.SignalController; } });
 
-},{"./lib/Emitter":32,"./lib/Event":33,"./lib/Federation":34}],30:[function(require,module,exports){
+},{"./lib/Emitter":32,"./lib/Event":33,"./lib/Federation":34,"./lib/Signal":36}],30:[function(require,module,exports){
 "use strict";
-/**
- *  This is a class to handle a single channel. A single channel is a collection
- *  of callbacks that an event instance might be triggered on.
- *
- *  The channel can handle tags. These tags are associated with callbacks and
- *  define if an event can be triggered in certain handlers.
- *
- *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Channel = void 0;
-// export the class
+;
+/**
+ *  This is a class that represents a single notification channel. Such channel
+ *  allows for registering a collection of handlers. These handler are then executed
+ *  when `.trigger()` method is called.
+ *
+ *  The channel also allows for registering handlers on specific collection of tags.
+ *  These tags should give an additional information about the specificity of
+ *  an event that should be handled.
+ */
 class Channel {
     constructor() {
         /**
          * An array containing all registered callbacks for each tag. Callbacks
          * registered under no callback are stored under null instead of tag name.
          * Each item in the array is a tuple tagname-callback.
-         * @var Array
          */
         this._callbacks = [];
     }
-    // the implementation
+    /**
+     * How many different callbacks are registered in this channel?
+     */
+    get size() {
+        // return the length of our callbacks
+        return this._callbacks.length;
+    }
     register(...args) {
         // destruct the parameters
         let [handler, t] = args;
@@ -1705,7 +1716,11 @@ class Channel {
         // allow chaining
         return this;
     }
-    // the implementation
+    observe(...args) {
+        const [handler, tags] = args;
+        this.register(handler, tags);
+        return () => void this.unregister(handler);
+    }
     unregister(...args) {
         // destruct the arguments into pieces
         let [handler, t] = args;
@@ -1732,7 +1747,6 @@ class Channel {
     }
     /**
      *  Trigger a specific event on this channel.
-     *  @param Event   The event to trigger on this channel.
      */
     trigger(event) {
         // iterate over the callbacks and try to trigger the event properly
@@ -1742,14 +1756,6 @@ class Channel {
             if (tag == null || event.tags.includes(tag))
                 handler(event);
         }
-    }
-    /**
-     * How many different callbacks are registered in this channel?
-     * @return int
-     */
-    get size() {
-        // return the length of our callbacks
-        return this._callbacks.length;
     }
 }
 exports.Channel = Channel;
@@ -1906,8 +1912,6 @@ exports.Designator = Designator;
  *  event emitter allows to register a number of callbacks that should be
  *  triggered when an event on specific channel is triggered. It's possible
  *  to distinguish channels by names.
- *
- *  @author     Paweł Kuźnik <pawel.kuznik@gmail.com>
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Emitter = void 0;
@@ -1915,9 +1919,6 @@ const Event_1 = require("./Event");
 const Channel_1 = require("./Channel");
 // export the class
 class Emitter {
-    /**
-     *  The constructor
-     */
     constructor() {
         /**
          *  A map container arrays of callbacks per callback channel.
@@ -1929,7 +1930,6 @@ class Emitter {
          *  @var    Set<Emitter>
          */
         this._bubbleTo = new Set();
-        // nothing special
     }
     // the actual implementation
     trigger(...args) {
@@ -1956,12 +1956,20 @@ class Emitter {
     }
     ;
     /**
-     *  Install callback on given channel.
-     *
-     *  @param  string      The channel name.
-     *  @param  function    The callback to call when the event is triggered
+     *  Install callback on given channel. This method is identical to the .handle() method,
+     *  but returns emitter instance for chaining.
      */
     on(name, callback) {
+        // install a handler on an emitter
+        this.handle(name, callback);
+        // allow chaining
+        return this;
+    }
+    /**
+     *  Install a handler on a specific event. This method is identical to the .on() method,
+     *  but it returns a function that can be used to uninstall the installed event handler.
+     */
+    handle(name, callback) {
         // split the name and tags
         let [channelName, ...tags] = name.split('.');
         // get the callbacks
@@ -1976,12 +1984,9 @@ class Emitter {
         // do we have callbacks? then use the method. Otherwise, we assume we
         // don't have any callbacks
         if (tags.length)
-            callbacks.register(callback, tags);
+            return callbacks.observe(callback, tags);
         // register the callback on all
-        else
-            callbacks.register(callback);
-        // allow chaining
-        return this;
+        return callbacks.observe(callback);
     }
     /**
      *  Uninstall callback on given channel.
@@ -2043,7 +2048,7 @@ class Emitter {
      *
      *  @return Event   The constructed event.
      */
-    createEvent(name, data = {}, previousEvent = null) {
+    createEvent(name, data, previousEvent = null) {
         // construct new event
         return new Event_1.Event(name, data, this, previousEvent);
     }
@@ -2053,6 +2058,10 @@ exports.Emitter = Emitter;
 
 },{"./Channel":30,"./Event":33}],33:[function(require,module,exports){
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Event = void 0;
+const Designator_1 = require("./Designator");
+const Packet_1 = require("./Packet");
 /**
  *  This is a class to acompany the Emitter class. The Event has important
  *  properties:
@@ -2066,23 +2075,18 @@ exports.Emitter = Emitter;
  *  dot separating them from the actual type. Follow this pattern:
  *
  *      type.tag1.tag2.tag3
- *
- *  @author Paweł Kuźnik <pawel.kuznik@gmail.com>
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Event = void 0;
-const Designator_1 = require("./Designator");
-// return the class
-class Event {
+class Event extends Packet_1.Packet {
     /**
      *  The constructor
      *
      *  @param  sting   The channel type of the event.
-     *  @param  object   The data associated with the event.
+     *  @param  object  The data associated with the event.
      *  @param  Emitter The emitter that triggers this event.
      *  @param  Event   The previous event in chain that lead to this event.
      */
     constructor(type, data, target = null, prev = null) {
+        super(data);
         /**
          *  Flags to tell if the event is stopped or prevented.
          */
@@ -2091,13 +2095,11 @@ class Event {
         // construct event designator
         this._designator = new Designator_1.Designator(type);
         // assign additional data
-        this._data = data;
         this._target = target;
         this._prev = prev;
     }
     /**
      *  Prevent the event.
-     *  @return Event   The prevented event.
      */
     prevent() {
         // mark the event as prevented
@@ -2107,12 +2109,10 @@ class Event {
     }
     /**
      *  Is the event prevented.
-     *  @return bool
      */
     get isPrevented() { return this._prevented; }
     /**
      *  Stop the event
-     *  @return Event   Same event for chaining
      */
     stop() {
         // mark the event as stopped
@@ -2126,41 +2126,28 @@ class Event {
     get isStopped() { return this._stopped; }
     /**
      *  Return the type of the event.
-     *  @return string
      */
     get type() { return this._designator.name; }
     /**
      *  Get access to tags assigend to this event.
-     *  @return Array
      */
     get tags() { return this._designator.tags; }
     /**
      *  The data associated with the event.
-     *
-     *  @return mixed
      */
-    get data() { return this._data; }
+    get data() { return this.payload; }
     /**
      *  Get the target of the event.
-     *
-     *  @return Emitter
      */
     get target() { return this._target; }
     /**
      *  Get the previos event in the chain.
-     *
-     *  @return Event
      */
     get previous() { return this._prev; }
     /**
      *  Create new event based on this one.
-     *
-     *  @param  string  The name of the event's channel.
-     *  @param  mixed   (Optional) The associated data.
-     *  @param  Emitter (Optional) The emitter instance that is the target of the event. If
-     *                  no target is provided, the current event target is used.
      */
-    createEvent(name, data = {}, target = null) {
+    createEvent(name, data, target = null) {
         // return new event instance
         return new Event(name, data, target || this._target, this);
     }
@@ -2168,17 +2155,16 @@ class Event {
      *  Create a new extended event. An extended event is same as this one, but
      *  it has an additional set of tags. This is useful when we want to bubble
      *  events but as they bubble they need to get more tags assigned to them.
-     *  @param  Array   An array of tag strings.
      */
     extendEvent(tags) {
         // create a new event that is based on an extended
-        return new Event(this._designator.extend(tags).toString(), this._data, this._target, this._prev);
+        return new Event(this._designator.extend(tags).toString(), this.data, this._target, this._prev);
     }
 }
 exports.Event = Event;
 ;
 
-},{"./Designator":31}],34:[function(require,module,exports){
+},{"./Designator":31,"./Packet":35}],34:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class describing a federation of one or many emitters. A federation
@@ -2205,6 +2191,81 @@ class Federation extends Emitter_1.Emitter {
 exports.Federation = Federation;
 
 },{"./Emitter":32}],35:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Packet = void 0;
+/**
+ *  This is a class describing a data carried in the invety system.
+ *  This is a base class for event and signal mechanism.
+ */
+class Packet {
+    constructor(payload) {
+        this.payload = payload;
+    }
+}
+exports.Packet = Packet;
+;
+
+},{}],36:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SignalController = void 0;
+;
+;
+;
+/**
+ *  The signal controller allows for control over a signal.
+ */
+class SignalController {
+    constructor() {
+        this._signal = new ControlledSignal();
+    }
+    get signal() {
+        return this._signal;
+    }
+    /**
+     *  Activate the signal.
+     */
+    activate(payload) {
+        this._signal.activate(payload);
+    }
+    /**
+     *  Prepare the object for disposal.
+     */
+    dispose() {
+        this._signal.dispose();
+    }
+}
+exports.SignalController = SignalController;
+;
+class ControlledSignal {
+    constructor() {
+        this._callbacks = new Set();
+    }
+    observe(callback) {
+        this._callbacks.add(callback);
+        return () => {
+            this._callbacks.delete(callback);
+        };
+    }
+    /**
+     *  Activate the signal.
+     */
+    activate(payload) {
+        for (let callback of this._callbacks) {
+            callback(payload);
+        }
+    }
+    /**
+     *  Prepare the object for disposal.
+     */
+    dispose() {
+        this._callbacks.clear();
+    }
+}
+;
+
+},{}],37:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors
