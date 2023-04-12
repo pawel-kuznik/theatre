@@ -126,4 +126,14 @@ export default class Warderobe implements RenderParticipant {
 
         for (let [key, animator] of this._animators) animator.renderUpdate(step);
     }
+
+    /**
+     *  Dispose the object
+     */
+    dispose() {
+
+        this.wait().then(() => {
+            this._textures.clear();
+        });
+    }
 };

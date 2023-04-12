@@ -67,6 +67,13 @@ export default class Theatre extends Emitter  {
      */
     private readonly _loop:RenderingLoop;
 
+    private _canvas: HTMLCanvasElement;
+
+    private _onDocumentKeyDown: any;
+    private _onDocumentWheel: any;
+    private _onCanvasClick: any;
+    private _onCanvasPointerMove: any;
+
     /**
      *  The constructor
      *
@@ -75,6 +82,8 @@ export default class Theatre extends Emitter  {
     constructor(canvas:HTMLCanvasElement, options?:TheatreOptions) {
 
         super();
+
+        this._canvas = canvas;
 
         this._rendererHandler = new RendererHandler(canvas, Object.assign({ }, {
             antialiasing:       true,
@@ -107,17 +116,17 @@ export default class Theatre extends Emitter  {
         });
 
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
-        canvas.ownerDocument.body.addEventListener('keydown', (event:KeyboardEvent) => {
+        canvas.ownerDocument.body.addEventListener('keydown', this._onDocumentKeyDown = (event:KeyboardEvent) => {
 
             this._camera.handlePointer(event);
         });
 
-        canvas.ownerDocument.body.addEventListener('wheel', (event:WheelEvent) => {
+        canvas.ownerDocument.body.addEventListener('wheel', this._onDocumentWheel = (event:WheelEvent) => {
 
             this._camera.handlePointer(event);
         });
 
-        canvas.addEventListener('click', (e:MouseEvent) => {
+        canvas.addEventListener('click', this._onCanvasClick = (e:MouseEvent) => {
 
             e.preventDefault();
 
@@ -129,7 +138,7 @@ export default class Theatre extends Emitter  {
             this._camera.handlePointer(event);
         });
 
-        canvas.addEventListener('pointermove', (event:PointerEvent) => {
+        canvas.addEventListener('pointermove', this._onCanvasPointerMove = (event:PointerEvent) => {
 
             this._camera.handlePointer(event);
         });
@@ -182,5 +191,28 @@ export default class Theatre extends Emitter  {
         this._stageContainer.mount(stage);
 
         this._stageContainer.stage.hydrate(this.warderobe);
+    }
+
+    /**
+     *  Unallocate all resources allocated by the renderer.
+     */
+    dispose() {
+
+        // first stop the loop as we really don't want to make any operations while cleanups
+        this._loop.stop();
+
+        // now we need to clean up all stages
+        for(let stage of this._stages.values()) {
+            stage.dispose();
+        }
+
+        this._canvas.ownerDocument.body.removeEventListener('keydown', this._onDocumentKeyDown);
+        this._canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
+        this._canvas.removeEventListener('click', this._onCanvasClick);
+        this._canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
+
+        this._stages.clear();
+
+        this._rendererHandler.dispose();
     }
 };

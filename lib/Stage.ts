@@ -118,4 +118,18 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         this._ambience = new StageAmbience(props);
         this._ambience.occupy(this.scene);
     }
+
+    /**
+     *  Dispose the scene.
+     */
+    dispose() {
+
+        for(let actor of this._actors) {
+            this.destroy(actor);
+        }
+
+        this._actors.clear();
+
+        if (this._ambience) this._ambience.vacate();
+    }
 };
