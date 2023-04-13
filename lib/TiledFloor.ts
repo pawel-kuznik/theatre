@@ -151,8 +151,6 @@ export default class TiledFloor extends Actor {
             this._positions.set(index, value);
         });
 
-        console.log(object);
-
         object.instanceMatrix.needsUpdate = true;
         if (object.instanceColor) object.instanceColor.needsUpdate = true;
     };
