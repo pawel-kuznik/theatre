@@ -44,7 +44,7 @@ export default class Theatre extends Emitter  {
     /**
      *  Rendering statistics.
      */
-    readonly _stats: RenderingStats;
+    readonly stats: RenderingStats;
 
     /**
      *  The container wrapping around the current stage and providing us
@@ -163,7 +163,7 @@ export default class Theatre extends Emitter  {
 
         this._loop.start();
 
-        this._stats = new RenderingStats(this._loop, this._rendererHandler.renderer);
+        this.stats = new RenderingStats(this._loop, this._rendererHandler.renderer);
     }
 
     /**

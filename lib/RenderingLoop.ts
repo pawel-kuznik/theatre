@@ -18,7 +18,7 @@ export default class RenderingLoop {
 
         this._fpsInterval = setInterval(() => {
             this._fps = 0;
-        });
+        }, 1000);
     }
 
     /**
