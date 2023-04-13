@@ -8,6 +8,7 @@ import CameraFactory, { CameraFactorySpecs } from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
 import { Emitter } from '@pawel-kuznik/iventy';
 import RenderingQualitySettings, { PowerPreferenceSetting, ShaderPrecisionSetting } from "./RenderingQualitySettings";
+import { RenderingStats } from "./RenderingStats";
 
 /**
  *  The options for the main object.
@@ -39,6 +40,11 @@ export default class Theatre extends Emitter  {
      *  The warderobe for the theathre.
      */
     public readonly warderobe:Warderobe = new Warderobe();
+
+    /**
+     *  Rendering statistics.
+     */
+    readonly _stats: RenderingStats;
 
     /**
      *  The container wrapping around the current stage and providing us
@@ -156,6 +162,8 @@ export default class Theatre extends Emitter  {
         });
 
         this._loop.start();
+
+        this._stats = new RenderingStats(this._loop, this._rendererHandler.renderer);
     }
 
     /**
@@ -198,8 +206,8 @@ export default class Theatre extends Emitter  {
      */
     dispose() {
 
-        // first stop the loop as we really don't want to make any operations while cleanups
-        this._loop.stop();
+        // first dispose of the loop as we really don't want to make any operations while cleanups
+        this._loop.dispose();
 
         // now we need to clean up all stages
         for(let stage of this._stages.values()) {
