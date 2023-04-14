@@ -9,6 +9,7 @@ import FreefloatCamera from "./FreefloatCamera";
 import TopDownCamera from "./TopDownCamera";
 import WheelLifterCameraMover from "./WheelLifterCameraMover";
 import WSADCameraMover from "./WSADCameraMover";
+import { CameraTracker } from "./CameraTracker";
 
 export type CameraFactorySpecs = CameraOptions & {
 
@@ -89,7 +90,9 @@ export default class CameraFactory {
      */
     private buildWSADMover(camera:FreefloatCamera, options:CameraMoverOptions) : WSADCameraMover {
 
-        return new WSADCameraMover(camera);
+        const tracker : CameraTracker | undefined = this._options.tracker ? new CameraTracker(this._options.tracker.stepX, this._options.tracker.stepY, this._options.tracker.stepZ) : undefined;
+
+        return new WSADCameraMover(camera, tracker);
     }
 
     /**
@@ -97,6 +100,8 @@ export default class CameraFactory {
      */
     private buildWheelLifter(camera:FreefloatCamera, options:CameraMoverOptions) : WheelLifterCameraMover {
 
-        return new WheelLifterCameraMover(camera);
+        const tracker : CameraTracker | undefined = this._options.tracker ? new CameraTracker(this._options.tracker.stepX, this._options.tracker.stepY, this._options.tracker.stepZ) : undefined;
+
+        return new WheelLifterCameraMover(camera, tracker);
     }
 };
