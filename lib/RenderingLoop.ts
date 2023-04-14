@@ -7,6 +7,7 @@ export default class RenderingLoop {
 
     private _running:boolean = false;
     private _fps: number = 0;
+    private _fpsAcc: number = 0;
 
     private _fpsInterval: number;
 
@@ -17,7 +18,8 @@ export default class RenderingLoop {
     constructor(private _renderFunction:(step:RenderStep) => void) {
 
         this._fpsInterval = setInterval(() => {
-            this._fps = 0;
+            this._fps = this._fpsAcc;
+            this._fpsAcc = 0;
         }, 1000);
     }
 
@@ -40,7 +42,7 @@ export default class RenderingLoop {
 
             this._renderFunction(renderStep);
 
-            this._fps++;
+            this._fpsAcc += 1;
 
             window.requestAnimationFrame(step);
         };

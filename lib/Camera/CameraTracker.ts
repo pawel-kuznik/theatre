@@ -33,15 +33,15 @@ export class CameraTracker extends Emitter {
         const currentChunkY = Math.floor(position.y / this._stepY);
         const currentChunkZ = Math.floor(position.z / this._stepZ);
 
-        const changeX = this._lastChunkX - currentChunkX;
-        const changeY = this._lastChunkY - currentChunkY;
-        const changeZ = this._lastChunkZ - currentChunkZ;
+        const changeX = currentChunkX - this._lastChunkX;
+        const changeY = currentChunkY - this._lastChunkY;
+        const changeZ = currentChunkZ - this._lastChunkZ;
 
         this._lastChunkX = currentChunkX;
         this._lastChunkY = currentChunkY;
         this._lastChunkZ = currentChunkZ;
 
-        if (changeX == 0 || changeY == 0 || changeZ == 0) return;
+        if (changeX == 0 && changeY == 0 && changeZ == 0) return;
         
         this.deferredTrigger('chunk-moved', {
             changeX,
