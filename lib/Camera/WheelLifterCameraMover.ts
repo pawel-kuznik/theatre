@@ -1,12 +1,14 @@
+import { Emitter } from "@pawel-kuznik/iventy";
 import { RenderStep } from "../RenderStep";
 import CameraMover from "./CameraMover";
+import { CameraTracker } from "./CameraTracker";
 import FreefloatCamera from "./FreefloatCamera";
 
 /**
  *  This is a camera mover that handlers lifting camera up/down in reaction
  *  to a mouse wheel wheel.
  */
-export default class WheelLifterCameraMover implements CameraMover {
+export default class WheelLifterCameraMover extends Emitter implements CameraMover {
 
     /**
      *  The target position the mover aims to move the camera to.
@@ -41,7 +43,11 @@ export default class WheelLifterCameraMover implements CameraMover {
     /**
      *  The constructor.
      */
-    public constructor (private readonly _camera:FreefloatCamera) { }
+    public constructor (private readonly _camera:FreefloatCamera, private readonly _tracker?: CameraTracker) {
+        super();
+
+        if (this._tracker) this._tracker.bubbleTo(this);
+    }
 
     /**
      *  Handle input event.
@@ -83,5 +89,7 @@ export default class WheelLifterCameraMover implements CameraMover {
 
         const factor = step.difference / this._smoothing;
         this._camera.liftBy((this._target - this._camera.height) * factor);
+
+        if (this._tracker) this._tracker.notify(this._camera.native.position);
     }
 };

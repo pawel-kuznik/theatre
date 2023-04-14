@@ -1,9 +1,10 @@
 import { Camera as ThreeJSCamera, Vector3 } from "three";
 import RenderParticipant from "./RenderParticipant";
+import { EmitterLike } from "@pawel-kuznik/iventy";
 /**
  *  An interface describing a camera in the theatre.
  */
-export default interface Camera extends RenderParticipant {
+export default interface Camera extends RenderParticipant, EmitterLike {
 
     /**
      *  Get access to the Three.js camera instance.

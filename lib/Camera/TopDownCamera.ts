@@ -4,13 +4,14 @@ import CameraMover from "./CameraMover";
 import CameraOptions from "./CameraOptions";
 import CameraPicker from "./CameraPicker";
 import FreefloatCamera from "./FreefloatCamera";
+import { Emitter } from "@pawel-kuznik/iventy";
 
 /**
  *  The specific options for top-down camera.
  */
 export interface TopDownCameraOptions extends CameraOptions {
 
-    // obligatory form CameraOptions
+    // obligatory for CameraOptions
     type: 'topdown';
 };
 
@@ -18,7 +19,7 @@ export interface TopDownCameraOptions extends CameraOptions {
  *  This is a special camera implementation that is suitable for a top-down
  *  view akin to board games or RTS games.
  */
-export default class TopDownCamera implements FreefloatCamera {
+export default class TopDownCamera extends Emitter implements FreefloatCamera {
 
     private readonly _camera:PerspectiveCamera;
 
@@ -34,6 +35,8 @@ export default class TopDownCamera implements FreefloatCamera {
      *  The construct of the camera.
      */
     constructor(options:TopDownCameraOptions) {
+
+        super();
 
         // construct the actual camera instance
         this._camera = new PerspectiveCamera(65, 45, 0.1, 8000);
@@ -156,6 +159,8 @@ export default class TopDownCamera implements FreefloatCamera {
     public appendMover(mover:CameraMover) {
 
         this._movers.push(mover);
+
+        mover.on('chunk-moved', (event) => void this.trigger(event));
     }
 
     /**

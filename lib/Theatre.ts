@@ -81,6 +81,11 @@ export default class Theatre extends Emitter  {
     private _onCanvasPointerMove: any;
 
     /**
+     *  The camera responsible for showing the game.
+     */
+    get camera() : Camera { return this._camera; }
+
+    /**
      *  The constructor
      *
      *  @throw  Error   When initialization fails. The message contains the reason.

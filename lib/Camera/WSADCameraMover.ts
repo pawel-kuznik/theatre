@@ -1,5 +1,7 @@
+import { Emitter } from "@pawel-kuznik/iventy";
 import { RenderStep } from "../RenderStep";
 import CameraMover from "./CameraMover";
+import { CameraTracker } from "./CameraTracker";
 import FreefloatCamera from "./FreefloatCamera";
 
 interface Position { 
@@ -11,7 +13,7 @@ interface Position {
  *  This is a camera mover that controls the camera based on pressing WSAD
  *  keys and move the camera in a top-down position.
  */
-export default class WSADCameraMover implements CameraMover {
+export default class WSADCameraMover extends Emitter implements CameraMover {
 
     /**
      *  The target position the mover aims to move the camera to.
@@ -45,7 +47,11 @@ export default class WSADCameraMover implements CameraMover {
     /**
      *  The constructor.
      */
-    public constructor (private readonly _camera:FreefloatCamera) { }
+    public constructor (private readonly _camera:FreefloatCamera, private readonly _tracker?: CameraTracker) {
+        super();
+
+        if (this._tracker) this._tracker?.bubbleTo(this);
+    }
 
     /**
      *  Handle input event.
@@ -102,5 +108,7 @@ export default class WSADCameraMover implements CameraMover {
         const move = { x: (this._target.x - this._camera.x) * factor, y: (this._target.y - this._camera.y) * factor };
 
         this._camera.moveBy(move.x, move.y);
+
+        if (this._tracker) this._tracker.notify(this._camera.native.position);
     }
 };

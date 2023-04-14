@@ -14,7 +14,9 @@ export type CameraFactorySpecs = CameraOptions & {
 
     movers:Array<CameraMoverOptions>;
 
-    pickers:Array<"primary"|"hover">
+    pickers:Array<"primary"|"hover">;
+
+    tracker?: { stepX: number, stepY: number, stepZ: number };
 };
 
 /**
