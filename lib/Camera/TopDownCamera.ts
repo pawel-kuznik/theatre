@@ -39,7 +39,12 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
         super();
 
         // construct the actual camera instance
-        this._camera = new PerspectiveCamera(65, 45, 0.1, 8000);
+        this._camera = new PerspectiveCamera(
+            options.fov || 65, 
+            45,
+            options.near || 0.1,
+            options.far || 8000
+        );
 
         // position the camera
         this._camera.position.x = 0;
