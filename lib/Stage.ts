@@ -7,6 +7,7 @@ import { RenderStep } from "./RenderStep";
 import StageAmbience from "./Stage/StageAmbience";
 import StageAmbienceProperties from "./StageAmbienceProperties";
 import Warderobe from "./Warderobe";
+import { InstantiatedActor } from "./InstantiatedActor";
 
 /**
  *  This is the stage. This class represents the scene as well as definition for
@@ -23,6 +24,11 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      *  The actors.
      */
     private readonly _actors:Set<Actor> = new Set();
+
+    /**
+     *  The instantiated actors.
+     */
+    private readonly _instantiatedActors: Set<InstantiatedActor> = new Set();
 
     /**
      *  The current scene ambience.
@@ -65,24 +71,40 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  Insert an actor into the scene.
      */
-    insert(actor:Actor) {
+    insert(actor:Actor|InstantiatedActor) {
 
-        this._actors.add(actor);
+        if (actor instanceof Actor) {
 
-        actor.attachTo(this.scene);
+            this._actors.add(actor);
+            actor.attachTo(this.scene); 
+            if (this._warderobe) actor.hydrate(this._warderobe);
+        }
 
-        if (this._warderobe) actor.hydrate(this._warderobe);
+        if (actor instanceof InstantiatedActor) {
+            
+            this._instantiatedActors.add(actor);
+            actor.attachTo(this.scene);
+            if (this._warderobe) actor.hydrate(this._warderobe);
+        }
     }
 
     /**
      *  Destroy a target actor residing in this scene. If the actor is not inside
      *  the scene no action will be done.
      */
-    destroy(actor:Actor) {
+    destroy(actor:Actor|InstantiatedActor) {
 
-        if (!this._actors.has(actor)) return;
+        if (actor instanceof Actor) {
 
-        this._actors.delete(actor);
+            if (!this._actors.has(actor)) return;
+            this._actors.delete(actor);
+        }
+
+        if (actor instanceof InstantiatedActor) {
+
+            if (!this._instantiatedActors.has(actor)) return;
+            this._instantiatedActors.delete(actor);
+        }
 
         actor.detach();
         actor.dispose();
@@ -98,6 +120,8 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         this._warderobe = warderobe;
 
         for (let actor of this._actors) actor.hydrate(warderobe);
+
+        for (let actor of this._instantiatedActors) actor.hydrate(warderobe);
     }
 
     /**
@@ -125,6 +149,10 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     dispose() {
 
         for(let actor of this._actors) {
+            this.destroy(actor);
+        }
+        
+        for (let actor of this._instantiatedActors) {
             this.destroy(actor);
         }
 

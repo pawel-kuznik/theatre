@@ -34,7 +34,7 @@ export default abstract class Actor implements RenderParticipant {
     protected abstract _initObject(warderobe:Warderobe) : Object3D;
 
     /**
-     *  A method to dispo actor's object.
+     *  A method to dispose actor's object.
      */
     protected _disposeObject() : void {
 

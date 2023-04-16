@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":29,"three":38}],2:[function(require,module,exports){
+},{"./build/theatre.js":31,"three":40}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -28,7 +28,7 @@ class Actor {
      */
     get position() { return new Position_1.default(this._object.position); }
     /**
-     *  A method to dispo actor's object.
+     *  A method to dispose actor's object.
      */
     _disposeObject() {
         for (let child of this._object.children) {
@@ -101,7 +101,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":14,"three":38}],3:[function(require,module,exports){
+},{"./Position":16,"three":40}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -177,6 +177,7 @@ const CameraMousePicker_1 = require("./CameraMousePicker");
 const TopDownCamera_1 = require("./TopDownCamera");
 const WheelLifterCameraMover_1 = require("./WheelLifterCameraMover");
 const WSADCameraMover_1 = require("./WSADCameraMover");
+const CameraTracker_1 = require("./CameraTracker");
 /**
  *  A special class to create a camera based
  *  on provided camera options.
@@ -232,19 +233,21 @@ class CameraFactory {
      *  Build a camera mover that reacts to WSAD keys.
      */
     buildWSADMover(camera, options) {
-        return new WSADCameraMover_1.default(camera);
+        const tracker = this._options.tracker ? new CameraTracker_1.CameraTracker(this._options.tracker.stepX, this._options.tracker.stepY, this._options.tracker.stepZ) : undefined;
+        return new WSADCameraMover_1.default(camera, tracker);
     }
     /**
      *  Build a camera mover that reacts to mouse wheel and lifts the camera up and down.
      */
     buildWheelLifter(camera, options) {
-        return new WheelLifterCameraMover_1.default(camera);
+        const tracker = this._options.tracker ? new CameraTracker_1.CameraTracker(this._options.tracker.stepX, this._options.tracker.stepY, this._options.tracker.stepZ) : undefined;
+        return new WheelLifterCameraMover_1.default(camera, tracker);
     }
 }
 exports.default = CameraFactory;
 ;
 
-},{"./CameraHoverPicker":6,"./CameraMousePicker":7,"./TopDownCamera":8,"./WSADCameraMover":9,"./WheelLifterCameraMover":10}],6:[function(require,module,exports){
+},{"./CameraHoverPicker":6,"./CameraMousePicker":7,"./CameraTracker":8,"./TopDownCamera":9,"./WSADCameraMover":10,"./WheelLifterCameraMover":11}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -285,7 +288,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
 exports.default = CameraHoverPicker;
 ;
 
-},{"./buildPickEventData":11,"@pawel-kuznik/iventy":30,"three":38}],7:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":32,"three":40}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -327,26 +330,83 @@ class CameraMousePicker extends iventy_1.Emitter {
 exports.default = CameraMousePicker;
 ;
 
-},{"./buildPickEventData":11,"@pawel-kuznik/iventy":30,"three":38}],8:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":32,"three":40}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CameraTracker = void 0;
+const iventy_1 = require("@pawel-kuznik/iventy");
+/**
+ *  This is a class that allows tracking a camera movement. It's useful for
+ *  telling the client application that camera moved into specific area of
+ *  game.
+ */
+class CameraTracker extends iventy_1.Emitter {
+    constructor(stepX, stepY, stepZ) {
+        super();
+        this._lastChunkX = 0;
+        this._lastChunkY = 0;
+        this._lastChunkZ = 0;
+        this._stepX = 1;
+        this._stepY = 1;
+        this._stepZ = 1;
+        this._stepX = stepX;
+        this._stepY = stepY;
+        this._stepZ = stepZ;
+    }
+    /**
+     *  Tell the tracker about a new position of a camera.
+     *  This needs to be called from the camera that moves.
+     */
+    notify(position) {
+        const currentChunkX = Math.floor(position.x / this._stepX);
+        const currentChunkY = Math.floor(position.y / this._stepY);
+        const currentChunkZ = Math.floor(position.z / this._stepZ);
+        const changeX = currentChunkX - this._lastChunkX;
+        const changeY = currentChunkY - this._lastChunkY;
+        const changeZ = currentChunkZ - this._lastChunkZ;
+        this._lastChunkX = currentChunkX;
+        this._lastChunkY = currentChunkY;
+        this._lastChunkZ = currentChunkZ;
+        if (changeX == 0 && changeY == 0 && changeZ == 0)
+            return;
+        this.deferredTrigger('chunk-moved', {
+            changeX,
+            changeY,
+            changeZ,
+            chunkX: currentChunkX,
+            chunkY: currentChunkY,
+            chunkZ: currentChunkZ,
+            posX: position.x,
+            posY: position.y,
+            posZ: position.z,
+        });
+    }
+}
+exports.CameraTracker = CameraTracker;
+;
+
+},{"@pawel-kuznik/iventy":32}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
+const iventy_1 = require("@pawel-kuznik/iventy");
 ;
 /**
  *  This is a special camera implementation that is suitable for a top-down
  *  view akin to board games or RTS games.
  */
-class TopDownCamera {
+class TopDownCamera extends iventy_1.Emitter {
     /**
      *  The construct of the camera.
      */
     constructor(options) {
+        super();
         this._movers = [];
         this._pickers = [];
         this._looktAt = new three_1.Vector3();
         this._moved = true;
         // construct the actual camera instance
-        this._camera = new three_1.PerspectiveCamera(65, 45, 0.1, 8000);
+        this._camera = new three_1.PerspectiveCamera(options.fov || 65, 45, options.near || 0.1, options.far || 8000);
         // position the camera
         this._camera.position.x = 0;
         this._camera.position.y = -2.5;
@@ -442,6 +502,7 @@ class TopDownCamera {
      */
     appendMover(mover) {
         this._movers.push(mover);
+        mover.on('chunk-moved', (event) => void this.trigger(event));
     }
     /**
      *  Append an actor picker.
@@ -461,20 +522,24 @@ class TopDownCamera {
 exports.default = TopDownCamera;
 ;
 
-},{"three":38}],9:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":32,"three":40}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const iventy_1 = require("@pawel-kuznik/iventy");
 ;
 /**
  *  This is a camera mover that controls the camera based on pressing WSAD
  *  keys and move the camera in a top-down position.
  */
-class WSADCameraMover {
+class WSADCameraMover extends iventy_1.Emitter {
     /**
      *  The constructor.
      */
-    constructor(_camera) {
+    constructor(_camera, _tracker) {
+        var _a;
+        super();
         this._camera = _camera;
+        this._tracker = _tracker;
         /**
          *  The smoothing of the camera in miliseconds. This is used to define
          *  a time period from the key down till the animation would end. This
@@ -490,6 +555,8 @@ class WSADCameraMover {
          *  How far ahead the target position could be from the current position?
          */
         this._rangeLimit = this._speed * 2;
+        if (this._tracker)
+            (_a = this._tracker) === null || _a === void 0 ? void 0 : _a.bubbleTo(this);
     }
     /**
      *  Handle input event.
@@ -535,24 +602,29 @@ class WSADCameraMover {
         const factor = step.difference / this._smoothing;
         const move = { x: (this._target.x - this._camera.x) * factor, y: (this._target.y - this._camera.y) * factor };
         this._camera.moveBy(move.x, move.y);
+        if (this._tracker)
+            this._tracker.notify(this._camera.native.position);
     }
 }
 exports.default = WSADCameraMover;
 ;
 
-},{}],10:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":32}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const iventy_1 = require("@pawel-kuznik/iventy");
 /**
  *  This is a camera mover that handlers lifting camera up/down in reaction
  *  to a mouse wheel wheel.
  */
-class WheelLifterCameraMover {
+class WheelLifterCameraMover extends iventy_1.Emitter {
     /**
      *  The constructor.
      */
-    constructor(_camera) {
+    constructor(_camera, _tracker) {
+        super();
         this._camera = _camera;
+        this._tracker = _tracker;
         /**
          *  The smoothing of the camera in miliseconds. This is used to define
          *  a time period from the key down till the animation would end. This
@@ -569,6 +641,8 @@ class WheelLifterCameraMover {
          */
         this._minHeight = 1;
         this._maxHeight = 500;
+        if (this._tracker)
+            this._tracker.bubbleTo(this);
     }
     /**
      *  Handle input event.
@@ -599,12 +673,14 @@ class WheelLifterCameraMover {
         }
         const factor = step.difference / this._smoothing;
         this._camera.liftBy((this._target - this._camera.height) * factor);
+        if (this._tracker)
+            this._tracker.notify(this._camera.native.position);
     }
 }
 exports.default = WheelLifterCameraMover;
 ;
 
-},{}],11:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":32}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -644,7 +720,7 @@ function buildPickEventData(intersections, holder) {
 exports.default = buildPickEventData;
 ;
 
-},{"../ActorIntersection":3,"three":38}],12:[function(require,module,exports){
+},{"../ActorIntersection":3,"three":40}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -662,7 +738,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":38}],13:[function(require,module,exports){
+},{"./Actor":2,"three":40}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -678,7 +754,120 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":20}],14:[function(require,module,exports){
+},{"./Stage":22}],15:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.InstantiatedActor = void 0;
+const three_1 = require("three");
+/**
+ *  This a variation on an actor that allows to render a lot of actors in one draw call.
+ *  Meaning, it makes it performant when dealing with a lot of actors that have same
+ *  geometry and material.
+ */
+class InstantiatedActor {
+    constructor(count) {
+        this._count = count;
+    }
+    get count() { return this._count; }
+    /**
+     *  Initialize the instance.
+     */
+    _init(warderobe) {
+        const geometry = this._initGoemetry(warderobe);
+        const material = this._initMaterial(warderobe);
+        return new three_1.InstancedMesh(geometry, material, this._count);
+    }
+    /**
+     *  Hydrate the actor with needed data from the top-most resouce holders. This
+     *  can be done when everything is loaded and this method should be synchronous.
+     *
+     *  This method doesn't do much, but makes sure that current object
+     *  can be reinitialized.
+     */
+    hydrate(warderobe) {
+        var _a;
+        console.log('hydrate instantiated actor');
+        const parentObject = (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.parent;
+        const oldObject = this._mesh;
+        this._disposeObject();
+        this._mesh = this._init(warderobe);
+        if (oldObject) {
+            this._mesh.position.x = oldObject.position.x;
+            this._mesh.position.y = oldObject.position.y;
+            this._mesh.position.z = oldObject.position.z;
+        }
+        parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._mesh);
+        this._afterHydrate();
+    }
+    /**
+     *  A method called after the actor is hydrated. It might be that the child class
+     *  has some special logic to wrap up initialization.
+     */
+    _afterHydrate() {
+        // ... nothing really. The child class can implement special logic if it wishes.
+    }
+    /**
+     *  A method to make a render update.
+     */
+    renderUpdate(step) {
+        // nothing. This can be implemented in extending class for custom logic.
+    }
+    /**
+     *  A method to dispose actor's object.
+     */
+    _disposeObject() {
+        var _a;
+        (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.dispose();
+    }
+    /**
+     *  Detach the actor
+     */
+    detach() {
+        var _a;
+        (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.removeFromParent();
+    }
+    /**
+     *  Attach the actor to a parent object.
+     */
+    attachTo(parent) {
+        if (this._mesh)
+            parent.add(this._mesh);
+    }
+    /**
+     *  Dispose of the data allocated by the actor.
+     */
+    dispose() {
+        this._disposeObject();
+    }
+    /**
+     *  Get position of an instance of the actor.
+     */
+    getPositionAt(index) {
+        var _a;
+        if (index >= this._count)
+            return undefined;
+        const matrix = new three_1.Matrix4();
+        (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.getMatrixAt(index, matrix);
+        return new three_1.Vector3().setFromMatrixPosition(matrix);
+    }
+    /**
+     *  Set position of an instance of an actor.
+     */
+    setPositionAt(index, position) {
+        var _a, _b;
+        console.log('set position at', index, 'with', position);
+        if (index >= this._count)
+            return undefined;
+        const matrix = new three_1.Matrix4();
+        (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.getMatrixAt(index, matrix);
+        matrix.setPosition(position);
+        (_b = this._mesh) === null || _b === void 0 ? void 0 : _b.setMatrixAt(index, matrix);
+    }
+}
+exports.InstantiatedActor = InstantiatedActor;
+;
+
+},{"three":40}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -708,7 +897,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -738,7 +927,7 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -808,7 +997,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":38}],17:[function(require,module,exports){
+},{"three":40}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -820,9 +1009,11 @@ class RenderingLoop {
         this._renderFunction = _renderFunction;
         this._running = false;
         this._fps = 0;
+        this._fpsAcc = 0;
         this._fpsInterval = setInterval(() => {
-            this._fps = 0;
-        });
+            this._fps = this._fpsAcc;
+            this._fpsAcc = 0;
+        }, 1000);
     }
     get fps() { return this._fps; }
     get runnig() { return this._running; }
@@ -838,7 +1029,7 @@ class RenderingLoop {
             const renderStep = new RenderStep_1.RenderStep(last, time);
             last = time;
             this._renderFunction(renderStep);
-            this._fps++;
+            this._fpsAcc += 1;
             window.requestAnimationFrame(step);
         };
         step(last);
@@ -860,7 +1051,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":15}],18:[function(require,module,exports){
+},{"./RenderStep":17}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PowerPreferenceSetting = exports.ShaderPrecisionSetting = void 0;
@@ -880,7 +1071,7 @@ var PowerPreferenceSetting;
 })(PowerPreferenceSetting = exports.PowerPreferenceSetting || (exports.PowerPreferenceSetting = {}));
 ;
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderingStats = void 0;
@@ -892,23 +1083,40 @@ class RenderingStats {
     constructor(loop, renderer) {
         this._renderingLoop = loop;
         this._renderer = renderer;
+        renderer.info.render.frame;
     }
     get fps() { return this._renderingLoop.fps; }
     get running() { return this._renderingLoop.runnig; }
+    get triangles() { return this._renderer.info.render.triangles; }
+    get calls() { return this._renderer.info.render.calls; }
+    get goemetries() { return this._renderer.info.memory.geometries; }
+    get textures() { return this._renderer.info.memory.textures; }
     get viewport() {
         const viewport = new three_1.Vector4();
         this._renderer.getViewport(viewport);
         return viewport;
     }
+    toJSON() {
+        return {
+            fps: this.fps,
+            running: this.running,
+            triangles: this.triangles,
+            calls: this.calls,
+            geometries: this.goemetries,
+            textures: this.textures
+        };
+    }
 }
 exports.RenderingStats = RenderingStats;
 ;
 
-},{"three":38}],20:[function(require,module,exports){
+},{"three":40}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
+const Actor_1 = require("./Actor");
 const StageAmbience_1 = require("./Stage/StageAmbience");
+const InstantiatedActor_1 = require("./InstantiatedActor");
 /**
  *  This is the stage. This class represents the scene as well as definition for
  *  lights and actors.
@@ -923,6 +1131,10 @@ class Stage {
          *  The actors.
          */
         this._actors = new Set();
+        /**
+         *  The instantiated actors.
+         */
+        this._instantiatedActors = new Set();
         /**
          *  The current scene ambience.
          */
@@ -953,19 +1165,34 @@ class Stage {
      *  Insert an actor into the scene.
      */
     insert(actor) {
-        this._actors.add(actor);
-        actor.attachTo(this.scene);
-        if (this._warderobe)
-            actor.hydrate(this._warderobe);
+        if (actor instanceof Actor_1.default) {
+            this._actors.add(actor);
+            actor.attachTo(this.scene);
+            if (this._warderobe)
+                actor.hydrate(this._warderobe);
+        }
+        if (actor instanceof InstantiatedActor_1.InstantiatedActor) {
+            this._instantiatedActors.add(actor);
+            actor.attachTo(this.scene);
+            if (this._warderobe)
+                actor.hydrate(this._warderobe);
+        }
     }
     /**
      *  Destroy a target actor residing in this scene. If the actor is not inside
      *  the scene no action will be done.
      */
     destroy(actor) {
-        if (!this._actors.has(actor))
-            return;
-        this._actors.delete(actor);
+        if (actor instanceof Actor_1.default) {
+            if (!this._actors.has(actor))
+                return;
+            this._actors.delete(actor);
+        }
+        if (actor instanceof InstantiatedActor_1.InstantiatedActor) {
+            if (!this._instantiatedActors.has(actor))
+                return;
+            this._instantiatedActors.delete(actor);
+        }
         actor.detach();
         actor.dispose();
     }
@@ -977,6 +1204,8 @@ class Stage {
     hydrate(warderobe) {
         this._warderobe = warderobe;
         for (let actor of this._actors)
+            actor.hydrate(warderobe);
+        for (let actor of this._instantiatedActors)
             actor.hydrate(warderobe);
     }
     /**
@@ -1002,6 +1231,9 @@ class Stage {
         for (let actor of this._actors) {
             this.destroy(actor);
         }
+        for (let actor of this._instantiatedActors) {
+            this.destroy(actor);
+        }
         this._actors.clear();
         if (this._ambience)
             this._ambience.vacate();
@@ -1010,7 +1242,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Stage/StageAmbience":21,"three":38}],21:[function(require,module,exports){
+},{"./Actor":2,"./InstantiatedActor":15,"./Stage/StageAmbience":23,"three":40}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1075,7 +1307,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":38}],22:[function(require,module,exports){
+},{"three":40}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -1126,7 +1358,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":13}],23:[function(require,module,exports){
+},{"./EmptyStage":14}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -1163,7 +1395,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RendererHandler_1 = require("./RendererHandler");
@@ -1261,6 +1493,10 @@ class Theatre extends iventy_1.Emitter {
         this.stats = new RenderingStats_1.RenderingStats(this._loop, this._rendererHandler.renderer);
     }
     /**
+     *  The camera responsible for showing the game.
+     */
+    get camera() { return this._camera; }
+    /**
      *  Get the current stage.
      */
     get stage() { return this._stageContainer.stage; }
@@ -1307,7 +1543,7 @@ class Theatre extends iventy_1.Emitter {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":16,"./RenderingLoop":17,"./RenderingQualitySettings":18,"./RenderingStats":19,"./Stage":20,"./StageContainer":22,"./Warderobe":28,"@pawel-kuznik/iventy":30}],25:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":18,"./RenderingLoop":19,"./RenderingQualitySettings":20,"./RenderingStats":21,"./Stage":22,"./StageContainer":24,"./Warderobe":30,"@pawel-kuznik/iventy":32}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1375,7 +1611,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":38}],26:[function(require,module,exports){
+},{"./Actor":2,"three":40}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1469,7 +1705,6 @@ class TiledFloor extends Actor_1.default {
             object.setColorAt(index, new three_1.Color(0xffffff));
             this._positions.set(index, value);
         });
-        console.log(object);
         object.instanceMatrix.needsUpdate = true;
         if (object.instanceColor)
             object.instanceColor.needsUpdate = true;
@@ -1513,7 +1748,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":38}],27:[function(require,module,exports){
+},{"./Actor":2,"three":40}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1580,7 +1815,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1694,12 +1929,14 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":23,"three":38}],29:[function(require,module,exports){
+},{"./TextureAnimator":25,"three":40}],31:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
+var InstantiatedActor_1 = require("./lib/InstantiatedActor");
+Object.defineProperty(exports, "InstantiatedActor", { enumerable: true, get: function () { return InstantiatedActor_1.InstantiatedActor; } });
 var TiledActors_1 = require("./lib/TiledActors");
 Object.defineProperty(exports, "TiledActors", { enumerable: true, get: function () { return TiledActors_1.default; } });
 var CompanionActor_1 = require("./lib/CompanionActor");
@@ -1722,7 +1959,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":12,"./lib/Position":14,"./lib/Stage":20,"./lib/Theatre":24,"./lib/TiledActors":25,"./lib/TiledFloor":26,"./lib/TransitionCycle":27,"./lib/Warderobe":28}],30:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":13,"./lib/InstantiatedActor":15,"./lib/Position":16,"./lib/Stage":22,"./lib/Theatre":26,"./lib/TiledActors":27,"./lib/TiledFloor":28,"./lib/TransitionCycle":29,"./lib/Warderobe":30}],32:[function(require,module,exports){
 "use strict";
 /**
  *  This is an entry file for the whole library. This file exposes (and kicks in
@@ -1742,7 +1979,7 @@ Object.defineProperty(exports, "Federation", { enumerable: true, get: function (
 var Signal_1 = require("./lib/Signal");
 Object.defineProperty(exports, "SignalController", { enumerable: true, get: function () { return Signal_1.SignalController; } });
 
-},{"./lib/Emitter":33,"./lib/Event":34,"./lib/Federation":35,"./lib/Signal":37}],31:[function(require,module,exports){
+},{"./lib/Emitter":35,"./lib/Event":36,"./lib/Federation":37,"./lib/Signal":39}],33:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Channel = void 0;
@@ -1835,7 +2072,7 @@ class Channel {
 exports.Channel = Channel;
 ;
 
-},{}],32:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class that handles an event designator. An event designator is
@@ -1979,7 +2216,7 @@ class Designator {
 }
 exports.Designator = Designator;
 
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 /**
  *  A class that can be used as event emitter on client and server side. An
@@ -2027,6 +2264,12 @@ class Emitter {
             });
         // return the triggered event
         return event;
+    }
+    ;
+    deferredTrigger(...args) {
+        setTimeout(() => {
+            this.trigger(args[0], args[1], args[2]);
+        });
     }
     ;
     /**
@@ -2130,7 +2373,7 @@ class Emitter {
 exports.Emitter = Emitter;
 ;
 
-},{"./Channel":31,"./Event":34}],34:[function(require,module,exports){
+},{"./Channel":33,"./Event":36}],36:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Event = void 0;
@@ -2238,7 +2481,7 @@ class Event extends Packet_1.Packet {
 exports.Event = Event;
 ;
 
-},{"./Designator":32,"./Packet":36}],35:[function(require,module,exports){
+},{"./Designator":34,"./Packet":38}],37:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class describing a federation of one or many emitters. A federation
@@ -2264,7 +2507,7 @@ class Federation extends Emitter_1.Emitter {
 }
 exports.Federation = Federation;
 
-},{"./Emitter":33}],36:[function(require,module,exports){
+},{"./Emitter":35}],38:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Packet = void 0;
@@ -2280,7 +2523,7 @@ class Packet {
 exports.Packet = Packet;
 ;
 
-},{}],37:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalController = void 0;
@@ -2339,7 +2582,7 @@ class ControlledSignal {
 }
 ;
 
-},{}],38:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors

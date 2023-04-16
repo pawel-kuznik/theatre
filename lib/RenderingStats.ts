@@ -29,4 +29,15 @@ export class RenderingStats {
 
         renderer.info.render.frame
     }
+
+    toJSON() {
+        return {
+            fps: this.fps,
+            running: this.running,
+            triangles: this.triangles,
+            calls: this.calls,
+            geometries: this.goemetries,
+            textures: this.textures
+        };
+    }
 };
