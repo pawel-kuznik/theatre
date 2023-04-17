@@ -1,4 +1,4 @@
-import { BufferGeometry, InstancedMesh, Material, Matrix3, Matrix4, Object3D, Vector3 } from "three";
+import { BufferGeometry, DynamicDrawUsage, InstancedMesh, Material, Matrix4, Object3D, Vector3 } from "three";
 import Warderobe from "./Warderobe";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
@@ -12,6 +12,9 @@ export abstract class InstantiatedActor implements RenderParticipant {
 
     private _mesh: InstancedMesh|undefined;
 
+    /**
+     *  The max number of actors to show in the scene. 
+     */
     private _count: number;
 
     protected get count() { return this._count; }
@@ -33,7 +36,13 @@ export abstract class InstantiatedActor implements RenderParticipant {
         const geometry = this._initGoemetry(warderobe);
         const material = this._initMaterial(warderobe);
 
-        return new InstancedMesh(geometry, material, this._count);
+        const mesh = new InstancedMesh(geometry, material, this._count);
+
+        // this line will make sure that the mesh will be updated every frame.
+        // @todo this might need to be an option
+        mesh.instanceMatrix.setUsage( DynamicDrawUsage );
+
+        return mesh;
     }
 
     /**
@@ -102,7 +111,8 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     attachTo(parent:Object3D) {
 
-        if (this._mesh) parent.add(this._mesh);
+        if (!this._mesh) return;
+        parent.add(this._mesh);
     }
 
     /**
@@ -131,15 +141,19 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     setPositionAt(index: number, position: Vector3) {
 
-        console.log('set position at', index, 'with', position);
+        console.log('set position at', this._mesh, index, 'with', position);
 
         if (index >= this._count) return undefined
+
+        if (!this._mesh) return undefined;
 
         const matrix = new Matrix4();
         this._mesh?.getMatrixAt(index, matrix);
 
         matrix.setPosition(position);
 
-        this._mesh?.setMatrixAt(index, matrix);
+        this._mesh.setMatrixAt(index, matrix);
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
     } 
 };

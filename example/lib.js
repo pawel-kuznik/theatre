@@ -775,7 +775,11 @@ class InstantiatedActor {
     _init(warderobe) {
         const geometry = this._initGoemetry(warderobe);
         const material = this._initMaterial(warderobe);
-        return new three_1.InstancedMesh(geometry, material, this._count);
+        const mesh = new three_1.InstancedMesh(geometry, material, this._count);
+        // this line will make sure that the mesh will be updated every frame.
+        // @todo this might need to be an option
+        mesh.instanceMatrix.setUsage(three_1.DynamicDrawUsage);
+        return mesh;
     }
     /**
      *  Hydrate the actor with needed data from the top-most resouce holders. This
@@ -830,8 +834,9 @@ class InstantiatedActor {
      *  Attach the actor to a parent object.
      */
     attachTo(parent) {
-        if (this._mesh)
-            parent.add(this._mesh);
+        if (!this._mesh)
+            return;
+        parent.add(this._mesh);
     }
     /**
      *  Dispose of the data allocated by the actor.
@@ -854,14 +859,18 @@ class InstantiatedActor {
      *  Set position of an instance of an actor.
      */
     setPositionAt(index, position) {
-        var _a, _b;
-        console.log('set position at', index, 'with', position);
+        var _a;
+        console.log('set position at', this._mesh, index, 'with', position);
         if (index >= this._count)
+            return undefined;
+        if (!this._mesh)
             return undefined;
         const matrix = new three_1.Matrix4();
         (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.getMatrixAt(index, matrix);
         matrix.setPosition(position);
-        (_b = this._mesh) === null || _b === void 0 ? void 0 : _b.setMatrixAt(index, matrix);
+        this._mesh.setMatrixAt(index, matrix);
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
     }
 }
 exports.InstantiatedActor = InstantiatedActor;
@@ -1156,6 +1165,8 @@ class Stage {
     renderUpdate(step) {
         for (let actor of this._actors)
             actor.renderUpdate(step);
+        for (let actor of this._instantiatedActors)
+            actor.renderUpdate(step);
     }
     /**
      *  The the current actors of the scene.
@@ -1167,15 +1178,15 @@ class Stage {
     insert(actor) {
         if (actor instanceof Actor_1.default) {
             this._actors.add(actor);
-            actor.attachTo(this.scene);
             if (this._warderobe)
                 actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene);
         }
         if (actor instanceof InstantiatedActor_1.InstantiatedActor) {
             this._instantiatedActors.add(actor);
-            actor.attachTo(this.scene);
             if (this._warderobe)
                 actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene);
         }
     }
     /**

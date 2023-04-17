@@ -61,6 +61,8 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     renderUpdate(step: RenderStep): void {
         
         for (let actor of this._actors) actor.renderUpdate(step);
+
+        for (let actor of this._instantiatedActors) actor.renderUpdate(step);
     }
 
     /**
@@ -76,15 +78,15 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         if (actor instanceof Actor) {
 
             this._actors.add(actor);
-            actor.attachTo(this.scene); 
             if (this._warderobe) actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene); 
         }
 
         if (actor instanceof InstantiatedActor) {
             
             this._instantiatedActors.add(actor);
-            actor.attachTo(this.scene);
             if (this._warderobe) actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene);
         }
     }
 
