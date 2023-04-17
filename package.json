@@ -36,6 +36,6 @@
     "@types/resize-observer-browser": "^0.1.6"
   },
   "peerDependencies": {
-    "three": "^0.133.1"
+    "three": "^0.151.3"
   }
 }
