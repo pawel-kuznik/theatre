@@ -28,6 +28,11 @@ export default abstract class Actor implements RenderParticipant {
     get position() : Position { return new Position(this._object.position); }
 
     /**
+     *  The UUID of the top object.
+     */
+    get renderUUID() : string { return this.object.uuid || ''; }
+
+    /**
      *  A function that is called to initialize the main object
      *  of the actor.
      */

@@ -24,7 +24,7 @@ export default class RendererHandler {
             powerPreference:    options.powerPreference
         });
 
-        Object3D.DefaultUp = new Vector3(0, 0, 1);
+        Object3D.DEFAULT_UP = new Vector3(0, 0, 1);
 
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = PCFSoftShadowMap;

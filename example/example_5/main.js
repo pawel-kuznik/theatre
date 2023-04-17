@@ -104,8 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.wait().then(() => {
 
         theatre.transitionTo('test');
-
-        console.log(theatre);
     });
 
     theatre.on('pick', event => {

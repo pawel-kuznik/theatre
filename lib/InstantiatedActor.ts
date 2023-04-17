@@ -1,7 +1,10 @@
-import { BufferGeometry, DynamicDrawUsage, InstancedMesh, Material, Matrix4, Object3D, Vector3 } from "three";
+import { BoxGeometry, BufferGeometry, Color, DynamicDrawUsage, InstancedMesh, Material, Matrix4, MeshBasicMaterial, Object3D, Vector3 } from "three";
 import Warderobe from "./Warderobe";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
+
+const dummyGeometry = new BoxGeometry(1, 1, 1);
+const dummyMaterial = new MeshBasicMaterial({ color: 0x55ffcc });
 
 /**
  *  This a variation on an actor that allows to render a lot of actors in one draw call.
@@ -10,7 +13,7 @@ import { RenderStep } from "./RenderStep";
  */
 export abstract class InstantiatedActor implements RenderParticipant {
 
-    private _mesh: InstancedMesh|undefined;
+    private _mesh: InstancedMesh = new InstancedMesh(dummyGeometry, dummyMaterial, 1);
 
     /**
      *  The max number of actors to show in the scene. 
@@ -23,6 +26,12 @@ export abstract class InstantiatedActor implements RenderParticipant {
 
     protected abstract _initMaterial(warderobe: Warderobe) : Material;
 
+    /**
+     *  The UUID of the top object.
+     */
+    get renderUUID() : string { return this._mesh?.uuid || ''; }
+
+    get object() : Object3D { return this._mesh; }
 
     constructor(count: number) {
         this._count = count;
@@ -53,8 +62,6 @@ export abstract class InstantiatedActor implements RenderParticipant {
      *  can be reinitialized.
      */
     hydrate(warderobe:Warderobe) : void {
-
-        console.log('hydrate instantiated actor');
 
         const parentObject = this._mesh?.parent;
         const oldObject = this._mesh;
@@ -95,7 +102,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     protected _disposeObject() : void {
 
-        this._mesh?.dispose();
+        this._mesh.dispose();
     }
 
     /**
@@ -103,7 +110,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     detach() : void {
 
-        this._mesh?.removeFromParent();
+        this._mesh.removeFromParent();
     }
 
     /**
@@ -131,7 +138,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
         if (index >= this._count) return undefined
 
         const matrix = new Matrix4();
-        this._mesh?.getMatrixAt(index, matrix);
+        this._mesh.getMatrixAt(index, matrix);
         
         return new Vector3().setFromMatrixPosition(matrix); 
     }
@@ -141,14 +148,10 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     setPositionAt(index: number, position: Vector3) {
 
-        console.log('set position at', this._mesh, index, 'with', position);
-
         if (index >= this._count) return undefined
 
-        if (!this._mesh) return undefined;
-
         const matrix = new Matrix4();
-        this._mesh?.getMatrixAt(index, matrix);
+        this._mesh.getMatrixAt(index, matrix);
 
         matrix.setPosition(position);
 
@@ -156,4 +159,15 @@ export abstract class InstantiatedActor implements RenderParticipant {
         this._mesh.updateMatrix();
         this._mesh.instanceMatrix.needsUpdate = true;
     } 
+
+    /**
+     *  Set color of an instance of an actor.
+     */
+    setColorAt(index: number, color: Color) {
+
+        if (index >= this._count) return undefined
+        
+        this._mesh.setColorAt(index, color);
+        this._mesh.instanceMatrix.needsUpdate = true;
+    }
 };

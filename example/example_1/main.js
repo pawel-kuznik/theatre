@@ -28,6 +28,4 @@ document.addEventListener('DOMContentLoaded', () => {
     introStage.insert(new Box());
 
     theatre.transitionTo('intro');
-
-    console.log(theatre);
 });

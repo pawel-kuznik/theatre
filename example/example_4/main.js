@@ -55,7 +55,5 @@ document.addEventListener('DOMContentLoaded', () => {
         theatre.transitionTo('test');
 
         floor.fill(-10, -10, 10, 10);
-
-        console.log(theatre);
     });
 });

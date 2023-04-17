@@ -6,7 +6,7 @@ class Boxes extends THEATRE.InstantiatedActor {
     }
 
     _initMaterial(warderobe) {
-        return new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff00ff)});
+        return new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff00ff)});
         // return new THREE.MeshPhongMaterial({ map: warderobe.fetchTexture('crate:side') });
     }
 };
@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // construct a theatre
     const theatre = new THEATRE.Theatre(canvas);
 
+    theatre.on('pick', (event) => {
+        console.log('pick', event);
+    });
+
     const testStage = theatre.createStage('test');
     testStage.setAmbience({
         ambientColor: new THREE.Color( 0xffffff )
@@ -36,26 +40,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
 
-    const boxes = new Boxes(20);
+    const size = 100;
+
+    const boxes = new Boxes(size * size);
     const crate = new Crate();
 
     theatre.warderobe.wait().then(() => {
 
-        theatre.transitionTo('test');
-        
-        boxes.setPositionAt(0, new THREE.Vector3(1,1,0));
-        boxes.setPositionAt(1, new THREE.Vector3(1,2,0));
-        boxes.setPositionAt(2, new THREE.Vector3(2,1,0));
-        boxes.setPositionAt(3, new THREE.Vector3(2,2,0));
-        
+        theatre.transitionTo('test');        
+        testStage.insert(boxes);
         testStage.insert(crate);
+
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < size * size; i++) {
+
+            x += 1;
+            if (x > size) {
+                y += 1;
+                x = 0;
+            }
+
+            boxes.setPositionAt(i, new THREE.Vector3(x,y,0));
+            boxes.setColorAt(i, new THREE.Color(0xffffff));
+        }
         
         crate.moveTo(0, 0, 3);
 
-        testStage.insert(boxes);
-
-        setInterval(() => {
-            console.log(theatre.stats.toJSON());
-        }, 1000);
+        // setInterval(() => {
+        //     console.log(theatre.stats.toJSON());
+        // }, 1000);
     });
 });

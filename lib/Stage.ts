@@ -45,11 +45,16 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  Fetch an actor by uuid of it's main object.
      */
-    fetch(uuid:string) : Actor|undefined {
+    fetch(uuid:string) : Actor|InstantiatedActor|undefined {
 
         for (let actor of this._actors) {
             
-            if (actor.object.uuid === uuid) return actor;
+            if (actor.renderUUID === uuid) return actor;
+        }
+
+        for (let actor of this._instantiatedActors) {
+
+            if (actor.renderUUID === uuid) return actor;
         }
 
         return undefined;
@@ -68,7 +73,7 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  The the current actors of the scene.
      */
-    get actors() : Array<Actor> { return [...this._actors]; }
+    get actors() : Array<Actor|InstantiatedActor> { return [...this._actors, ...this._instantiatedActors]; }
 
     /**
      *  Insert an actor into the scene.

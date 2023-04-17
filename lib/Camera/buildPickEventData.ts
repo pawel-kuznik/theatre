@@ -2,13 +2,14 @@ import { InstancedMesh, Intersection, Object3D } from "three";
 import Actor from "../Actor";
 import ActorIntersection from "../ActorIntersection";
 import ActorsHolder from "../ActorsHolder";
+import { InstantiatedActor } from "../InstantiatedActor";
 
 /**
  *  This is a helper function to get the actor based on an intersected object.
  *  We need to check the immediate object but then start looking at the parent
  *  of the handed object cause actors can be constructed out of many objects.
  */
-function lookUp(object:Object3D, holder:ActorsHolder) : Actor|null {
+function lookUp(object:Object3D, holder:ActorsHolder) : Actor|InstantiatedActor|null {
 
     const find = holder.fetch(object.uuid);
 

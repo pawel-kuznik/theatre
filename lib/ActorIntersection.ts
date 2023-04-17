@@ -1,4 +1,5 @@
 import Actor from "./Actor";
+import { InstantiatedActor } from "./InstantiatedActor";
 
 /**
  *  This is a structure that we get when we intersect something with an actor. This is useful,
@@ -7,5 +8,5 @@ import Actor from "./Actor";
  */
 export default class ActorIntersection {
 
-    constructor(public readonly actor:Actor, public readonly child:number|undefined = undefined) { }
+    constructor(public readonly actor:Actor|InstantiatedActor, public readonly child:number|undefined = undefined) { }
 }

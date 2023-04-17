@@ -34,6 +34,4 @@ document.addEventListener('DOMContentLoaded', () => {
     testStage.insert(grid);
 
     theatre.transitionTo('test');
-
-    console.log(theatre);
 });

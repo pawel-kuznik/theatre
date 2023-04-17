@@ -5,6 +5,7 @@ import ActorsHolder from "../ActorsHolder";
 import Camera from "../Camera";
 import buildPickEventData from "./buildPickEventData";
 import CameraPicker from "./CameraPicker";
+import { InstantiatedActor } from "../InstantiatedActor";
 
 /**
  *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
@@ -38,7 +39,7 @@ import CameraPicker from "./CameraPicker";
 
         this._raycaster.setFromCamera(screenClick, this._camera.native);
 
-        const objects = this._actorsHolder.actors.map((actor:Actor) => actor.object);
+        const objects = this._actorsHolder.actors.map((actor:Actor|InstantiatedActor) => actor.object);
 
         const intersections = this._raycaster.intersectObjects(objects, true);
 

@@ -54,9 +54,6 @@ class Brazier extends THEATRE.Actor {
         flame.instanceMatrix.needsUpdate = true;
 
         flame.position.z = .25;
-
-        console.log(flame);        
-        
         main.add(base);
         main.add(flame);
 
@@ -107,7 +104,5 @@ document.addEventListener('DOMContentLoaded', () => {
         theatre.transitionTo('main');
 
         floor.fill(-500, -500, 500, 500);
-
-        console.log(theatre);
     });
 });
