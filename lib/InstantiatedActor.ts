@@ -3,9 +3,6 @@ import Warderobe from "./Warderobe";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
 
-const dummyGeometry = new BoxGeometry(1, 1, 1);
-const dummyMaterial = new MeshBasicMaterial({ color: 0x55ffcc });
-
 /**
  *  This a variation on an actor that allows to render a lot of actors in one draw call.
  *  Meaning, it makes it performant when dealing with a lot of actors that have same
@@ -13,7 +10,7 @@ const dummyMaterial = new MeshBasicMaterial({ color: 0x55ffcc });
  */
 export abstract class InstantiatedActor implements RenderParticipant {
 
-    private _mesh: InstancedMesh = new InstancedMesh(dummyGeometry, dummyMaterial, 1);
+    private _mesh: InstancedMesh = new InstancedMesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0x55ffcc }), 1);
 
     /**
      *  The max number of actors to show in the scene. 
