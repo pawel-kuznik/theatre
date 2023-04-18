@@ -17,6 +17,17 @@ export default interface Camera extends RenderParticipant, EmitterLike {
     get moved() : boolean;
 
     /**
+     *  The position of the camera.
+     */
+    get x() : number;
+    get y() : number;
+
+    /**
+     *  Get the height on which the camera resides.
+     */
+    get heigth() : number;
+
+    /**
      *  Handle an input event related to the camera.
      */
     handlePointer(event:KeyboardEvent|PointerEvent|WheelEvent) : void;
@@ -30,4 +41,9 @@ export default interface Camera extends RenderParticipant, EmitterLike {
      *  At which point the camera is looking at.
      */
     getLookAt() : Vector3;
+
+    /**
+     *  Move camera to given position.
+     */
+    moveTo(x: number, y: number, z: number|undefined) : void;
 };

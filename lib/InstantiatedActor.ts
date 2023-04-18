@@ -17,7 +17,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     private _count: number;
 
-    protected get count() { return this._count; }
+    public get count() { return this._mesh.count; }
 
     protected abstract _initGoemetry(warderobe: Warderobe) : BufferGeometry;
 
@@ -68,15 +68,52 @@ export abstract class InstantiatedActor implements RenderParticipant {
 
         this._mesh = this._init(warderobe);
 
-        if (oldObject) {
-            this._mesh.position.x = oldObject.position.x;
-            this._mesh.position.y = oldObject.position.y;
-            this._mesh.position.z = oldObject.position.z;
-        }
+        this._mesh.position.x = oldObject.position.x;
+        this._mesh.position.y = oldObject.position.y;
+        this._mesh.position.z = oldObject.position.z;
 
         parentObject?.add(this._mesh);
 
         this._afterHydrate();
+    }
+
+    /**
+     *  Resize the number of rendered instances.
+     */
+    resize(newSize: number) {
+
+        // are we dealing with a size that would be bigger than current count of
+        // instances meshes? Then we need to create a new instanced mesh.
+        if (this._count < newSize) {
+
+            this._count = newSize;
+
+            const parentObject = this._mesh?.parent;
+            const oldObject = this._mesh;
+
+            this.detach();
+            this._disposeObject();
+
+            this._mesh = new InstancedMesh(oldObject.geometry, oldObject.material, this._count);
+
+            // this line will make sure that the mesh will be updated every frame.
+            // @todo this might need to be an option
+            this._mesh.instanceMatrix.setUsage( DynamicDrawUsage );
+
+            this._mesh.position.x = oldObject.position.x;
+            this._mesh.position.y = oldObject.position.y;
+            this._mesh.position.z = oldObject.position.z;
+
+            parentObject?.add(this._mesh);
+
+            this._afterHydrate();            
+        }
+
+        else this._mesh.count = newSize;
+
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
+        if (this._mesh.instanceColor) this._mesh.instanceColor.needsUpdate = true;
     }
 
     /**
@@ -100,6 +137,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     protected _disposeObject() : void {
 
+        this._mesh.count = 0;
         this._mesh.dispose();
     }
 

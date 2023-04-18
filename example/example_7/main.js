@@ -40,23 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
 
-    const size = 100;
+    let size = 1;
 
     const boxes = new Boxes(size * size);
     const crate = new Crate();
 
-    theatre.warderobe.wait().then(() => {
+    function resize(newSize) {
 
-        theatre.transitionTo('test');        
-        testStage.insert(boxes);
-        testStage.insert(crate);
+        boxes.resize(newSize * newSize);
 
         let x = 0;
         let y = 0;
-        for (let i = 0; i < size * size; i++) {
+        for (let i = 0; i < newSize * newSize; i++) {
 
             x += 1;
-            if (x > size) {
+            if (x > newSize) {
                 y += 1;
                 x = 0;
             }
@@ -64,11 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
             boxes.setPositionAt(i, new THREE.Vector3(x,y,0));
             boxes.setColorAt(i, new THREE.Color(0xffffff));
         }
+    }
+
+    theatre.warderobe.wait().then(() => {
+
+        theatre.transitionTo('test');        
+        testStage.insert(boxes);
+        testStage.insert(crate);
+
+        resize();
         
         crate.moveTo(0, 0, 3);
 
-        // setInterval(() => {
-        //     console.log(theatre.stats.toJSON());
-        // }, 1000);
+        setTimeout(() => {
+
+            resize(150);
+
+            console.log('resized to', 150);
+        }, 5000);
+
+        setTimeout(() => {
+
+            resize(50);
+
+            console.log('resized to', 50);
+        }, 15000);
+
+        setInterval(() => {
+            console.log(theatre.stats.toJSON());
+        }, 1000);
     });
 });

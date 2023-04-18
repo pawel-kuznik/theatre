@@ -441,6 +441,7 @@ class TopDownCamera extends iventy_1.Emitter {
      */
     get x() { return this._camera.position.x; }
     get y() { return this._camera.position.y; }
+    get heigth() { return this._camera.position.z; }
     /**
      *  Update aspect ratio of the camera.
      */
@@ -475,9 +476,11 @@ class TopDownCamera extends iventy_1.Emitter {
     /**
      *  Move camera to a certain x and y values.
      */
-    moveTo(x, y) {
+    moveTo(x, y, z = undefined) {
         this._camera.position.x = x;
         this._camera.position.y = y;
+        if (z !== undefined)
+            this._camera.position.z = z;
         this._looktAt = new three_1.Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
         this._camera.lookAt(this._looktAt);
         this._moved = true;
@@ -774,7 +777,7 @@ class InstantiatedActor {
         this._mesh = new three_1.InstancedMesh(new three_1.BoxGeometry(1, 1, 1), new three_1.MeshBasicMaterial({ color: 0x55ffcc }), 1);
         this._count = count;
     }
-    get count() { return this._count; }
+    get count() { return this._mesh.count; }
     /**
      *  The UUID of the top object.
      */
@@ -806,13 +809,42 @@ class InstantiatedActor {
         this.detach();
         this._disposeObject();
         this._mesh = this._init(warderobe);
-        if (oldObject) {
+        this._mesh.position.x = oldObject.position.x;
+        this._mesh.position.y = oldObject.position.y;
+        this._mesh.position.z = oldObject.position.z;
+        parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._mesh);
+        this._afterHydrate();
+    }
+    /**
+     *  Resize the number of rendered instances.
+     */
+    resize(newSize) {
+        var _a;
+        // are we dealing with a size that would be bigger than current count of
+        // instances meshes? Then we need to create a new instanced mesh.
+        if (this._count < newSize) {
+            this._count = newSize;
+            const parentObject = (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.parent;
+            const oldObject = this._mesh;
+            this.detach();
+            this._disposeObject();
+            this._mesh = new three_1.InstancedMesh(oldObject.geometry, oldObject.material, this._count);
+            console.log('new mesh was created');
+            // this line will make sure that the mesh will be updated every frame.
+            // @todo this might need to be an option
+            this._mesh.instanceMatrix.setUsage(three_1.DynamicDrawUsage);
             this._mesh.position.x = oldObject.position.x;
             this._mesh.position.y = oldObject.position.y;
             this._mesh.position.z = oldObject.position.z;
+            parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._mesh);
+            this._afterHydrate();
         }
-        parentObject === null || parentObject === void 0 ? void 0 : parentObject.add(this._mesh);
-        this._afterHydrate();
+        else
+            this._mesh.count = newSize;
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
+        if (this._mesh.instanceColor)
+            this._mesh.instanceColor.needsUpdate = true;
     }
     /**
      *  A method called after the actor is hydrated. It might be that the child class
@@ -831,6 +863,7 @@ class InstantiatedActor {
      *  A method to dispose actor's object.
      */
     _disposeObject() {
+        this._mesh.count = 0;
         this._mesh.dispose();
     }
     /**
@@ -1851,7 +1884,6 @@ exports.default = TransitionCycle;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const TextureAnimator_1 = require("./TextureAnimator");
-console.log(three_1.TextureLoader);
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
  *  can be textures, materials, and so on. We use this centralized store cause there

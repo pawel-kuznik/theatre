@@ -82,6 +82,8 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
     get x() :number { return this._camera.position.x; }
     get y() :number { return this._camera.position.y; }
 
+    get heigth() : number { return this._camera.position.z; }
+
     /**
      *  Update aspect ratio of the camera.
      */
@@ -126,13 +128,14 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
     /** 
      *  Move camera to a certain x and y values.
      */
-    public moveTo(x:number, y:number) {
+    public moveTo(x:number, y:number, z: number|undefined = undefined) {
 
         this._camera.position.x = x;
         this._camera.position.y = y;
+        if (z !== undefined) this._camera.position.z = z;
         this._looktAt= new Vector3(this._camera.position.x, this._camera.position.y + 2.5, 0);
         this._camera.lookAt(this._looktAt);
-        
+
         this._moved = true;
     }
 
