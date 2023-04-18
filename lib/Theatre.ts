@@ -1,3 +1,4 @@
+import { Emitter } from '@pawel-kuznik/iventy';
 import RendererHandler from "./RendererHandler";
 import RenderingLoop from "./RenderingLoop";
 import Stage from "./Stage";
@@ -6,7 +7,6 @@ import Warderobe from "./Warderobe";
 import Camera from "./Camera";
 import CameraFactory, { CameraFactorySpecs } from "./Camera/CameraFactory";
 import { RenderStep } from "./RenderStep";
-import { Emitter } from '@pawel-kuznik/iventy';
 import RenderingQualitySettings, { PowerPreferenceSetting, ShaderPrecisionSetting } from "./RenderingQualitySettings";
 import { RenderingStats } from "./RenderingStats";
 
@@ -93,6 +93,8 @@ export default class Theatre extends Emitter  {
     constructor(canvas:HTMLCanvasElement, options?:TheatreOptions) {
 
         super();
+
+        if (!(window as any).__THREE__) throw Error("Trying to use Theatre without THREE.js");
 
         this._canvas = canvas;
 

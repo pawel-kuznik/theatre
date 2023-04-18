@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "declaration": true,
     "outDir": "./build",
     "strict": true,

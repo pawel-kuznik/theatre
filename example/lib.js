@@ -1427,13 +1427,13 @@ exports.default = TextureAnimator;
 },{}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const iventy_1 = require("@pawel-kuznik/iventy");
 const RendererHandler_1 = require("./RendererHandler");
 const RenderingLoop_1 = require("./RenderingLoop");
 const Stage_1 = require("./Stage");
 const StageContainer_1 = require("./StageContainer");
 const Warderobe_1 = require("./Warderobe");
 const CameraFactory_1 = require("./Camera/CameraFactory");
-const iventy_1 = require("@pawel-kuznik/iventy");
 const RenderingQualitySettings_1 = require("./RenderingQualitySettings");
 const RenderingStats_1 = require("./RenderingStats");
 ;
@@ -1472,6 +1472,8 @@ class Theatre extends iventy_1.Emitter {
          *  The stages created inside the theatre.
          */
         this._stages = new Map();
+        if (!window.__THREE__)
+            throw Error("Trying to use Theatre without THREE.js");
         this._canvas = canvas;
         this._rendererHandler = new RendererHandler_1.default(canvas, Object.assign({}, {
             antialiasing: true,
@@ -1849,6 +1851,7 @@ exports.default = TransitionCycle;
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const TextureAnimator_1 = require("./TextureAnimator");
+console.log(three_1.TextureLoader);
 /**
  *  This class represents a warderobe of many thins that are useful for actors. This
  *  can be textures, materials, and so on. We use this centralized store cause there
