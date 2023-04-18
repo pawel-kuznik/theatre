@@ -6,16 +6,51 @@ useful for my own games and rendering needs.
 
 ## How to get started?
 
+main.js
 ```
 import { Theatre, Actor, Camera } from "theatre";
+import { CompanionActor } from "./CompanionActor";
 
-const theatre = new Theatre({ 
+// the library renders inside a <canvas> element
+const canvasElement = document.querySelector('canvas');
 
-    camera: TableTopCamera
+// create a theatre inside the canvas
+const theatre = new Theatre(canvasElement);
+
+// the theatre supports multiple rendering scenes (called stages).
+const mainStage = theatre.createStage('main');
+
+// set the lights on the stage
+mainStage.setAmbience({
+    ambientColor: 0xffffff
 });
 
-theatre.stage.enterActor(new Actor);
+// create a companion, so it's not so lonely in the scene
+const companion = new CompanionActor();
+
+// insert the companion into the stage
+mainStage.insert(companion);
 ```
+
+CompanionActor.js
+```
+import { BoxGeometry, MeshBasicMaterial } from "three";
+import { Actor } from "theatre";
+
+export class CompanionActor extends Actor {
+
+    _initObject() {
+
+        const geometry = new BoxGeometry(1, 1, 1);
+        const material = new MeshBasicMaterial({ color: 0xff00ff });
+
+        return new Mesh(geometry, material);
+    }
+};
+```
+
+The above code will setup a simple scene with a companion box. It's not much, but it illustrates
+how to setup the theatre and stage for more action.
 
 ## Running development environment
 
