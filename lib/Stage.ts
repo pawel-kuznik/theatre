@@ -40,8 +40,6 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      */
     private _warderobe:Warderobe|undefined;
 
-    constructor() { }
-
     /**
      *  Fetch an actor by uuid of it's main object.
      */

@@ -66,6 +66,7 @@ class Actor {
     hydrate(warderobe) {
         const parentObject = this._object.parent;
         const oldObject = this._object;
+        this.detach();
         this._disposeObject();
         this._object = this._initObject(warderobe);
         this._object.position.x = oldObject.position.x;
@@ -327,7 +328,6 @@ class CameraMousePicker extends iventy_1.Emitter {
         const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
         this._raycaster.setFromCamera(screenClick, this._camera.native);
         const objects = this._actorsHolder.actors.map((actor) => actor.object);
-        console.log(objects);
         const intersections = this._raycaster.intersectObjects(objects, true);
         this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
     }
@@ -764,8 +764,6 @@ exports.default = EmptyStage;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstantiatedActor = void 0;
 const three_1 = require("three");
-const dummyGeometry = new three_1.BoxGeometry(1, 1, 1);
-const dummyMaterial = new three_1.MeshBasicMaterial({ color: 0x55ffcc });
 /**
  *  This a variation on an actor that allows to render a lot of actors in one draw call.
  *  Meaning, it makes it performant when dealing with a lot of actors that have same
@@ -773,7 +771,7 @@ const dummyMaterial = new three_1.MeshBasicMaterial({ color: 0x55ffcc });
  */
 class InstantiatedActor {
     constructor(count) {
-        this._mesh = new three_1.InstancedMesh(dummyGeometry, dummyMaterial, 1);
+        this._mesh = new three_1.InstancedMesh(new three_1.BoxGeometry(1, 1, 1), new three_1.MeshBasicMaterial({ color: 0x55ffcc }), 1);
         this._count = count;
     }
     get count() { return this._count; }
@@ -803,9 +801,9 @@ class InstantiatedActor {
      */
     hydrate(warderobe) {
         var _a;
-        console.log('hydrate instantiated actor');
         const parentObject = (_a = this._mesh) === null || _a === void 0 ? void 0 : _a.parent;
         const oldObject = this._mesh;
+        this.detach();
         this._disposeObject();
         this._mesh = this._init(warderobe);
         if (oldObject) {
@@ -869,7 +867,6 @@ class InstantiatedActor {
      *  Set position of an instance of an actor.
      */
     setPositionAt(index, position) {
-        console.log('set position at', this._mesh, index, 'with', position);
         if (index >= this._count)
             return undefined;
         const matrix = new three_1.Matrix4();
@@ -1686,7 +1683,7 @@ class TiledFloor extends Actor_1.default {
         this._initialized = true;
         const geometry = new three_1.PlaneGeometry(1, 1);
         const material = new three_1.MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: this._shadows ? three_1.FrontSide : undefined });
-        const object = new three_1.InstancedMesh(geometry, material, this._size + 1);
+        const object = new three_1.InstancedMesh(geometry, material, this._size);
         if (this._shadows)
             object.receiveShadow = true;
         return object;
@@ -1889,6 +1886,7 @@ class Warderobe {
      */
     registerTexture(name, texture) {
         this._textures.set(name, texture);
+        texture.userData.ownedByWarderobe = true;
     }
     /**
      *  Fetch material by name.
@@ -1902,6 +1900,7 @@ class Warderobe {
      */
     registerMaterial(name, material) {
         this._materials.set(name, material);
+        material.userData.ownedByWarderobe = true;
     }
     /**
      *  Register a new texture animator on a already defined texture.

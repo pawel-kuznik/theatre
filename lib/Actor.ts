@@ -84,6 +84,7 @@ export default abstract class Actor implements RenderParticipant {
         const parentObject = this._object.parent;
         const oldObject = this._object;
 
+        this.detach();
         this._disposeObject();
 
         this._object = this._initObject(warderobe);

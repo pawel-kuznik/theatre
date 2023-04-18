@@ -110,6 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const intersections = event.data.intersections;
 
+        console.log(intersections);
+
         for (let int of intersections) {
 
             if ('toggle' in int.actor) int.actor.toggle();

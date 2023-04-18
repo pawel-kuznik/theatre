@@ -63,6 +63,7 @@ export abstract class InstantiatedActor implements RenderParticipant {
         const parentObject = this._mesh?.parent;
         const oldObject = this._mesh;
 
+        this.detach();
         this._disposeObject();
 
         this._mesh = this._init(warderobe);
@@ -165,6 +166,6 @@ export abstract class InstantiatedActor implements RenderParticipant {
         if (index >= this._count) return undefined
         
         this._mesh.setColorAt(index, color);
-        this._mesh.instanceMatrix.needsUpdate = true;
+        if (this._mesh.instanceColor) this._mesh.instanceColor.needsUpdate = true;
     }
 };

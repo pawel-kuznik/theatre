@@ -84,7 +84,7 @@ export default class TiledFloor extends Actor {
         const geometry = new PlaneGeometry(1, 1);
         const material = new MeshPhongMaterial({ map: warderobe.fetchTexture(this._texture), shadowSide: this._shadows ? FrontSide : undefined });
         
-        const object = new InstancedMesh(geometry, material, this._size + 1);
+        const object = new InstancedMesh(geometry, material, this._size);
 
         if (this._shadows) object.receiveShadow = true;
             

@@ -47,6 +47,7 @@ export default class Warderobe implements RenderParticipant {
     public registerTexture(name:string, texture:Texture) : void {
 
         this._textures.set(name, texture);
+        texture.userData.ownedByWarderobe = true;
     }
 
     /**
@@ -63,6 +64,7 @@ export default class Warderobe implements RenderParticipant {
     public registerMaterial(name:string, material:MeshBasicMaterial|MeshPhongMaterial) : void {
 
         this._materials.set(name, material);
+        material.userData.ownedByWarderobe = true;
     }
 
     /**
@@ -75,7 +77,6 @@ export default class Warderobe implements RenderParticipant {
         if (!texture) throw Error('Missing texture');
 
         const animator = new TextureAnimator(texture, 2);
-
         this._animators.set(name, animator);
 
         return animator;
