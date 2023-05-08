@@ -73,8 +73,6 @@ export default class Theatre extends Emitter  {
      */
     private readonly _loop:RenderingLoop;
 
-    private _canvas: HTMLCanvasElement;
-
     private _onDocumentKeyDown: any;
     private _onDocumentWheel: any;
     private _onCanvasClick: any;
@@ -90,19 +88,24 @@ export default class Theatre extends Emitter  {
      *
      *  @throw  Error   When initialization fails. The message contains the reason.
      */
-    constructor(canvas:HTMLCanvasElement, options?:TheatreOptions) {
+    constructor(canvasContainer:HTMLElement, options?:TheatreOptions) {
 
         super();
 
         if (!(window as any).__THREE__) throw Error("Trying to use Theatre without THREE.js");
 
-        this._canvas = canvas;
+        const container = document.createElement('div');
+        container.className = "theatre-container";
 
-        this._rendererHandler = new RendererHandler(canvas, Object.assign({ }, {
+        canvasContainer.append(container);
+
+        this._rendererHandler = new RendererHandler(container, Object.assign({ }, {
             antialiasing:       true,
             shaderPrecision:    ShaderPrecisionSetting.high,
             powerPreference:    PowerPreferenceSetting.default      
         }));
+
+        const canvas = this._rendererHandler.canvas;
 
         const cameraDefaults:CameraFactorySpecs = {
             type:           'topdown',
@@ -126,6 +129,8 @@ export default class Theatre extends Emitter  {
             this._stageContainer.renderUpdate(step);
 
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+
+            this._rendererHandler.css.render(this._stageContainer.stage.scene, this._camera.native);
         });
 
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
@@ -221,10 +226,10 @@ export default class Theatre extends Emitter  {
             stage.dispose();
         }
 
-        this._canvas.ownerDocument.body.removeEventListener('keydown', this._onDocumentKeyDown);
-        this._canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
-        this._canvas.removeEventListener('click', this._onCanvasClick);
-        this._canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
+        this._rendererHandler.canvas.ownerDocument.body.removeEventListener('keydown', this._onDocumentKeyDown);
+        this._rendererHandler.canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
+        this._rendererHandler.canvas.removeEventListener('click', this._onCanvasClick);
+        this._rendererHandler.canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
 
         this._stages.clear();
 

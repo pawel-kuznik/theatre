@@ -29,10 +29,8 @@ class Carpet extends THEATRE.Actor {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const canvas = document.querySelector('canvas');
-
     // construct a theatre
-    const theatre = new THEATRE.Theatre(canvas);
+    const theatre = new THEATRE.Theatre(document.body);
 
     const testStage = theatre.createStage('test');
     testStage.setAmbience({

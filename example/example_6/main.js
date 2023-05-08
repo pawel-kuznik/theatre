@@ -7,7 +7,7 @@ class Carpet extends THEATRE.Actor {
 
         const animation = this._animation = new THEATRE.TransitionCycle();
         animation.add(new THEATRE.ActorTranslation(this, 2000, new THREE.Vector3(10, 0, 0)));
-        animation.add(new THEATRE.ActorTranslation(this, 2000, new THREE.Vector3(10, 10, 5)));
+        animation.add(new THEATRE.ActorTranslation(this, 2000, new THREE.Vector3(25, 10, 5)));
         animation.add(new THEATRE.ActorTranslation(this, 2000, new THREE.Vector3(-10, 0, 5)));
 
         animation.start();
@@ -53,10 +53,8 @@ class Pillar extends THEATRE.Actor {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const canvas = document.querySelector('canvas');
-
     // construct a theatre
-    const theatre = new THEATRE.Theatre(canvas);
+    const theatre = new THEATRE.Theatre(document.body);
 
     const testStage = theatre.createStage('test');
     testStage.setAmbience({

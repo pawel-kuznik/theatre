@@ -8,6 +8,7 @@ import StageAmbience from "./Stage/StageAmbience";
 import StageAmbienceProperties from "./StageAmbienceProperties";
 import Warderobe from "./Warderobe";
 import { InstantiatedActor } from "./InstantiatedActor";
+import { HTMLActor } from "./HTMLActor";
 
 /**
  *  This is the stage. This class represents the scene as well as definition for
@@ -31,6 +32,11 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     private readonly _instantiatedActors: Set<InstantiatedActor> = new Set();
 
     /**
+     *  The HTML actors.
+     */
+    private readonly _htmlActors: Set<HTMLActor> = new Set();
+
+    /**
      *  The current scene ambience.
      */
     private _ambience:StageAmbience|null = null;
@@ -43,7 +49,7 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  Fetch an actor by uuid of it's main object.
      */
-    fetch(uuid:string) : Actor|InstantiatedActor|undefined {
+    fetch(uuid:string) : Actor|InstantiatedActor|HTMLActor|undefined {
 
         for (let actor of this._actors) {
             
@@ -51,6 +57,11 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         }
 
         for (let actor of this._instantiatedActors) {
+
+            if (actor.renderUUID === uuid) return actor;
+        }
+
+        for (let actor of this._htmlActors) {
 
             if (actor.renderUUID === uuid) return actor;
         }
@@ -71,12 +82,12 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  The the current actors of the scene.
      */
-    get actors() : Array<Actor|InstantiatedActor> { return [...this._actors, ...this._instantiatedActors]; }
+    get actors() : Array<Actor|InstantiatedActor|HTMLActor> { return [...this._actors, ...this._instantiatedActors, ...this._htmlActors]; }
 
     /**
      *  Insert an actor into the scene.
      */
-    insert(actor:Actor|InstantiatedActor) {
+    insert(actor:Actor|InstantiatedActor|HTMLActor) {
 
         if (actor instanceof Actor) {
 
@@ -91,13 +102,19 @@ export default class Stage implements RenderParticipant, ActorsHolder {
             if (this._warderobe) actor.hydrate(this._warderobe);
             actor.attachTo(this.scene);
         }
+
+        if (actor instanceof HTMLActor) {
+
+            this._htmlActors.add(actor);
+            actor.attachTo(this.scene);
+        }
     }
 
     /**
      *  Destroy a target actor residing in this scene. If the actor is not inside
      *  the scene no action will be done.
      */
-    destroy(actor:Actor|InstantiatedActor) {
+    destroy(actor:Actor|InstantiatedActor|HTMLActor) {
 
         if (actor instanceof Actor) {
 
@@ -109,6 +126,12 @@ export default class Stage implements RenderParticipant, ActorsHolder {
 
             if (!this._instantiatedActors.has(actor)) return;
             this._instantiatedActors.delete(actor);
+        }
+
+        if (actor instanceof HTMLActor) {
+            
+            if (!this._htmlActors.has(actor)) return;
+            this._htmlActors.delete(actor);
         }
 
         actor.detach();
@@ -161,7 +184,13 @@ export default class Stage implements RenderParticipant, ActorsHolder {
             this.destroy(actor);
         }
 
+        for (let actor of this._htmlActors) {
+            this.destroy(actor);
+        }
+
         this._actors.clear();
+        this._instantiatedActors.clear();
+        this._htmlActors.clear();
 
         if (this._ambience) this._ambience.vacate();
     }

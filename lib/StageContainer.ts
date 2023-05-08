@@ -1,6 +1,7 @@
 import Actor from "./Actor";
 import ActorsHolder from "./ActorsHolder";
 import EmptyStage from "./EmptyStage";
+import { HTMLActor } from "./HTMLActor";
 import { InstantiatedActor } from "./InstantiatedActor";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
@@ -30,7 +31,7 @@ export default class StageContainer implements RenderParticipant, ActorsHolder {
     /**
      *  The actors inside this container.
      */
-    get actors(): Array<Actor|InstantiatedActor> { return this._stage.actors; } 
+    get actors(): Array<Actor|InstantiatedActor|HTMLActor> { return this._stage.actors; } 
 
     /**
      *  Mount new stage. A promise of fully mounted stage is returned.
@@ -46,7 +47,7 @@ export default class StageContainer implements RenderParticipant, ActorsHolder {
     /**
      *  Fetch an actor by it's object uuid.
      */
-    fetch(uuid: string): Actor | InstantiatedActor | undefined {
+    fetch(uuid: string): Actor | InstantiatedActor |  HTMLActor | undefined {
 
         return this._stage.fetch(uuid);
     }

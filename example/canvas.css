@@ -10,7 +10,7 @@ html, body
     padding:    0;
 }
 
-canvas
+.theatre-container
 {
     width:      calc(100% - 2rem - 4px);
     height:     calc(100% - 2rem - 4px);
@@ -19,6 +19,8 @@ canvas
     border:     2px dashed darkorange;
     background-clip: border-box;
     background:gainsboro;
+
+    box-sizing: border-box;
 
     border-radius: 7px;
 }

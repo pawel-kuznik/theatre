@@ -14,12 +14,16 @@ export default class StageAmbience implements Occupant {
 
     private _overheadLight:DirectionalLight;
 
+    private _shadowsRange: number;
+
     constructor(properties:StageAmbienceProperties) {
 
         this._ambientLight = new AmbientLight(properties.ambientColor, .5);
 
+        this._shadowsRange = properties.shadowsRange || 10;
+
         this._overheadLight = new DirectionalLight(0xffffff, .5);
-        this._overheadLight.position.set(0, 0, 10);
+        this._overheadLight.position.set(0, 0, properties.overheadCeiling || 10);
         this._overheadLight.lookAt(new Vector3(0, 0, 0));
         this._overheadLight.castShadow = true;
 
@@ -28,10 +32,10 @@ export default class StageAmbience implements Occupant {
         this._overheadLight.shadow.camera.near = 0;
         this._overheadLight.shadow.camera.far = 250;
 
-        this._overheadLight.shadow.camera.left = -10;
-        this._overheadLight.shadow.camera.right = 10;
-        this._overheadLight.shadow.camera.top = 10;
-        this._overheadLight.shadow.camera.bottom = -10;
+        this._overheadLight.shadow.camera.left = -this._shadowsRange;
+        this._overheadLight.shadow.camera.right = this._shadowsRange;
+        this._overheadLight.shadow.camera.top = this._shadowsRange;
+        this._overheadLight.shadow.camera.bottom = -this._shadowsRange;
     }
 
     /**
@@ -43,7 +47,7 @@ export default class StageAmbience implements Occupant {
         // shadows. This however is very specific to top-down camera and we will need
         // a different ration for cameras dealing with first person view.
         // Or we could ask the camera what kind of radius of shadows it wants...
-        const radius = Math.max(10 * (camera.native.position.z / 10), 5);
+        const radius = Math.max(this._shadowsRange * (camera.native.position.z / this._shadowsRange), this._shadowsRange / 2);
 
         // to make sure that the shadows render we need to "move" the frustrum (field of view)
         // of the shadow camera to match our actual camera. However, we don't want to move

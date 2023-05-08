@@ -2,6 +2,7 @@ export { default as Actor } from "./lib/Actor";
 export { InstantiatedActor } from "./lib/InstantiatedActor";
 export { default as TiledActors } from "./lib/TiledActors";
 export { default as CompanionActor } from "./lib/CompanionActor";
+export { HTMLActor } from "./lib/HTMLActor";
 export { default as Stage } from "./lib/Stage";
 export { default as Warderobe } from "./lib/Warderobe";
 export { default as Position } from "./lib/Position";

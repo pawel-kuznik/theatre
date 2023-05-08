@@ -34,7 +34,8 @@
   },
   "dependencies": {
     "@pawel-kuznik/iventy": "^3.0.4",
-    "@types/resize-observer-browser": "^0.1.6"
+    "@types/resize-observer-browser": "^0.1.6",
+    "three-css3d": "^1.0.6"
   },
   "peerDependencies": {
     "three": "^0.150.1"

@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":31,"three":40}],2:[function(require,module,exports){
+},{"./build/theatre.js":32,"three":42}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -106,7 +106,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":16,"three":40}],3:[function(require,module,exports){
+},{"./Position":17,"three":42}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -293,7 +293,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
 exports.default = CameraHoverPicker;
 ;
 
-},{"./buildPickEventData":12,"@pawel-kuznik/iventy":32,"three":40}],7:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":33,"three":42}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -335,7 +335,7 @@ class CameraMousePicker extends iventy_1.Emitter {
 exports.default = CameraMousePicker;
 ;
 
-},{"./buildPickEventData":12,"@pawel-kuznik/iventy":32,"three":40}],8:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":33,"three":42}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CameraTracker = void 0;
@@ -390,7 +390,7 @@ class CameraTracker extends iventy_1.Emitter {
 exports.CameraTracker = CameraTracker;
 ;
 
-},{"@pawel-kuznik/iventy":32}],9:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":33}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -530,7 +530,7 @@ class TopDownCamera extends iventy_1.Emitter {
 exports.default = TopDownCamera;
 ;
 
-},{"@pawel-kuznik/iventy":32,"three":40}],10:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":33,"three":42}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -617,7 +617,7 @@ class WSADCameraMover extends iventy_1.Emitter {
 exports.default = WSADCameraMover;
 ;
 
-},{"@pawel-kuznik/iventy":32}],11:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":33}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -688,7 +688,7 @@ class WheelLifterCameraMover extends iventy_1.Emitter {
 exports.default = WheelLifterCameraMover;
 ;
 
-},{"@pawel-kuznik/iventy":32}],12:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":33}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -728,7 +728,7 @@ function buildPickEventData(intersections, holder) {
 exports.default = buildPickEventData;
 ;
 
-},{"../ActorIntersection":3,"three":40}],13:[function(require,module,exports){
+},{"../ActorIntersection":3,"three":42}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -746,7 +746,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":40}],14:[function(require,module,exports){
+},{"./Actor":2,"three":42}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -762,7 +762,36 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":22}],15:[function(require,module,exports){
+},{"./Stage":23}],15:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.HTMLActor = void 0;
+const three_css3d_1 = require("three-css3d");
+const Actor_1 = require("./Actor");
+class HTMLActor extends Actor_1.default {
+    constructor(scale = .01) {
+        super();
+        this._scale = scale;
+        this._element = this._initElement();
+    }
+    get element() { return this._element; }
+    /**
+     *  A function that is called to initialize the main object
+     *  of the actor.
+     */
+    _initObject(warderobe) {
+        const wrapper = document.createElement('div');
+        this._element.style.transform = `scale(${this._scale})`;
+        // this help with blurriness when we apply scale
+        this._element.style.backfaceVisibility = 'hidden';
+        wrapper.append(this._element);
+        return new three_css3d_1.CSS3DObject(wrapper);
+    }
+}
+exports.HTMLActor = HTMLActor;
+;
+
+},{"./Actor":2,"three-css3d":41}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstantiatedActor = void 0;
@@ -829,7 +858,6 @@ class InstantiatedActor {
             this.detach();
             this._disposeObject();
             this._mesh = new three_1.InstancedMesh(oldObject.geometry, oldObject.material, this._count);
-            console.log('new mesh was created');
             // this line will make sure that the mesh will be updated every frame.
             // @todo this might need to be an option
             this._mesh.instanceMatrix.setUsage(three_1.DynamicDrawUsage);
@@ -923,7 +951,7 @@ class InstantiatedActor {
 exports.InstantiatedActor = InstantiatedActor;
 ;
 
-},{"three":40}],16:[function(require,module,exports){
+},{"three":42}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -953,7 +981,7 @@ class Position {
 exports.default = Position;
 ;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
@@ -983,17 +1011,26 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
+const three_css3d_1 = require("three-css3d");
 /**
  *  This is a class that handlers the canvas element and its relation to the renderer
  *  for us.
  */
 class RendererHandler {
-    constructor(_canvas, options) {
-        this._canvas = _canvas;
+    constructor(container, options) {
+        this._css = new three_css3d_1.CSS3DRenderer();
+        container.style.position = 'relative';
+        this._container = container;
+        this._canvas = document.createElement('canvas');
+        container.append(this._canvas);
+        container.append(this._css.domElement);
+        this._canvas.style.position = 'absolute';
+        this._css.domElement.style.position = 'absolute';
+        this._css.domElement.style.pointerEvents = 'none';
         this._renderer = new three_1.WebGLRenderer({
             canvas: this._canvas,
             antialias: options.antialiasing,
@@ -1005,7 +1042,7 @@ class RendererHandler {
         this._renderer.shadowMap.type = three_1.PCFSoftShadowMap;
         this._observer = new ResizeObserver(() => void this._resize());
         this._resize();
-        this._observer.observe(this._canvas);
+        this._observer.observe(container);
     }
     /**
      *  Get access to the actual renderer.
@@ -1015,6 +1052,10 @@ class RendererHandler {
      *  Get acecss to the actual canvas element
      */
     get canvas() { return this._canvas; }
+    /**
+     *  Get access to the CSS renderer.
+     */
+    get css() { return this._css; }
     /**
      *  Get the aspect ratio of the renderer.
      */
@@ -1041,10 +1082,11 @@ class RendererHandler {
      */
     _resize() {
         const scale = window.devicePixelRatio;
-        const bb = this._canvas.getBoundingClientRect();
+        const bb = this._container.getBoundingClientRect();
         // resize the observer, but don't allow the renderer to resize
         // the canvas. This would make it a somewhat silly loop.
         this._renderer.setSize(bb.width * scale, bb.height * scale, false);
+        this._css.setSize(bb.width * scale, bb.height * scale);
         if (this._resizeHandler)
             this._resizeHandler(bb.width, bb.height);
     }
@@ -1053,7 +1095,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"three":40}],19:[function(require,module,exports){
+},{"three":42,"three-css3d":41}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -1107,7 +1149,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":17}],20:[function(require,module,exports){
+},{"./RenderStep":18}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PowerPreferenceSetting = exports.ShaderPrecisionSetting = void 0;
@@ -1127,7 +1169,7 @@ var PowerPreferenceSetting;
 })(PowerPreferenceSetting = exports.PowerPreferenceSetting || (exports.PowerPreferenceSetting = {}));
 ;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderingStats = void 0;
@@ -1166,13 +1208,14 @@ class RenderingStats {
 exports.RenderingStats = RenderingStats;
 ;
 
-},{"three":40}],22:[function(require,module,exports){
+},{"three":42}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
 const StageAmbience_1 = require("./Stage/StageAmbience");
 const InstantiatedActor_1 = require("./InstantiatedActor");
+const HTMLActor_1 = require("./HTMLActor");
 /**
  *  This is the stage. This class represents the scene as well as definition for
  *  lights and actors.
@@ -1192,6 +1235,10 @@ class Stage {
          */
         this._instantiatedActors = new Set();
         /**
+         *  The HTML actors.
+         */
+        this._htmlActors = new Set();
+        /**
          *  The current scene ambience.
          */
         this._ambience = null;
@@ -1205,6 +1252,10 @@ class Stage {
                 return actor;
         }
         for (let actor of this._instantiatedActors) {
+            if (actor.renderUUID === uuid)
+                return actor;
+        }
+        for (let actor of this._htmlActors) {
             if (actor.renderUUID === uuid)
                 return actor;
         }
@@ -1222,7 +1273,7 @@ class Stage {
     /**
      *  The the current actors of the scene.
      */
-    get actors() { return [...this._actors, ...this._instantiatedActors]; }
+    get actors() { return [...this._actors, ...this._instantiatedActors, ...this._htmlActors]; }
     /**
      *  Insert an actor into the scene.
      */
@@ -1237,6 +1288,10 @@ class Stage {
             this._instantiatedActors.add(actor);
             if (this._warderobe)
                 actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene);
+        }
+        if (actor instanceof HTMLActor_1.HTMLActor) {
+            this._htmlActors.add(actor);
             actor.attachTo(this.scene);
         }
     }
@@ -1254,6 +1309,11 @@ class Stage {
             if (!this._instantiatedActors.has(actor))
                 return;
             this._instantiatedActors.delete(actor);
+        }
+        if (actor instanceof HTMLActor_1.HTMLActor) {
+            if (!this._htmlActors.has(actor))
+                return;
+            this._htmlActors.delete(actor);
         }
         actor.detach();
         actor.dispose();
@@ -1296,7 +1356,12 @@ class Stage {
         for (let actor of this._instantiatedActors) {
             this.destroy(actor);
         }
+        for (let actor of this._htmlActors) {
+            this.destroy(actor);
+        }
         this._actors.clear();
+        this._instantiatedActors.clear();
+        this._htmlActors.clear();
         if (this._ambience)
             this._ambience.vacate();
     }
@@ -1304,7 +1369,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Actor":2,"./InstantiatedActor":15,"./Stage/StageAmbience":23,"three":40}],23:[function(require,module,exports){
+},{"./Actor":2,"./HTMLActor":15,"./InstantiatedActor":16,"./Stage/StageAmbience":24,"three":42}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1316,18 +1381,19 @@ const three_1 = require("three");
 class StageAmbience {
     constructor(properties) {
         this._ambientLight = new three_1.AmbientLight(properties.ambientColor, .5);
+        this._shadowsRange = properties.shadowsRange || 10;
         this._overheadLight = new three_1.DirectionalLight(0xffffff, .5);
-        this._overheadLight.position.set(0, 0, 10);
+        this._overheadLight.position.set(0, 0, properties.overheadCeiling || 10);
         this._overheadLight.lookAt(new three_1.Vector3(0, 0, 0));
         this._overheadLight.castShadow = true;
         this._overheadLight.shadow.mapSize.width = 512;
         this._overheadLight.shadow.mapSize.height = 512;
         this._overheadLight.shadow.camera.near = 0;
         this._overheadLight.shadow.camera.far = 250;
-        this._overheadLight.shadow.camera.left = -10;
-        this._overheadLight.shadow.camera.right = 10;
-        this._overheadLight.shadow.camera.top = 10;
-        this._overheadLight.shadow.camera.bottom = -10;
+        this._overheadLight.shadow.camera.left = -this._shadowsRange;
+        this._overheadLight.shadow.camera.right = this._shadowsRange;
+        this._overheadLight.shadow.camera.top = this._shadowsRange;
+        this._overheadLight.shadow.camera.bottom = -this._shadowsRange;
     }
     /**
      *  Update shadow camera to be in-line with another camera.
@@ -1337,7 +1403,7 @@ class StageAmbience {
         // shadows. This however is very specific to top-down camera and we will need
         // a different ration for cameras dealing with first person view.
         // Or we could ask the camera what kind of radius of shadows it wants...
-        const radius = Math.max(10 * (camera.native.position.z / 10), 5);
+        const radius = Math.max(this._shadowsRange * (camera.native.position.z / this._shadowsRange), this._shadowsRange / 2);
         // to make sure that the shadows render we need to "move" the frustrum (field of view)
         // of the shadow camera to match our actual camera. However, we don't want to move
         // the directional light. 
@@ -1369,7 +1435,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":40}],24:[function(require,module,exports){
+},{"three":42}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -1420,7 +1486,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":14}],25:[function(require,module,exports){
+},{"./EmptyStage":14}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -1457,7 +1523,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -1490,7 +1556,7 @@ class Theatre extends iventy_1.Emitter {
      *
      *  @throw  Error   When initialization fails. The message contains the reason.
      */
-    constructor(canvas, options) {
+    constructor(canvasContainer, options) {
         super();
         /**
          *  The warderobe for the theathre.
@@ -1507,12 +1573,15 @@ class Theatre extends iventy_1.Emitter {
         this._stages = new Map();
         if (!window.__THREE__)
             throw Error("Trying to use Theatre without THREE.js");
-        this._canvas = canvas;
-        this._rendererHandler = new RendererHandler_1.default(canvas, Object.assign({}, {
+        const container = document.createElement('div');
+        container.className = "theatre-container";
+        canvasContainer.append(container);
+        this._rendererHandler = new RendererHandler_1.default(container, Object.assign({}, {
             antialiasing: true,
             shaderPrecision: RenderingQualitySettings_1.ShaderPrecisionSetting.high,
             powerPreference: RenderingQualitySettings_1.PowerPreferenceSetting.default
         }));
+        const canvas = this._rendererHandler.canvas;
         const cameraDefaults = {
             type: 'topdown',
             movers: [{ type: 'wsad' }, { type: 'wheellifter' }],
@@ -1527,6 +1596,7 @@ class Theatre extends iventy_1.Emitter {
             this.warderobe.renderUpdate(step);
             this._stageContainer.renderUpdate(step);
             this._rendererHandler.renderer.render(this._stageContainer.stage.scene, this._camera.native);
+            this._rendererHandler.css.render(this._stageContainer.stage.scene, this._camera.native);
         });
         // @todo This whole thing should be disposable and this event handler should be uninstalled.
         canvas.ownerDocument.body.addEventListener('keydown', this._onDocumentKeyDown = (event) => {
@@ -1596,10 +1666,10 @@ class Theatre extends iventy_1.Emitter {
         for (let stage of this._stages.values()) {
             stage.dispose();
         }
-        this._canvas.ownerDocument.body.removeEventListener('keydown', this._onDocumentKeyDown);
-        this._canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
-        this._canvas.removeEventListener('click', this._onCanvasClick);
-        this._canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
+        this._rendererHandler.canvas.ownerDocument.body.removeEventListener('keydown', this._onDocumentKeyDown);
+        this._rendererHandler.canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
+        this._rendererHandler.canvas.removeEventListener('click', this._onCanvasClick);
+        this._rendererHandler.canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
         this._stages.clear();
         this._rendererHandler.dispose();
     }
@@ -1607,7 +1677,7 @@ class Theatre extends iventy_1.Emitter {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":18,"./RenderingLoop":19,"./RenderingQualitySettings":20,"./RenderingStats":21,"./Stage":22,"./StageContainer":24,"./Warderobe":30,"@pawel-kuznik/iventy":32}],27:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":19,"./RenderingLoop":20,"./RenderingQualitySettings":21,"./RenderingStats":22,"./Stage":23,"./StageContainer":25,"./Warderobe":31,"@pawel-kuznik/iventy":33}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1675,7 +1745,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":40}],28:[function(require,module,exports){
+},{"./Actor":2,"three":42}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1812,7 +1882,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":40}],29:[function(require,module,exports){
+},{"./Actor":2,"three":42}],30:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1879,7 +1949,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1995,10 +2065,10 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":25,"three":40}],31:[function(require,module,exports){
+},{"./TextureAnimator":26,"three":42}],32:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var InstantiatedActor_1 = require("./lib/InstantiatedActor");
@@ -2007,6 +2077,8 @@ var TiledActors_1 = require("./lib/TiledActors");
 Object.defineProperty(exports, "TiledActors", { enumerable: true, get: function () { return TiledActors_1.default; } });
 var CompanionActor_1 = require("./lib/CompanionActor");
 Object.defineProperty(exports, "CompanionActor", { enumerable: true, get: function () { return CompanionActor_1.default; } });
+var HTMLActor_1 = require("./lib/HTMLActor");
+Object.defineProperty(exports, "HTMLActor", { enumerable: true, get: function () { return HTMLActor_1.HTMLActor; } });
 var Stage_1 = require("./lib/Stage");
 Object.defineProperty(exports, "Stage", { enumerable: true, get: function () { return Stage_1.default; } });
 var Warderobe_1 = require("./lib/Warderobe");
@@ -2025,7 +2097,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":13,"./lib/InstantiatedActor":15,"./lib/Position":16,"./lib/Stage":22,"./lib/Theatre":26,"./lib/TiledActors":27,"./lib/TiledFloor":28,"./lib/TransitionCycle":29,"./lib/Warderobe":30}],32:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":13,"./lib/HTMLActor":15,"./lib/InstantiatedActor":16,"./lib/Position":17,"./lib/Stage":23,"./lib/Theatre":27,"./lib/TiledActors":28,"./lib/TiledFloor":29,"./lib/TransitionCycle":30,"./lib/Warderobe":31}],33:[function(require,module,exports){
 "use strict";
 /**
  *  This is an entry file for the whole library. This file exposes (and kicks in
@@ -2045,7 +2117,7 @@ Object.defineProperty(exports, "Federation", { enumerable: true, get: function (
 var Signal_1 = require("./lib/Signal");
 Object.defineProperty(exports, "SignalController", { enumerable: true, get: function () { return Signal_1.SignalController; } });
 
-},{"./lib/Emitter":35,"./lib/Event":36,"./lib/Federation":37,"./lib/Signal":39}],33:[function(require,module,exports){
+},{"./lib/Emitter":36,"./lib/Event":37,"./lib/Federation":38,"./lib/Signal":40}],34:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Channel = void 0;
@@ -2138,7 +2210,7 @@ class Channel {
 exports.Channel = Channel;
 ;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class that handles an event designator. An event designator is
@@ -2282,7 +2354,7 @@ class Designator {
 }
 exports.Designator = Designator;
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 "use strict";
 /**
  *  A class that can be used as event emitter on client and server side. An
@@ -2439,7 +2511,7 @@ class Emitter {
 exports.Emitter = Emitter;
 ;
 
-},{"./Channel":33,"./Event":36}],36:[function(require,module,exports){
+},{"./Channel":34,"./Event":37}],37:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Event = void 0;
@@ -2547,7 +2619,7 @@ class Event extends Packet_1.Packet {
 exports.Event = Event;
 ;
 
-},{"./Designator":34,"./Packet":38}],37:[function(require,module,exports){
+},{"./Designator":35,"./Packet":39}],38:[function(require,module,exports){
 "use strict";
 /**
  *  This is a class describing a federation of one or many emitters. A federation
@@ -2573,7 +2645,7 @@ class Federation extends Emitter_1.Emitter {
 }
 exports.Federation = Federation;
 
-},{"./Emitter":35}],38:[function(require,module,exports){
+},{"./Emitter":36}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Packet = void 0;
@@ -2589,7 +2661,7 @@ class Packet {
 exports.Packet = Packet;
 ;
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalController = void 0;
@@ -2648,7 +2720,262 @@ class ControlledSignal {
 }
 ;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var three = require('three');
+
+class CSS3DObject extends three.Object3D {
+    /**
+     * @param element Target Sprite DOM Element
+     */
+    constructor(element) {
+        super();
+        this.element = element;
+        this.element.style.position = 'absolute';
+        this.element.style.pointerEvents = 'auto';
+        this.addEventListener('removed', () => {
+            this.traverse((object) => {
+                if (object instanceof CSS3DObject &&
+                    object.element instanceof Element &&
+                    object.element.parentNode !== null) {
+                    object.element.parentNode.removeChild(object.element);
+                }
+            });
+        });
+    }
+    /**
+     * Copy content from another CSS3DObject.
+     * @param source Source CSS3DObject
+     * @param recursive
+     * @returns CSS3DObject
+     */
+    copy(source, recursive) {
+        three.Object3D.prototype.copy.call(this, source, recursive);
+        this.element = source.element.cloneNode(true);
+        return this;
+    }
+}
+
+class CSS3DSprite extends CSS3DObject {
+    /**
+     * @param element Target Sprite DOM Element
+     * @param spriteRatio The ratio for sprite rotation compensation, 1 for full sprite, 0 for normal 3D object.
+     */
+    constructor(element, spriteRatio = 1) {
+        super(element);
+        this.spriteRatio = spriteRatio;
+        this.spriteMatrixWorld = new three.Matrix4().copy(this.matrixWorld);
+    }
+}
+
+class CSS3DRenderer extends three.EventDispatcher {
+    zOrder(scene) {
+        const { cache } = this;
+        const items = [];
+        scene.traverse(obj => {
+            const object = obj;
+            if (cache.objects.has(object)) {
+                items.push({
+                    object,
+                    data: cache.objects.get(object),
+                });
+            }
+        });
+        const order = items.sort((a, b) => 
+        // Only for IE, property is guaranteed to exist
+        a.data.distanceToCameraSquared - b.data.distanceToCameraSquared);
+        const zMax = order.length;
+        order.forEach((info, index) => {
+            const { object } = info;
+            object.element.style.zIndex = `${zMax - index}`;
+        });
+    }
+    constructor() {
+        super();
+        this._width = 0;
+        this._height = 0;
+        this._widthHalf = 0;
+        this._heightHalf = 0;
+        this.matrix = new three.Matrix4();
+        this._spriteQuat = new three.Quaternion();
+        this._objectQuat = new three.Quaternion();
+        this.cache = {
+            camera: { fov: 0, style: '' },
+            objects: new WeakMap(),
+        };
+        this.epsilon = (value) => (Math.abs(value) < 1e-10 ? 0 : value);
+        this.getDistanceToSquared = (function () {
+            const a = new three.Vector3();
+            const b = new three.Vector3();
+            return function (object1, object2) {
+                a.setFromMatrixPosition(object1.matrixWorld);
+                b.setFromMatrixPosition(object2.matrixWorld);
+                return a.distanceToSquared(b);
+            };
+        })();
+        this.getCameraCSSMatrix = (martrix, camera, fov) => {
+            const { epsilon } = this;
+            const { elements } = martrix;
+            // prettier-ignore
+            const matrixCSS = `matrix3d(${epsilon(elements[0])},${epsilon(-elements[1])},${epsilon(elements[2])},${epsilon(elements[3])},${epsilon(elements[4])},${epsilon(-elements[5])},${epsilon(elements[6])},${epsilon(elements[7])},${epsilon(elements[8])},${epsilon(-elements[9])},${epsilon(elements[10])},${epsilon(elements[11])},${epsilon(elements[12])},${epsilon(-elements[13])},${epsilon(elements[14])},${epsilon(elements[15])})`;
+            if (camera instanceof three.OrthographicCamera) {
+                const tx = -(camera.right + camera.left) / 2;
+                const ty = (camera.top + camera.bottom) / 2;
+                return `scale(${fov})translate(${epsilon(tx)}px,${epsilon(ty)}px)${matrixCSS}`;
+            }
+            return `translateZ(${fov}px)${matrixCSS}`;
+        };
+        this.getObjectCSSMatrix = (matrix, cameraCSSMatrix) => {
+            const { epsilon } = this;
+            const { elements } = matrix;
+            // prettier-ignore
+            const matrix3d = `matrix3d(${epsilon(elements[0])},${epsilon(elements[1])},${epsilon(elements[2])},${epsilon(elements[3])},${epsilon(-elements[4])},${epsilon(-elements[5])},${epsilon(-elements[6])},${epsilon(-elements[7])},${epsilon(elements[8])},${epsilon(elements[9])},${epsilon(elements[10])},${epsilon(elements[11])},${epsilon(elements[12])},${epsilon(elements[13])},${epsilon(elements[14])},${epsilon(elements[15])})`;
+            // prettier-ignore
+            if (this.isIE) {
+                return `translate(-50%,-50%)translate(${this._widthHalf}px,${this._heightHalf}px)${cameraCSSMatrix}${matrix3d}`;
+            }
+            return `translate(-50%,-50%)${matrix3d}`;
+        };
+        this.renderObject = (object, scene, camera, cameraCSSMatrix) => {
+            const { matrix, getObjectCSSMatrix, cache, cameraElement, renderObject, isIE, getDistanceToSquared, } = this;
+            if (object instanceof CSS3DObject) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                object.onBeforeRender(this, scene, camera);
+                let style;
+                if (object instanceof CSS3DSprite) {
+                    // http://swiftcoder.wordpress.com/2008/11/25/constructing-a-billboard-matrix/
+                    matrix.copy(camera.matrixWorldInverse);
+                    // Get the inverse transforms
+                    matrix.transpose();
+                    // NOTE: The euler interp is probably cause Gimbal lock
+                    // Convert the rotation part to euler to merge by ratio
+                    // this._spriteEuler.setFromRotationMatrix(matrix); // camera inverse part
+                    // this._objectEuler.setFromRotationMatrix(object.matrixWorld); // object rotation part
+                    // this._spriteEuler.x = this._spriteEuler.x * object.spriteRatio + this._objectEuler.x * (1 - object.spriteRatio);
+                    // this._spriteEuler.y = this._spriteEuler.y * object.spriteRatio + this._objectEuler.y * (1 - object.spriteRatio);
+                    // this._spriteEuler.z = this._spriteEuler.z * object.spriteRatio + this._objectEuler.z * (1 - object.spriteRatio);
+                    // matrix.makeRotationFromEuler(this._spriteEuler);
+                    this._spriteQuat.setFromRotationMatrix(matrix);
+                    this._objectQuat.setFromRotationMatrix(object.matrixWorld);
+                    this._objectQuat.slerp(this._spriteQuat, object.spriteRatio);
+                    matrix.makeRotationFromQuaternion(this._objectQuat);
+                    matrix.copyPosition(object.matrixWorld);
+                    matrix.scale(object.scale);
+                    matrix.elements[3] = 0;
+                    matrix.elements[7] = 0;
+                    matrix.elements[11] = 0;
+                    matrix.elements[15] = 1;
+                    // save current computed sprite matrix
+                    object.spriteMatrixWorld.copy(matrix);
+                    style = getObjectCSSMatrix(matrix, cameraCSSMatrix);
+                }
+                else {
+                    style = getObjectCSSMatrix(object.matrixWorld, cameraCSSMatrix);
+                }
+                const { element } = object;
+                const cachedObject = cache.objects.get(object);
+                if (cachedObject === undefined || cachedObject.style !== style) {
+                    element.style.transform = style;
+                    const objectData = { style };
+                    cache.objects.set(object, objectData);
+                    if (isIE) {
+                        objectData.distanceToCameraSquared = getDistanceToSquared(camera, object);
+                    }
+                }
+                element.style.display = object.visible ? '' : 'none';
+                if (element.parentNode !== cameraElement) {
+                    cameraElement.appendChild(element);
+                }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                object.onAfterRender(this, scene, camera);
+            }
+            for (let i = 0, l = object.children.length; i < l; i++) {
+                renderObject(object.children[i], scene, camera, cameraCSSMatrix);
+            }
+        };
+        const domElement = document.createElement('div');
+        this.domElement = domElement;
+        domElement.style.overflow = 'hidden';
+        const cameraElement = document.createElement('div');
+        this.cameraElement = cameraElement;
+        cameraElement.style.transformStyle = 'preserve-3d';
+        domElement.appendChild(cameraElement);
+        this.isIE = /Trident/i.test(navigator.userAgent);
+    }
+    setClearColor() {
+        /* noop */
+    }
+    /**
+     * Get the size of container element.
+     * @returns
+     */
+    getSize() {
+        return {
+            width: this._width,
+            height: this._height,
+        };
+    }
+    /**
+     * Set the size of container element.
+     * @param width The width of element
+     * @param height The height of element
+     */
+    setSize(width, height) {
+        this._width = width;
+        this._height = height;
+        this._widthHalf = this._width / 2;
+        this._heightHalf = this._height / 2;
+        this.domElement.style.width = `${width}px`;
+        this.domElement.style.height = `${height}px`;
+        this.cameraElement.style.width = `${width}px`;
+        this.cameraElement.style.height = `${height}px`;
+    }
+    /**
+     * Update CSS3D scene.
+     * @param scene Three.js scene
+     * @param camera Three.js camera
+     */
+    render(scene, camera) {
+        const { _heightHalf, _widthHalf, isIE, cameraElement, cache, domElement, getCameraCSSMatrix, zOrder, renderObject, } = this;
+        const fov = camera.projectionMatrix.elements[5] * _heightHalf;
+        if (cache.camera.fov !== fov) {
+            domElement.style.perspective = `${fov}px`;
+            cache.camera.fov = fov;
+        }
+        // compatible for old version of three.js
+        if ((scene.matrixAutoUpdate && scene.matrixAutoUpdate === true) ||
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            scene.autoUpdate === true) {
+            scene.updateMatrixWorld();
+        }
+        if (camera.parent === null)
+            camera.updateMatrixWorld();
+        const cameraCSSMatrix = getCameraCSSMatrix(camera.matrixWorldInverse, camera, fov);
+        const style = `${cameraCSSMatrix}translate(${_widthHalf}px,${_heightHalf}px)`;
+        if (cache.camera.style !== style && !isIE) {
+            cameraElement.style.transform = style;
+            cache.camera.style = style;
+        }
+        renderObject(scene, scene, camera, cameraCSSMatrix);
+        if (isIE) {
+            // IE10 and 11 does not support 'preserve-3d'.
+            // Thus, z-order in 3D will not work.
+            // We have to calc z-order manually and set CSS z-index for IE.
+            // FYI: z-index can't handle object intersection
+            zOrder(scene);
+        }
+    }
+}
+
+exports.CSS3DObject = CSS3DObject;
+exports.CSS3DRenderer = CSS3DRenderer;
+exports.CSS3DSprite = CSS3DSprite;
+
+
+},{"three":42}],42:[function(require,module,exports){
 console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation' );
 /**
  * @license
