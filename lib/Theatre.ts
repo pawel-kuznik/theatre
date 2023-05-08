@@ -46,6 +46,8 @@ export default class Theatre extends Emitter  {
      */
     readonly stats: RenderingStats;
 
+    private readonly _container: HTMLElement;
+
     /**
      *  The container wrapping around the current stage and providing us
      *  with ability to transition from one stage to another.
@@ -96,6 +98,7 @@ export default class Theatre extends Emitter  {
 
         const container = document.createElement('div');
         container.className = "theatre-container";
+        this._container = container;
 
         canvasContainer.append(container);
 
@@ -234,5 +237,7 @@ export default class Theatre extends Emitter  {
         this._stages.clear();
 
         this._rendererHandler.dispose();
+
+        this._container.remove();
     }
 };
