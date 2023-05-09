@@ -1,6 +1,6 @@
 {
   "name": "@pawel-kuznik/theatre",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "theatre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
   "main": "build/theatre.js",
   "module": "build/theatre.js",
@@ -12,7 +12,7 @@
     "build": "tsc",
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "example": "tsc -p tsconfig.example.json && browserify example/bootstrap.js -o example/lib.js",
+    "example": "tsc -p tsconfig.example.json && browserify example/bootstrap.js -p esmify -o example/lib.js",
     "example-server": "http-server ./example -o"
   },
   "repository": {
@@ -28,13 +28,14 @@
   "devDependencies": {
     "@types/three": "^0.150.1",
     "browserify": "^17.0.0",
+    "esmify": "^2.1.1",
     "http-server": "^14.0.0",
     "three": "^0.150.1",
     "typescript": "^4.4.4"
   },
   "dependencies": {
     "@pawel-kuznik/iventy": "^3.0.4",
-    "@pawel-kuznik/three-css3d": "^1.0.8",
+    "@pawel-kuznik/three-css3d": "^1.0.10",
     "@types/resize-observer-browser": "^0.1.6"
   },
   "peerDependencies": {

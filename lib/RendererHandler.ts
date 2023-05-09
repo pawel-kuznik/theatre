@@ -1,6 +1,6 @@
 import { Object3D, PCFSoftShadowMap, Vector3, WebGLRenderer } from "three";
 import RenderingQualitySettings from "./RenderingQualitySettings";
-import { CSS3DRenderer } from "three-css3d";
+import { CSS3DRenderer } from "@pawel-kuznik/three-css3d";
 
 export type ResizeHandler = (width:number, height:number) => void;
 

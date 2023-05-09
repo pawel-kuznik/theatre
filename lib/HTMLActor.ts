@@ -1,4 +1,4 @@
-import { CSS3DObject } from "three-css3d";
+import { CSS3DObject } from "@pawel-kuznik/three-css3d";
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
 
