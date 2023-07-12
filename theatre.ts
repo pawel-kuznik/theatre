@@ -10,6 +10,8 @@ export { default as Theatre } from "./lib/Theatre";
 export { default as TiledFloor } from "./lib/TiledFloor";
 export { default as ActorIntersection } from "./lib/ActorIntersection";
 export { default as RenderingQualitySettings } from "./lib/RenderingQualitySettings";
+export { RTSTerrain } from "./lib/RTSTerrain";
+export { RTSTerrainMaterial } from "./lib/RTSTerrainMaterial";
 
 // spatial animations
 export { default as TransitionCycle } from "./lib/TransitionCycle";

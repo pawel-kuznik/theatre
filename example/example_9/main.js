@@ -1,5 +1,3 @@
-console.log('Example 9');
-
 class Box extends THEATRE.Actor {
 
     _initObject() {
@@ -14,7 +12,20 @@ class Box extends THEATRE.Actor {
 class Terrain extends THEATRE.RTSTerrain {
 
     constructor() {
-        super(5);
+        super(10);
+
+        this.setHeight(1, 1, 2);
+        this.setHeight(0, 0, 2);
+        this.setHeight(1, 0, 2);
+
+        this.setHeight(4, 4, 1);
+        this.setHeight(3, 4, 1);
+    }
+
+    getTerrainMaterial() {
+        return new THEATRE.RTSTerrainMaterial();
+        // return new THREE.MeshPhongMaterial({ color: 0xff00ff });
+        // return new THREE.MeshBasicMaterial({ color: 0xff00ff });
     }
 };
 
@@ -36,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     introStage.insert(box);
 
     const terrain = new Terrain();
-
     introStage.insert(terrain);
    
     theatre.transitionTo('intro');

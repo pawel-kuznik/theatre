@@ -1,4 +1,4 @@
-import { Object3D, Event, Material, Mesh, BufferGeometry } from "three";
+import { Object3D, Event, Material, Mesh, BufferGeometry, BufferAttribute } from "three";
 import Actor from "./Actor";
 import Warderobe from "./Warderobe";
 
@@ -22,27 +22,30 @@ export abstract class RTSTerrain extends Actor {
 
     setHeight(x: number, y: number, height: number) {
 
+        const idx = this._posToIdx(x, y);
+        this._heights.set([ height ], idx);
     }
 
     getHeight(x: number, y: number) : number {
-        return 0;
+        const idx = this._posToIdx(x, y);
+        return this._heights[idx];
     }
 
     protected abstract getTerrainMaterial(warderobe: Warderobe) : Material;
 
     protected _initObject(warderobe: Warderobe): Object3D<Event> {
 
-        const vertices = new Float32Array(3 * (this._size - 1) * 6);
+        const vertices = new Float32Array(this._size * this._size * 6 * 3);
 
-        for (let x = 0; x < this._size - 1; x++) {
-            for (let y = 0; y < this._size - 1; y++) {
+        for (let y = 0; y < this._size - 1; y++) {
+            for (let x = 0; x < this._size - 1; x++) {
 
                 const p1 = this.getHeight(x, y);
                 const p2 = this.getHeight(x + 1, y);
                 const p3 = this.getHeight(x + 1, y + 1);
                 const p4 = this.getHeight(x, y + 1);
 
-                [
+                vertices.set([
                     // lower-right tiangle
                     x, y, p1,
                     x + 1, y, p2,
@@ -52,13 +55,20 @@ export abstract class RTSTerrain extends Actor {
                     x + 1, y + 1, p3,
                     x, y + 1, p4,
                     x, y, p1
-                ]
+                ], (x + (y * this._size)) * 6 * 3);
             }
         }
 
         const geometry = new BufferGeometry();
+        geometry.setAttribute('position', new BufferAttribute( vertices, 3 ) );
+        geometry.computeVertexNormals();
+
         const material = this.getTerrainMaterial(warderobe);
 
         return new Mesh(geometry, material);
+    }
+
+    private _posToIdx(x: number, y: number) : number {
+        return x + (y * this._size);
     }
 };
