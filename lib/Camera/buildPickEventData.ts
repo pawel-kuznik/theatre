@@ -36,7 +36,7 @@ export default function buildPickEventData(intersections:Array<Intersection<Obje
 
         const child = value.object instanceof InstancedMesh ? value.instanceId : undefined;
 
-        return new ActorIntersection(actor, child);
+        return new ActorIntersection(value, actor, child);
     }).filter((value:ActorIntersection|undefined) => !!value);
 
     return {

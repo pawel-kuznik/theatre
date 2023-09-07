@@ -1,3 +1,4 @@
+import { Intersection, Object3D, Vector3 } from "three";
 import Actor from "./Actor";
 import { InstantiatedActor } from "./InstantiatedActor";
 
@@ -8,5 +9,16 @@ import { InstantiatedActor } from "./InstantiatedActor";
  */
 export default class ActorIntersection {
 
-    constructor(public readonly actor:Actor|InstantiatedActor, public readonly child:number|undefined = undefined) { }
-}
+    private _intersection: Intersection<Object3D>;
+
+    get intersection(): Intersection<Object3D> { return this._intersection; }
+    get position() : Vector3 { return this._intersection.point; }
+
+    constructor(
+        intersection: Intersection<Object3D>,
+        public readonly actor:Actor|InstantiatedActor,
+        public readonly child:number|undefined = undefined
+    ) {
+        this._intersection = intersection;
+    }
+};
