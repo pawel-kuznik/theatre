@@ -96,6 +96,8 @@ export default class Theatre extends Emitter  {
 
         if (!(window as any).__THREE__) throw Error("Trying to use Theatre without THREE.js");
 
+        console.log("Theatre init");
+
         const container = document.createElement('div');
         container.className = "theatre-container";
         this._container = container;
@@ -118,7 +120,7 @@ export default class Theatre extends Emitter  {
 
         const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
 
-        this._camera = (new CameraFactory(cameraOptions, this._stageContainer, this)).build();
+        this._camera = (new CameraFactory(cameraOptions, this._stageContainer, this, this._rendererHandler.renderSize)).build();
 
         this._camera.updateAspectRatio(this._rendererHandler.aspectRatio);
 

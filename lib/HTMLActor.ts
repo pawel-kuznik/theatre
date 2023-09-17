@@ -16,7 +16,7 @@ export abstract class HTMLActor extends Actor {
 
         this._scale = scale;
 
-        this._element = this._initElement();
+        this._element = document.createElement("DIV");
     }
     
     /**
@@ -32,13 +32,14 @@ export abstract class HTMLActor extends Actor {
 
         const wrapper = document.createElement('div');
 
+        this._element = this._initElement();
+
         this._element.style.transform = `scale(${this._scale})`;
 
         // this help with blurriness when we apply scale
         this._element.style.backfaceVisibility = 'hidden';
 
         wrapper.append(this._element);
-
      
         return new CSS3DObject(wrapper);
     }

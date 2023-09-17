@@ -10,6 +10,7 @@ import TopDownCamera from "./TopDownCamera";
 import WheelLifterCameraMover from "./WheelLifterCameraMover";
 import WSADCameraMover from "./WSADCameraMover";
 import { CameraTracker } from "./CameraTracker";
+import { RenderSize } from "../RenderSize";
 
 export type CameraFactorySpecs = CameraOptions & {
 
@@ -29,7 +30,7 @@ export default class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(private readonly _options:CameraFactorySpecs, private readonly _actorsHolder:ActorsHolder, private readonly _eventTarget:Emitter) {
+    constructor(private readonly _options:CameraFactorySpecs, private readonly _actorsHolder:ActorsHolder, private readonly _eventTarget:Emitter, private readonly _renderSize: RenderSize) {
 
     }
 
@@ -66,7 +67,7 @@ export default class CameraFactory {
 
         if (options.pickers.includes('primary')) {
 
-            const picker = new CameraMousePicker(camera, this._actorsHolder);
+            const picker = new CameraMousePicker(camera, this._actorsHolder, this._renderSize);
 
             picker.bubbleTo(this._eventTarget);
             
@@ -75,7 +76,7 @@ export default class CameraFactory {
 
         if (options.pickers.includes('hover')) {
 
-            const picker = new CameraHoverPicker(camera, this._actorsHolder);
+            const picker = new CameraHoverPicker(camera, this._actorsHolder, this._renderSize);
 
             picker.bubbleTo(this._eventTarget);
 

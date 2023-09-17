@@ -5,6 +5,7 @@ import CameraOptions from "./CameraOptions";
 import CameraPicker from "./CameraPicker";
 import FreefloatCamera from "./FreefloatCamera";
 import { Emitter } from "@pawel-kuznik/iventy";
+import { RenderSize } from "../RenderSize";
 
 /**
  *  The specific options for top-down camera.

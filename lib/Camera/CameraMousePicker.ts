@@ -6,6 +6,7 @@ import Camera from "../Camera";
 import buildPickEventData from "./buildPickEventData";
 import CameraPicker from "./CameraPicker";
 import { InstantiatedActor } from "../InstantiatedActor";
+import { RenderSize } from "../RenderSize";
 
 /**
  *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
@@ -21,7 +22,7 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
     /**
      *  The constructor.
      */
-    constructor(private readonly _camera:Camera, private readonly _actorsHolder:ActorsHolder) {
+    constructor(private readonly _camera:Camera, private readonly _actorsHolder:ActorsHolder, private readonly _renderSize: RenderSize) {
 
         super();
     }
@@ -36,7 +37,7 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
         // only handle primary button clicks
         if (event.button !== 0) return;
 
-        const screenClick = new Vector2((event.clientX / window.innerWidth) * 2 - 1, - (event.clientY / window.innerHeight) * 2 + 1);
+        const screenClick = new Vector2((event.offsetX / this._renderSize.width) * 2 - 1, - (event.offsetY / this._renderSize.height) * 2 + 1);
 
         this._raycaster.setFromCamera(screenClick, this._camera.native);
 

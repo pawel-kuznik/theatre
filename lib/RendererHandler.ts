@@ -1,6 +1,7 @@
 import { Object3D, PCFSoftShadowMap, Vector3, WebGLRenderer } from "three";
-import RenderingQualitySettings from "./RenderingQualitySettings";
 import { CSS3DRenderer } from "@pawel-kuznik/three-css3d";
+import RenderingQualitySettings from "./RenderingQualitySettings";
+import { RenderSize } from "./RenderSize";
 
 export type ResizeHandler = (width:number, height:number) => void;
 
@@ -13,6 +14,7 @@ export default class RendererHandler {
     private readonly _renderer:WebGLRenderer;
 
     private readonly _observer:ResizeObserver;
+    private readonly _renderSize: RenderSize;
 
     private readonly _css: CSS3DRenderer = new CSS3DRenderer();
 
@@ -50,6 +52,9 @@ export default class RendererHandler {
 
         this._observer = new ResizeObserver(() => void this._resize());
 
+        const bb = this._canvas.getBoundingClientRect();
+        this._renderSize = new RenderSize(bb.width, bb.height);
+
         this._resize();
         this._observer.observe(container);
     }
@@ -72,12 +77,12 @@ export default class RendererHandler {
     /**
      *  Get the aspect ratio of the renderer.
      */
-    get aspectRatio() : number { 
+    get aspectRatio() : number { return this._renderSize.aspectRatio; }
 
-        const bb = this._canvas.getBoundingClientRect();
-
-        return bb.width / bb.height;
-    }
+    /**
+     *  Get an object that tells what is the rendering size.
+     */
+    get renderSize() : RenderSize { return this._renderSize; }
 
     /**
      *  Cleanup any resources of this class.
@@ -110,6 +115,7 @@ export default class RendererHandler {
         this._renderer.setSize(bb.width * scale, bb.height * scale, false);
 
         this._css.setSize(bb.width * scale, bb.height * scale);
+        this._renderSize.adjust(bb.width * scale, bb.height * scale);
 
         if (this._resizeHandler) this._resizeHandler(bb.width, bb.height);
     };
