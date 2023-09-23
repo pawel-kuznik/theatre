@@ -107,7 +107,15 @@ export default class RendererHandler {
      */
     private _resize() : void {
 
-        const scale = window.devicePixelRatio;
+        // @note This one is strange. On some devices (MacBook) the scale has
+        // to be same as window.devicePixelRation. This was also the case with
+        // MS Surface Book, but after updates it produces a lot of issues with
+        // resizing. Why? Dunno. So now the scale is set to 1, but this needs 
+        // futther investigation.
+        // @todo get to the bottom of this issue.
+
+        // const scale = window.devicePixelRatio;
+        const scale = 1;
         const bb = this._container.getBoundingClientRect();
 
         // resize the observer, but don't allow the renderer to resize
