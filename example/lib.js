@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.THEATRE = { ...require('./build/theatre.js') };
 window.THREE = { ...require('three') };
-},{"./build/theatre.js":32,"three":45}],2:[function(require,module,exports){
+},{"./build/theatre.js":33,"three":46}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -106,7 +106,7 @@ class Actor {
 exports.default = Actor;
 ;
 
-},{"./Position":17,"three":45}],3:[function(require,module,exports){
+},{"./Position":17,"three":46}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -115,12 +115,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *  we want to know about it.
  */
 class ActorIntersection {
-    constructor(actor, child = undefined) {
+    constructor(intersection, actor, child = undefined) {
         this.actor = actor;
         this.child = child;
+        this._intersection = intersection;
     }
+    get intersection() { return this._intersection; }
+    get position() { return this._intersection.point; }
 }
 exports.default = ActorIntersection;
+;
 
 },{}],4:[function(require,module,exports){
 "use strict";
@@ -191,10 +195,11 @@ class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(_options, _actorsHolder, _eventTarget) {
+    constructor(_options, _actorsHolder, _eventTarget, _renderSize) {
         this._options = _options;
         this._actorsHolder = _actorsHolder;
         this._eventTarget = _eventTarget;
+        this._renderSize = _renderSize;
     }
     /**
      *  Build an instance of the camera based
@@ -223,12 +228,12 @@ class CameraFactory {
                 camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
         if (options.pickers.includes('primary')) {
-            const picker = new CameraMousePicker_1.default(camera, this._actorsHolder);
+            const picker = new CameraMousePicker_1.default(camera, this._actorsHolder, this._renderSize);
             picker.bubbleTo(this._eventTarget);
             camera.appendPicker(picker);
         }
         if (options.pickers.includes('hover')) {
-            const picker = new CameraHoverPicker_1.default(camera, this._actorsHolder);
+            const picker = new CameraHoverPicker_1.default(camera, this._actorsHolder, this._renderSize);
             picker.bubbleTo(this._eventTarget);
             camera.appendPicker(picker);
         }
@@ -266,10 +271,11 @@ class CameraHoverPicker extends iventy_1.Emitter {
     /**
      *  The constructor.
      */
-    constructor(_camera, _actorsHolder) {
+    constructor(_camera, _actorsHolder, _renderSize) {
         super();
         this._camera = _camera;
         this._actorsHolder = _actorsHolder;
+        this._renderSize = _renderSize;
         /**
          *  The raycaster that will do the checking.
          */
@@ -283,7 +289,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
             return;
         if (event.button !== -1)
             return;
-        const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+        const screenClick = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
         this._raycaster.setFromCamera(screenClick, this._camera.native);
         const objects = this._actorsHolder.actors.map((actor) => actor.object);
         const intersections = this._raycaster.intersectObjects(objects, true);
@@ -293,7 +299,7 @@ class CameraHoverPicker extends iventy_1.Emitter {
 exports.default = CameraHoverPicker;
 ;
 
-},{"./buildPickEventData":12,"@pawel-kuznik/iventy":33,"three":45}],7:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":34,"three":46}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -307,10 +313,11 @@ class CameraMousePicker extends iventy_1.Emitter {
     /**
      *  The constructor.
      */
-    constructor(_camera, _actorsHolder) {
+    constructor(_camera, _actorsHolder, _renderSize) {
         super();
         this._camera = _camera;
         this._actorsHolder = _actorsHolder;
+        this._renderSize = _renderSize;
         /**
          *  The raycaster that will do the checking.
          */
@@ -325,7 +332,7 @@ class CameraMousePicker extends iventy_1.Emitter {
         // only handle primary button clicks
         if (event.button !== 0)
             return;
-        const screenClick = new three_1.Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+        const screenClick = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
         this._raycaster.setFromCamera(screenClick, this._camera.native);
         const objects = this._actorsHolder.actors.map((actor) => actor.object);
         const intersections = this._raycaster.intersectObjects(objects, true);
@@ -335,7 +342,7 @@ class CameraMousePicker extends iventy_1.Emitter {
 exports.default = CameraMousePicker;
 ;
 
-},{"./buildPickEventData":12,"@pawel-kuznik/iventy":33,"three":45}],8:[function(require,module,exports){
+},{"./buildPickEventData":12,"@pawel-kuznik/iventy":34,"three":46}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CameraTracker = void 0;
@@ -390,7 +397,7 @@ class CameraTracker extends iventy_1.Emitter {
 exports.CameraTracker = CameraTracker;
 ;
 
-},{"@pawel-kuznik/iventy":33}],9:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":34}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -530,7 +537,7 @@ class TopDownCamera extends iventy_1.Emitter {
 exports.default = TopDownCamera;
 ;
 
-},{"@pawel-kuznik/iventy":33,"three":45}],10:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":34,"three":46}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -617,7 +624,7 @@ class WSADCameraMover extends iventy_1.Emitter {
 exports.default = WSADCameraMover;
 ;
 
-},{"@pawel-kuznik/iventy":33}],11:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":34}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -688,7 +695,7 @@ class WheelLifterCameraMover extends iventy_1.Emitter {
 exports.default = WheelLifterCameraMover;
 ;
 
-},{"@pawel-kuznik/iventy":33}],12:[function(require,module,exports){
+},{"@pawel-kuznik/iventy":34}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -718,7 +725,7 @@ function buildPickEventData(intersections, holder) {
         if (!actor)
             return undefined;
         const child = value.object instanceof three_1.InstancedMesh ? value.instanceId : undefined;
-        return new ActorIntersection_1.default(actor, child);
+        return new ActorIntersection_1.default(value, actor, child);
     }).filter((value) => !!value);
     return {
         intersections: result,
@@ -728,7 +735,7 @@ function buildPickEventData(intersections, holder) {
 exports.default = buildPickEventData;
 ;
 
-},{"../ActorIntersection":3,"three":45}],13:[function(require,module,exports){
+},{"../ActorIntersection":3,"three":46}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -746,7 +753,7 @@ class CompanionActor extends Actor_1.default {
 exports.default = CompanionActor;
 ;
 
-},{"./Actor":2,"three":45}],14:[function(require,module,exports){
+},{"./Actor":2,"three":46}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Stage_1 = require("./Stage");
@@ -762,7 +769,7 @@ class EmptyStage extends Stage_1.default {
 exports.default = EmptyStage;
 ;
 
-},{"./Stage":23}],15:[function(require,module,exports){
+},{"./Stage":24}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTMLActor = void 0;
@@ -772,7 +779,7 @@ class HTMLActor extends Actor_1.default {
     constructor(scale = .01) {
         super();
         this._scale = scale;
-        this._element = this._initElement();
+        this._element = document.createElement("DIV");
     }
     get element() { return this._element; }
     /**
@@ -781,6 +788,7 @@ class HTMLActor extends Actor_1.default {
      */
     _initObject(warderobe) {
         const wrapper = document.createElement('div');
+        this._element = this._initElement();
         this._element.style.transform = `scale(${this._scale})`;
         // this help with blurriness when we apply scale
         this._element.style.backfaceVisibility = 'hidden';
@@ -791,7 +799,7 @@ class HTMLActor extends Actor_1.default {
 exports.HTMLActor = HTMLActor;
 ;
 
-},{"./Actor":2,"@pawel-kuznik/three-css3d":44}],16:[function(require,module,exports){
+},{"./Actor":2,"@pawel-kuznik/three-css3d":45}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstantiatedActor = void 0;
@@ -951,7 +959,7 @@ class InstantiatedActor {
 exports.InstantiatedActor = InstantiatedActor;
 ;
 
-},{"three":45}],17:[function(require,module,exports){
+},{"three":46}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -984,6 +992,29 @@ exports.default = Position;
 },{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.RenderSize = void 0;
+class RenderSize {
+    constructor(width, height) {
+        this._width = width;
+        this._height = height;
+    }
+    get width() { return this._width; }
+    get height() { return this._height; }
+    get aspectRatio() { return this._width / this._height; }
+    /**
+     *  @internal
+     */
+    adjust(width, height) {
+        this._width = width;
+        this._height = height;
+    }
+}
+exports.RenderSize = RenderSize;
+;
+
+},{}],19:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderStep = void 0;
 /**
  *  This is an interface describing a render step. This means
@@ -1011,11 +1042,12 @@ class RenderStep {
 exports.RenderStep = RenderStep;
 ;
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const three_css3d_1 = require("@pawel-kuznik/three-css3d");
+const RenderSize_1 = require("./RenderSize");
 /**
  *  This is a class that handlers the canvas element and its relation to the renderer
  *  for us.
@@ -1041,6 +1073,8 @@ class RendererHandler {
         this._renderer.shadowMap.enabled = true;
         this._renderer.shadowMap.type = three_1.PCFSoftShadowMap;
         this._observer = new ResizeObserver(() => void this._resize());
+        const bb = this._canvas.getBoundingClientRect();
+        this._renderSize = new RenderSize_1.RenderSize(bb.width, bb.height);
         this._resize();
         this._observer.observe(container);
     }
@@ -1059,10 +1093,11 @@ class RendererHandler {
     /**
      *  Get the aspect ratio of the renderer.
      */
-    get aspectRatio() {
-        const bb = this._canvas.getBoundingClientRect();
-        return bb.width / bb.height;
-    }
+    get aspectRatio() { return this._renderSize.aspectRatio; }
+    /**
+     *  Get an object that tells what is the rendering size.
+     */
+    get renderSize() { return this._renderSize; }
     /**
      *  Cleanup any resources of this class.
      */
@@ -1087,6 +1122,7 @@ class RendererHandler {
         // the canvas. This would make it a somewhat silly loop.
         this._renderer.setSize(bb.width * scale, bb.height * scale, false);
         this._css.setSize(bb.width * scale, bb.height * scale);
+        this._renderSize.adjust(bb.width * scale, bb.height * scale);
         if (this._resizeHandler)
             this._resizeHandler(bb.width, bb.height);
     }
@@ -1095,7 +1131,7 @@ class RendererHandler {
 exports.default = RendererHandler;
 ;
 
-},{"@pawel-kuznik/three-css3d":44,"three":45}],20:[function(require,module,exports){
+},{"./RenderSize":18,"@pawel-kuznik/three-css3d":45,"three":46}],21:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const RenderStep_1 = require("./RenderStep");
@@ -1149,7 +1185,7 @@ class RenderingLoop {
 exports.default = RenderingLoop;
 ;
 
-},{"./RenderStep":18}],21:[function(require,module,exports){
+},{"./RenderStep":19}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PowerPreferenceSetting = exports.ShaderPrecisionSetting = void 0;
@@ -1169,7 +1205,7 @@ var PowerPreferenceSetting;
 })(PowerPreferenceSetting = exports.PowerPreferenceSetting || (exports.PowerPreferenceSetting = {}));
 ;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenderingStats = void 0;
@@ -1208,7 +1244,7 @@ class RenderingStats {
 exports.RenderingStats = RenderingStats;
 ;
 
-},{"three":45}],23:[function(require,module,exports){
+},{"three":46}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1369,7 +1405,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Actor":2,"./HTMLActor":15,"./InstantiatedActor":16,"./Stage/StageAmbience":24,"three":45}],24:[function(require,module,exports){
+},{"./Actor":2,"./HTMLActor":15,"./InstantiatedActor":16,"./Stage/StageAmbience":25,"three":46}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1435,7 +1471,7 @@ class StageAmbience {
 exports.default = StageAmbience;
 ;
 
-},{"three":45}],25:[function(require,module,exports){
+},{"three":46}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmptyStage_1 = require("./EmptyStage");
@@ -1486,7 +1522,7 @@ class StageContainer {
 exports.default = StageContainer;
 ;
 
-},{"./EmptyStage":14}],26:[function(require,module,exports){
+},{"./EmptyStage":14}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -1523,7 +1559,7 @@ class TextureAnimator {
 exports.default = TextureAnimator;
 ;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const iventy_1 = require("@pawel-kuznik/iventy");
@@ -1573,6 +1609,7 @@ class Theatre extends iventy_1.Emitter {
         this._stages = new Map();
         if (!window.__THREE__)
             throw Error("Trying to use Theatre without THREE.js");
+        console.log("Theatre init");
         const container = document.createElement('div');
         container.className = "theatre-container";
         this._container = container;
@@ -1589,7 +1626,7 @@ class Theatre extends iventy_1.Emitter {
             pickers: ['primary', 'hover']
         };
         const cameraOptions = options ? (options.camera || cameraDefaults) : cameraDefaults;
-        this._camera = (new CameraFactory_1.default(cameraOptions, this._stageContainer, this)).build();
+        this._camera = (new CameraFactory_1.default(cameraOptions, this._stageContainer, this, this._rendererHandler.renderSize)).build();
         this._camera.updateAspectRatio(this._rendererHandler.aspectRatio);
         this._loop = new RenderingLoop_1.default((step) => {
             this._stageContainer.stage.updateShadowCamera(this._camera);
@@ -1679,7 +1716,7 @@ class Theatre extends iventy_1.Emitter {
 exports.default = Theatre;
 ;
 
-},{"./Camera/CameraFactory":5,"./RendererHandler":19,"./RenderingLoop":20,"./RenderingQualitySettings":21,"./RenderingStats":22,"./Stage":23,"./StageContainer":25,"./Warderobe":31,"@pawel-kuznik/iventy":33}],28:[function(require,module,exports){
+},{"./Camera/CameraFactory":5,"./RendererHandler":20,"./RenderingLoop":21,"./RenderingQualitySettings":22,"./RenderingStats":23,"./Stage":24,"./StageContainer":26,"./Warderobe":32,"@pawel-kuznik/iventy":34}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1747,7 +1784,7 @@ class TiledActors extends Actor_1.default {
 exports.default = TiledActors;
 ;
 
-},{"./Actor":2,"three":45}],29:[function(require,module,exports){
+},{"./Actor":2,"three":46}],30:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1884,7 +1921,7 @@ class TiledFloor extends Actor_1.default {
 exports.default = TiledFloor;
 ;
 
-},{"./Actor":2,"three":45}],30:[function(require,module,exports){
+},{"./Actor":2,"three":46}],31:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TransitionCycle {
@@ -1951,7 +1988,7 @@ class TransitionCycle {
 exports.default = TransitionCycle;
 ;
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -2067,7 +2104,7 @@ class Warderobe {
 exports.default = Warderobe;
 ;
 
-},{"./TextureAnimator":26,"three":45}],32:[function(require,module,exports){
+},{"./TextureAnimator":27,"three":46}],33:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
@@ -2099,7 +2136,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":13,"./lib/HTMLActor":15,"./lib/InstantiatedActor":16,"./lib/Position":17,"./lib/Stage":23,"./lib/Theatre":27,"./lib/TiledActors":28,"./lib/TiledFloor":29,"./lib/TransitionCycle":30,"./lib/Warderobe":31}],33:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":13,"./lib/HTMLActor":15,"./lib/InstantiatedActor":16,"./lib/Position":17,"./lib/Stage":24,"./lib/Theatre":28,"./lib/TiledActors":29,"./lib/TiledFloor":30,"./lib/TransitionCycle":31,"./lib/Warderobe":32}],34:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2142,7 +2179,7 @@ Object.defineProperty(exports, "SignalController", {
   }
 });
 
-},{"./lib/Emitter":36,"./lib/Event":37,"./lib/Federation":38,"./lib/Signal":40}],34:[function(require,module,exports){
+},{"./lib/Emitter":37,"./lib/Event":38,"./lib/Federation":39,"./lib/Signal":41}],35:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Channel = void 0;
@@ -2235,7 +2272,7 @@ class Channel {
 exports.Channel = Channel;
 ;
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2375,7 +2412,7 @@ class Designator {
 }
 exports.Designator = Designator;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2524,7 +2561,7 @@ class Emitter {
 exports.Emitter = Emitter;
 ;
 
-},{"./Channel":34,"./Event":37}],37:[function(require,module,exports){
+},{"./Channel":35,"./Event":38}],38:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Event = void 0;
@@ -2632,7 +2669,7 @@ class Event extends Packet_1.Packet {
 exports.Event = Event;
 ;
 
-},{"./Designator":35,"./Packet":39}],38:[function(require,module,exports){
+},{"./Designator":36,"./Packet":40}],39:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2661,7 +2698,7 @@ class Federation extends Emitter_1.Emitter {
 }
 exports.Federation = Federation;
 
-},{"./Emitter":36}],39:[function(require,module,exports){
+},{"./Emitter":37}],40:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Packet = void 0;
@@ -2677,7 +2714,7 @@ class Packet {
 exports.Packet = Packet;
 ;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalController = void 0;
@@ -2736,7 +2773,7 @@ class ControlledSignal {
 }
 ;
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2781,7 +2818,7 @@ class CSS3DObject extends _three.Object3D {
 }
 exports.CSS3DObject = CSS3DObject;
 
-},{"three":45}],42:[function(require,module,exports){
+},{"three":46}],43:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3026,7 +3063,7 @@ class CSS3DRenderer extends _three.EventDispatcher {
 }
 exports.CSS3DRenderer = CSS3DRenderer;
 
-},{"./CSS3DObject":41,"./CSS3DSprite":43,"three":45}],43:[function(require,module,exports){
+},{"./CSS3DObject":42,"./CSS3DSprite":44,"three":46}],44:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3051,7 +3088,7 @@ class CSS3DSprite extends _CSS3DObject.CSS3DObject {
 }
 exports.CSS3DSprite = CSS3DSprite;
 
-},{"./CSS3DObject":41,"three":45}],44:[function(require,module,exports){
+},{"./CSS3DObject":42,"three":46}],45:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3079,7 +3116,7 @@ var _CSS3DObject = require("./CSS3DObject");
 var _CSS3DSprite = require("./CSS3DSprite");
 var _CSS3DRenderer = require("./CSS3DRenderer");
 
-},{"./CSS3DObject":41,"./CSS3DRenderer":42,"./CSS3DSprite":43}],45:[function(require,module,exports){
+},{"./CSS3DObject":42,"./CSS3DRenderer":43,"./CSS3DSprite":44}],46:[function(require,module,exports){
 "use strict";Object.defineProperty(exports,"__esModule",{value:true});exports.DynamicCopyUsage=exports.DstColorFactor=exports.DstAlphaFactor=exports.DoubleSide=exports.DodecahedronGeometry=exports.DodecahedronBufferGeometry=exports.DisplayP3ColorSpace=exports.DiscreteInterpolant=exports.DirectionalLightHelper=exports.DirectionalLight=exports.DepthTexture=exports.DepthStencilFormat=exports.DepthFormat=exports.DefaultLoadingManager=exports.DecrementWrapStencilOp=exports.DecrementStencilOp=exports.DataUtils=exports.DataTextureLoader=exports.DataTexture=exports.DataArrayTexture=exports.Data3DTexture=exports.Cylindrical=exports.CylinderGeometry=exports.CylinderBufferGeometry=exports.CustomToneMapping=exports.CustomBlending=exports.CurvePath=exports.Curve=exports.CullFaceNone=exports.CullFaceFrontBack=exports.CullFaceFront=exports.CullFaceBack=exports.CubicInterpolant=exports.CubicBezierCurve3=exports.CubicBezierCurve=exports.CubeUVReflectionMapping=exports.CubeTextureLoader=exports.CubeTexture=exports.CubeRefractionMapping=exports.CubeReflectionMapping=exports.CubeCamera=exports.ConeGeometry=exports.ConeBufferGeometry=exports.CompressedTextureLoader=exports.CompressedTexture=exports.CompressedArrayTexture=exports.ColorManagement=exports.ColorKeyframeTrack=exports.Color=exports.Clock=exports.ClampToEdgeWrapping=exports.CircleGeometry=exports.CircleBufferGeometry=exports.CineonToneMapping=exports.CatmullRomCurve3=exports.CapsuleGeometry=exports.CapsuleBufferGeometry=exports.CanvasTexture=exports.CameraHelper=exports.Camera=exports.Cache=exports.ByteType=exports.BufferGeometryLoader=exports.BufferGeometry=exports.BufferAttribute=exports.BoxHelper=exports.BoxGeometry=exports.BoxBufferGeometry=exports.Box3Helper=exports.Box3=exports.Box2=exports.BooleanKeyframeTrack=exports.Bone=exports.BasicShadowMap=exports.BasicDepthPacking=exports.BackSide=exports.AxesHelper=exports.AudioLoader=exports.AudioListener=exports.AudioContext=exports.AudioAnalyser=exports.Audio=exports.ArrowHelper=exports.ArrayCamera=exports.ArcCurve=exports.AnimationUtils=exports.AnimationObjectGroup=exports.AnimationMixer=exports.AnimationLoader=exports.AnimationClip=exports.AmbientLightProbe=exports.AmbientLight=exports.AlwaysStencilFunc=exports.AlwaysDepth=exports.AlphaFormat=exports.AdditiveBlending=exports.AdditiveAnimationBlendMode=exports.AddOperation=exports.AddEquation=exports.ACESFilmicToneMapping=void 0;exports.Matrix4=exports.Matrix3=exports.MathUtils=exports.MaterialLoader=exports.Material=exports.MOUSE=exports.LuminanceFormat=exports.LuminanceAlphaFormat=exports.LoopRepeat=exports.LoopPingPong=exports.LoopOnce=exports.LoadingManager=exports.LoaderUtils=exports.Loader=exports.LinearToneMapping=exports.LinearSRGBColorSpace=exports.LinearMipmapNearestFilter=exports.LinearMipmapLinearFilter=exports.LinearMipMapNearestFilter=exports.LinearMipMapLinearFilter=exports.LinearInterpolant=exports.LinearFilter=exports.LinearEncoding=exports.LineSegments=exports.LineLoop=exports.LineDashedMaterial=exports.LineCurve3=exports.LineCurve=exports.LineBasicMaterial=exports.Line3=exports.Line=exports.LightProbe=exports.Light=exports.LessStencilFunc=exports.LessEqualStencilFunc=exports.LessEqualDepth=exports.LessDepth=exports.Layers=exports.LatheGeometry=exports.LatheBufferGeometry=exports.LOD=exports.KeyframeTrack=exports.KeepStencilOp=exports.InvertStencilOp=exports.InterpolateSmooth=exports.InterpolateLinear=exports.InterpolateDiscrete=exports.Interpolant=exports.InterleavedBufferAttribute=exports.InterleavedBuffer=exports.IntType=exports.Int8BufferAttribute=exports.Int32BufferAttribute=exports.Int16BufferAttribute=exports.InstancedMesh=exports.InstancedInterleavedBuffer=exports.InstancedBufferGeometry=exports.InstancedBufferAttribute=exports.IncrementWrapStencilOp=exports.IncrementStencilOp=exports.ImageUtils=exports.ImageLoader=exports.ImageBitmapLoader=exports.IcosahedronGeometry=exports.IcosahedronBufferGeometry=exports.HemisphereLightProbe=exports.HemisphereLightHelper=exports.HemisphereLight=exports.HalfFloatType=exports.Group=exports.GridHelper=exports.GreaterStencilFunc=exports.GreaterEqualStencilFunc=exports.GreaterEqualDepth=exports.GreaterDepth=exports.GLSL3=exports.GLSL1=exports.GLBufferAttribute=exports.Frustum=exports.FrontSide=exports.FramebufferTexture=exports.FogExp2=exports.Fog=exports.FloatType=exports.Float64BufferAttribute=exports.Float32BufferAttribute=exports.Float16BufferAttribute=exports.FileLoader=exports.ExtrudeGeometry=exports.ExtrudeBufferGeometry=exports.EventDispatcher=exports.Euler=exports.EquirectangularRefractionMapping=exports.EquirectangularReflectionMapping=exports.EqualStencilFunc=exports.EqualDepth=exports.EllipseCurve=exports.EdgesGeometry=exports.DynamicReadUsage=exports.DynamicDrawUsage=void 0;exports.RGFormat=exports.RGB_S3TC_DXT1_Format=exports.RGB_PVRTC_4BPPV1_Format=exports.RGB_PVRTC_2BPPV1_Format=exports.RGB_ETC2_Format=exports.RGB_ETC1_Format=exports.RGBA_S3TC_DXT5_Format=exports.RGBA_S3TC_DXT3_Format=exports.RGBA_S3TC_DXT1_Format=exports.RGBA_PVRTC_4BPPV1_Format=exports.RGBA_PVRTC_2BPPV1_Format=exports.RGBA_ETC2_EAC_Format=exports.RGBA_BPTC_Format=exports.RGBA_ASTC_8x8_Format=exports.RGBA_ASTC_8x6_Format=exports.RGBA_ASTC_8x5_Format=exports.RGBA_ASTC_6x6_Format=exports.RGBA_ASTC_6x5_Format=exports.RGBA_ASTC_5x5_Format=exports.RGBA_ASTC_5x4_Format=exports.RGBA_ASTC_4x4_Format=exports.RGBA_ASTC_12x12_Format=exports.RGBA_ASTC_12x10_Format=exports.RGBA_ASTC_10x8_Format=exports.RGBA_ASTC_10x6_Format=exports.RGBA_ASTC_10x5_Format=exports.RGBA_ASTC_10x10_Format=exports.RGBAIntegerFormat=exports.RGBAFormat=exports.RGBADepthPacking=exports.REVISION=exports.RED_RGTC1_Format=exports.RED_GREEN_RGTC2_Format=exports.QuaternionLinearInterpolant=exports.QuaternionKeyframeTrack=exports.Quaternion=exports.QuadraticBezierCurve3=exports.QuadraticBezierCurve=exports.PropertyMixer=exports.PropertyBinding=exports.PositionalAudio=exports.PolyhedronGeometry=exports.PolyhedronBufferGeometry=exports.PolarGridHelper=exports.PointsMaterial=exports.Points=exports.PointLightHelper=exports.PointLight=exports.PlaneHelper=exports.PlaneGeometry=exports.PlaneBufferGeometry=exports.Plane=exports.PerspectiveCamera=exports.Path=exports.PMREMGenerator=exports.PCFSoftShadowMap=exports.PCFShadowMap=exports.OrthographicCamera=exports.OneMinusSrcColorFactor=exports.OneMinusSrcAlphaFactor=exports.OneMinusDstColorFactor=exports.OneMinusDstAlphaFactor=exports.OneFactor=exports.OctahedronGeometry=exports.OctahedronBufferGeometry=exports.ObjectSpaceNormalMap=exports.ObjectLoader=exports.Object3D=exports.NumberKeyframeTrack=exports.NotEqualStencilFunc=exports.NotEqualDepth=exports.NormalBlending=exports.NormalAnimationBlendMode=exports.NoToneMapping=exports.NoColorSpace=exports.NoBlending=exports.NeverStencilFunc=exports.NeverDepth=exports.NearestMipmapNearestFilter=exports.NearestMipmapLinearFilter=exports.NearestMipMapNearestFilter=exports.NearestMipMapLinearFilter=exports.NearestFilter=exports.MultiplyOperation=exports.MultiplyBlending=exports.MixOperation=exports.MirroredRepeatWrapping=exports.MinEquation=exports.MeshToonMaterial=exports.MeshStandardMaterial=exports.MeshPhysicalMaterial=exports.MeshPhongMaterial=exports.MeshNormalMaterial=exports.MeshMatcapMaterial=exports.MeshLambertMaterial=exports.MeshDistanceMaterial=exports.MeshDepthMaterial=exports.MeshBasicMaterial=exports.Mesh=exports.MaxEquation=void 0;exports.WebGLRenderTarget=exports.WebGLMultipleRenderTargets=exports.WebGLCubeRenderTarget=exports.WebGLArrayRenderTarget=exports.WebGL3DRenderTarget=exports.WebGL1Renderer=exports.VideoTexture=exports.VectorKeyframeTrack=exports.Vector4=exports.Vector3=exports.Vector2=exports.VSMShadowMap=exports.UnsignedShortType=exports.UnsignedShort5551Type=exports.UnsignedShort4444Type=exports.UnsignedIntType=exports.UnsignedInt248Type=exports.UnsignedByteType=exports.UniformsUtils=exports.UniformsLib=exports.UniformsGroup=exports.Uniform=exports.Uint8ClampedBufferAttribute=exports.Uint8BufferAttribute=exports.Uint32BufferAttribute=exports.Uint16BufferAttribute=exports.UVMapping=exports.TwoPassDoubleSide=exports.TubeGeometry=exports.TubeBufferGeometry=exports.TrianglesDrawMode=exports.TriangleStripDrawMode=exports.TriangleFanDrawMode=exports.Triangle=exports.TorusKnotGeometry=exports.TorusKnotBufferGeometry=exports.TorusGeometry=exports.TorusBufferGeometry=exports.TextureLoader=exports.Texture=exports.TetrahedronGeometry=exports.TetrahedronBufferGeometry=exports.TangentSpaceNormalMap=exports.TOUCH=exports.SubtractiveBlending=exports.SubtractEquation=exports.StringKeyframeTrack=exports.StreamReadUsage=exports.StreamDrawUsage=exports.StreamCopyUsage=exports.StereoCamera=exports.StaticReadUsage=exports.StaticDrawUsage=exports.StaticCopyUsage=exports.SrcColorFactor=exports.SrcAlphaSaturateFactor=exports.SrcAlphaFactor=exports.SpriteMaterial=exports.Sprite=exports.SpotLightHelper=exports.SpotLight=exports.SplineCurve=exports.SphericalHarmonics3=exports.Spherical=exports.SphereGeometry=exports.SphereBufferGeometry=exports.Sphere=exports.Source=exports.SkinnedMesh=exports.SkeletonHelper=exports.Skeleton=exports.ShortType=exports.ShapeUtils=exports.ShapePath=exports.ShapeGeometry=exports.ShapeBufferGeometry=exports.Shape=exports.ShadowMaterial=exports.ShaderMaterial=exports.ShaderLib=exports.ShaderChunk=exports.Scene=exports.SRGBColorSpace=exports.SIGNED_RED_RGTC1_Format=exports.SIGNED_RED_GREEN_RGTC2_Format=exports.RingGeometry=exports.RingBufferGeometry=exports.ReverseSubtractEquation=exports.ReplaceStencilOp=exports.RepeatWrapping=exports.ReinhardToneMapping=exports.RedIntegerFormat=exports.RedFormat=exports.RectAreaLight=exports.Raycaster=exports.Ray=exports.RawShaderMaterial=exports.RGIntegerFormat=void 0;exports.WebGLRenderer=WebGLRenderer;exports.WebGLUtils=WebGLUtils;exports.sRGBEncoding=exports._SRGBAFormat=exports.ZeroStencilOp=exports.ZeroSlopeEnding=exports.ZeroFactor=exports.ZeroCurvatureEnding=exports.WrapAroundEnding=exports.WireframeGeometry=void 0;/**
  * @license
  * Copyright 2010-2023 Three.js Authors
