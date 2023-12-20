@@ -18,6 +18,15 @@ export abstract class HTMLActor extends Actor {
 
         this._element = document.createElement("DIV");
     }
+
+    /**
+     *  Dispose all resources the actor consumes.
+     */
+    dispose(): void {
+
+        this._element.remove();
+        super.dispose();
+    }
     
     /**
      *  This method should initialize the element for the actor
