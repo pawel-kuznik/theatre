@@ -64,6 +64,10 @@ export default class WSADCameraMover extends Emitter implements CameraMover {
 
         if (![ 'KeyA', 'KeyD', 'KeyW', 'KeyS' ].includes(keyboardEvent.code)) return;
 
+        // if the event comes from an input, select, or textarea then we don't want to move
+        // the camera. The user wants to input something inside the control element.
+        if ((keyboardEvent.target as HTMLElement).closest("input, select, textarea")) return;
+
         const kick = this._target ? 1 : 2.5;
         const position = this._target || { x: this._camera.x, y: this._camera.y };
 

@@ -75,8 +75,6 @@ export default class MPressMover extends Emitter implements CameraMover {
         const target = event.target as HTMLElement;
         target.setPointerCapture(event.pointerId);
 
-        console.log("lock with button", event.button);
-
         const moveHandler = (event: PointerEvent) => {
 
             const kick = this._target ? 1 : 2.5;

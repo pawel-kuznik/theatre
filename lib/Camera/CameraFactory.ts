@@ -31,7 +31,12 @@ export default class CameraFactory {
     /**
      *  The constructor.
      */
-    constructor(private readonly _options:CameraFactorySpecs, private readonly _actorsHolder:ActorsHolder, private readonly _eventTarget:Emitter, private readonly _renderSize: RenderSize) {
+    constructor(
+        private readonly _options:CameraFactorySpecs,
+        private readonly _actorsHolder:ActorsHolder,
+        private readonly _eventTarget:Emitter,
+        private readonly _renderSize: RenderSize
+    ) {
 
     }
 
