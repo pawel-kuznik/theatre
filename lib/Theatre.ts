@@ -79,6 +79,7 @@ export default class Theatre extends Emitter  {
     private _onDocumentWheel: any;
     private _onCanvasClick: any;
     private _onCanvasPointerMove: any;
+    private _onCavnasPointerDown: any;
 
     /**
      *  The camera responsible for showing the game.
@@ -114,7 +115,7 @@ export default class Theatre extends Emitter  {
 
         const cameraDefaults:CameraFactorySpecs = {
             type:           'topdown',
-            movers:         [ { type: 'wsad' },  { type: 'wheellifter' }],
+            movers:         [ { type: 'wsad' }, { type: "mpress" }, { type: 'wheellifter' }],
             pickers:        ['primary', 'hover']
         };
 
@@ -162,6 +163,11 @@ export default class Theatre extends Emitter  {
         });
 
         canvas.addEventListener('pointermove', this._onCanvasPointerMove = (event:PointerEvent) => {
+
+            this._camera.handlePointer(event);
+        });
+
+        canvas.addEventListener('pointerdown', this._onCavnasPointerDown = (event: PointerEvent) => {
 
             this._camera.handlePointer(event);
         });
@@ -235,6 +241,7 @@ export default class Theatre extends Emitter  {
         this._rendererHandler.canvas.ownerDocument.body.removeEventListener('wheel', this._onDocumentWheel);
         this._rendererHandler.canvas.removeEventListener('click', this._onCanvasClick);
         this._rendererHandler.canvas.removeEventListener('pointermove', this._onCanvasPointerMove);
+        this._rendererHandler.canvas.removeEventListener('pointerdown', this._onCavnasPointerDown);
 
         this._stages.clear();
 

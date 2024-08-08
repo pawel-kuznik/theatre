@@ -11,6 +11,7 @@ import WheelLifterCameraMover from "./WheelLifterCameraMover";
 import WSADCameraMover from "./WSADCameraMover";
 import { CameraTracker } from "./CameraTracker";
 import { RenderSize } from "../RenderSize";
+import MPressMover from "./MPressMover";
 
 export type CameraFactorySpecs = CameraOptions & {
 
@@ -61,6 +62,7 @@ export default class CameraFactory {
 
         for (let moverOptions of this._options.movers) {
 
+            if (moverOptions.type === "mpress") camera.appendMover(this.buildMPressMover(camera, moverOptions));
             if (moverOptions.type === 'wsad') camera.appendMover(this.buildWSADMover(camera, moverOptions));
             if (moverOptions.type === 'wheellifter') camera.appendMover(this.buildWheelLifter(camera, moverOptions));
         }
@@ -94,6 +96,14 @@ export default class CameraFactory {
         const tracker : CameraTracker | undefined = this._options.tracker ? new CameraTracker(this._options.tracker.stepX, this._options.tracker.stepY, this._options.tracker.stepZ) : undefined;
 
         return new WSADCameraMover(camera, tracker);
+    }
+
+    /**
+     *  Build a camera mover that reacts to M-press on a mouse.
+     */
+    private buildMPressMover(camera: FreefloatCamera, options: CameraMoverOptions) : MPressMover {
+
+        return new MPressMover(camera);
     }
 
     /**

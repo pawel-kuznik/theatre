@@ -65,7 +65,7 @@ To run the examples server run
 npm run example-server
 ```
 
-To rebuilt the examoples (and run them initially) run. This command needs to be ran with
+To rebuilt the examples (and run them initially) run. This command needs to be ran with
 every change to inspect.
 
 ```
