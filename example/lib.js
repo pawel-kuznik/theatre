@@ -454,7 +454,6 @@ class MPressMover extends iventy_1.Emitter {
     handlePointerDown(event) {
         const target = event.target;
         target.setPointerCapture(event.pointerId);
-        console.log("lock with button", event.button);
         const moveHandler = (event) => {
             const kick = this._target ? 1 : 2.5;
             const position = this._target || { x: this._camera.x, y: this._camera.y };
@@ -668,6 +667,10 @@ class WSADCameraMover extends iventy_1.Emitter {
         const keyboardEvent = event;
         if (!['KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(keyboardEvent.code))
             return;
+        // if the event comes from an input, select, or textarea then we don't want to move
+        // the camera. The user wants to input something inside the control element.
+        if (keyboardEvent.target.closest("input, select, textarea"))
+            return;
         const kick = this._target ? 1 : 2.5;
         const position = this._target || { x: this._camera.x, y: this._camera.y };
         const factor = this._camera.native.position.z;
@@ -752,6 +755,12 @@ class WheelLifterCameraMover extends iventy_1.Emitter {
         if (event.type !== 'wheel')
             return;
         const wheelEvent = event;
+        // if the control, shift, or alt key are pressed, we don't handle. This is cause
+        // there might be other actions associated with these combinations and as long as
+        // we don't have an explicit configuration to enable them, we want to opt out from
+        // handling these cases.
+        if (wheelEvent.ctrlKey || wheelEvent.shiftKey || wheelEvent.altKey)
+            return;
         const delta = wheelEvent.deltaY;
         let position = this._target !== undefined ? this._target : this._camera.height;
         this._target = position + delta * this._speed;

@@ -58,6 +58,12 @@ export default class WheelLifterCameraMover extends Emitter implements CameraMov
 
         const wheelEvent = event as WheelEvent;
 
+        // if the control, shift, or alt key are pressed, we don't handle. This is cause
+        // there might be other actions associated with these combinations and as long as
+        // we don't have an explicit configuration to enable them, we want to opt out from
+        // handling these cases.
+        if (wheelEvent.ctrlKey || wheelEvent.shiftKey || wheelEvent.altKey) return;
+
         const delta = wheelEvent.deltaY;
 
         let position = this._target !== undefined ? this._target : this._camera.height;
