@@ -44,8 +44,21 @@ export default class MPressMover extends Emitter implements CameraMover {
     }
 
     handlePointer(event: KeyboardEvent | PointerEvent | WheelEvent): void {
-     
-        if (event.type === "pointerdown" && (event as PointerEvent).button === 1 ) this.handlePointerDown(event as PointerEvent);
+
+        if (event.type === "pointerdown") {
+
+            const pointerEvent = event as PointerEvent;
+
+            // not pressing the middle button? then skip it
+            if (pointerEvent.button !== 1) return;
+
+            // if the wheel happens on an element that is not controlled by the theatre, then
+            // we don't want to do any camera moving.
+            const target = pointerEvent.target as HTMLElement;
+            if (!target.closest("[data-theatre]")) return;
+
+            this.handlePointerDown(event as PointerEvent);
+        }
     }
 
     renderUpdate(step: RenderStep): void {

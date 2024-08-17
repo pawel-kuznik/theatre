@@ -57,6 +57,10 @@ export default class RendererHandler {
 
         this._resize();
         this._observer.observe(container);
+
+        // mark the renderes with out data-* attribute
+        this._css.domElement.setAttribute("data-theatre", "yes");
+        this._canvas.setAttribute("data-theatre", "yes");
     }
 
     /**

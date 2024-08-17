@@ -433,8 +433,18 @@ class MPressMover extends iventy_1.Emitter {
             (_a = this._tracker) === null || _a === void 0 ? void 0 : _a.bubbleTo(this);
     }
     handlePointer(event) {
-        if (event.type === "pointerdown" && event.button === 1)
+        if (event.type === "pointerdown") {
+            const pointerEvent = event;
+            // not pressing the middle button? then skip it
+            if (pointerEvent.button !== 1)
+                return;
+            // if the wheel happens on an element that is not controlled by the theatre, then
+            // we don't want to do any camera moving.
+            const target = pointerEvent.target;
+            if (!target.closest("[data-theatre]"))
+                return;
             this.handlePointerDown(event);
+        }
     }
     renderUpdate(step) {
         if (!this._target || !this._final || !this._begin)
@@ -760,6 +770,12 @@ class WheelLifterCameraMover extends iventy_1.Emitter {
         // we don't have an explicit configuration to enable them, we want to opt out from
         // handling these cases.
         if (wheelEvent.ctrlKey || wheelEvent.shiftKey || wheelEvent.altKey)
+            return;
+        // if the wheel happens on an element that is not controlled by the theatre, then
+        // we don't want to do any camera lifting.
+        const target = wheelEvent.target;
+        console.log(target);
+        if (!target.closest("[data-theatre]"))
             return;
         const delta = wheelEvent.deltaY;
         let position = this._target !== undefined ? this._target : this._camera.height;
@@ -1179,6 +1195,9 @@ class RendererHandler {
         this._renderSize = new RenderSize_1.RenderSize(bb.width, bb.height);
         this._resize();
         this._observer.observe(container);
+        // mark the renderes with out data-* attribute
+        this._css.domElement.setAttribute("data-theatre", "yes");
+        this._canvas.setAttribute("data-theatre", "yes");
     }
     /**
      *  Get access to the actual renderer.

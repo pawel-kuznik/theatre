@@ -64,6 +64,12 @@ export default class WheelLifterCameraMover extends Emitter implements CameraMov
         // handling these cases.
         if (wheelEvent.ctrlKey || wheelEvent.shiftKey || wheelEvent.altKey) return;
 
+        // if the wheel happens on an element that is not controlled by the theatre, then
+        // we don't want to do any camera lifting.
+        const target = wheelEvent.target as HTMLElement;
+        console.log(target);
+        if (!target.closest("[data-theatre]")) return;
+
         const delta = wheelEvent.deltaY;
 
         let position = this._target !== undefined ? this._target : this._camera.height;
