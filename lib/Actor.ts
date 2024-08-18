@@ -106,7 +106,7 @@ export default abstract class Actor implements RenderParticipant {
         this._object.position.x = x;
         this._object.position.y = y;
 
-        if (z !== undefined) this._object.position.z;
+        if (z !== undefined) this._object.position.z = z;
     }
 
     /**
