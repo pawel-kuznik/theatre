@@ -1,6 +1,8 @@
 import { Camera as ThreeJSCamera, Vector3 } from "three";
 import RenderParticipant from "./RenderParticipant";
 import { EmitterLike } from "@pawel-kuznik/iventy";
+import CameraPicker from "./Camera/CameraPicker";
+import CameraMover from "./Camera/CameraMover";
 /**
  *  An interface describing a camera in the theatre.
  */
@@ -26,6 +28,16 @@ export default interface Camera extends RenderParticipant, EmitterLike {
      *  Get the height on which the camera resides.
      */
     get heigth() : number;
+
+    /**
+     *  Camera pickers associated with this camera.
+     */
+    get pickers() : CameraPicker[];
+
+    /**
+     *  Camera moves associated with this camera.
+     */
+    get movers() : CameraMover[];
 
     /**
      *  Handle an input event related to the camera.

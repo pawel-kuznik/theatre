@@ -5,7 +5,6 @@ import CameraOptions from "./CameraOptions";
 import CameraPicker from "./CameraPicker";
 import FreefloatCamera from "./FreefloatCamera";
 import { Emitter } from "@pawel-kuznik/iventy";
-import { RenderSize } from "../RenderSize";
 
 /**
  *  The specific options for top-down camera.
@@ -31,6 +30,9 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
     private _looktAt:Vector3 = new Vector3();
 
     private _moved:boolean = true;
+
+    get movers() { return this._movers; }
+    get pickers() { return this._pickers; }
 
     /**
      *  The construct of the camera.
@@ -186,6 +188,8 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
     renderUpdate(step:RenderStep) : void {
 
         for (let mover of this._movers) mover.renderUpdate(step);
+
+        for (let picker of this._pickers) picker.renderUpdate(step);
 
         this._moved = false;
     }

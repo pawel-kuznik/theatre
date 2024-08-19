@@ -82,7 +82,7 @@ class Actor {
         this._object.position.x = x;
         this._object.position.y = y;
         if (z !== undefined)
-            this._object.position.z;
+            this._object.position.z = z;
     }
     /**
      *  Detach the actor
@@ -289,6 +289,29 @@ class CameraHoverPicker extends iventy_1.Emitter {
          *  The raycaster that will do the checking.
          */
         this._raycaster = new three_1.Raycaster();
+        this._point = new three_1.Vector2(0, 0);
+        this._toPick = false;
+        this._enabled = true;
+    }
+    enable() {
+        this._enabled = true;
+    }
+    disable() {
+        this._enabled = false;
+    }
+    restrictLayers(layers) {
+        this._raycaster.layers.disableAll();
+        for (let layer of layers) {
+            this._raycaster.layers.set(layer);
+        }
+    }
+    renderUpdate(step) {
+        if (!this._toPick || !this._enabled)
+            return;
+        this._raycaster.setFromCamera(this._point, this._camera.native);
+        const objects = this._actorsHolder.actors.map((actor) => actor.object);
+        const intersections = this._raycaster.intersectObjects(objects, true);
+        this.trigger('hover', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
     }
     /**
      *  Handle mouse event and try to pick actors.
@@ -298,11 +321,9 @@ class CameraHoverPicker extends iventy_1.Emitter {
             return;
         if (event.button !== -1)
             return;
-        const screenClick = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
-        this._raycaster.setFromCamera(screenClick, this._camera.native);
-        const objects = this._actorsHolder.actors.map((actor) => actor.object);
-        const intersections = this._raycaster.intersectObjects(objects, true);
-        this.trigger('hover', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
+        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
+        this._point.y = -(event.offsetY / this._renderSize.height) * 2 + 1;
+        this._toPick = true;
     }
 }
 exports.default = CameraHoverPicker;
@@ -331,6 +352,17 @@ class CameraMousePicker extends iventy_1.Emitter {
          *  The raycaster that will do the checking.
          */
         this._raycaster = new three_1.Raycaster();
+        this._point = new three_1.Vector2(0, 0);
+        this._toPick = false;
+    }
+    renderUpdate(step) {
+        if (!this._toPick)
+            return;
+        const objects = this._actorsHolder.actors.map((actor) => actor.object);
+        this._raycaster.setFromCamera(this._point, this._camera.native);
+        const intersections = this._raycaster.intersectObjects(objects, true);
+        this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
+        this._toPick = false;
     }
     /**
      *  Handle mouse event and try to pick actors.
@@ -341,11 +373,9 @@ class CameraMousePicker extends iventy_1.Emitter {
         // only handle primary button clicks
         if (event.button !== 0)
             return;
-        const screenClick = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
-        this._raycaster.setFromCamera(screenClick, this._camera.native);
-        const objects = this._actorsHolder.actors.map((actor) => actor.object);
-        const intersections = this._raycaster.intersectObjects(objects, true);
-        this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
+        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
+        this._point.y = -(event.offsetY / this._renderSize.height) * 2 + 1;
+        this._toPick = true;
     }
 }
 exports.default = CameraMousePicker;
@@ -521,6 +551,8 @@ class TopDownCamera extends iventy_1.Emitter {
         // make it look at the center of the board
         this._camera.lookAt(0, 0, 0);
     }
+    get movers() { return this._movers; }
+    get pickers() { return this._pickers; }
     /**
      *  The point the camera looks at.
      */
@@ -626,6 +658,8 @@ class TopDownCamera extends iventy_1.Emitter {
     renderUpdate(step) {
         for (let mover of this._movers)
             mover.renderUpdate(step);
+        for (let picker of this._pickers)
+            picker.renderUpdate(step);
         this._moved = false;
     }
 }
@@ -774,7 +808,6 @@ class WheelLifterCameraMover extends iventy_1.Emitter {
         // if the wheel happens on an element that is not controlled by the theatre, then
         // we don't want to do any camera lifting.
         const target = wheelEvent.target;
-        console.log(target);
         if (!target.closest("[data-theatre]"))
             return;
         const delta = wheelEvent.deltaY;
@@ -2239,7 +2272,7 @@ exports.default = Warderobe;
 },{"./TextureAnimator":28,"three":47}],34:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TransitionCycle = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.WSADCameraMover = exports.WheelLifterCameraMover = exports.MPressMover = exports.CameraMousePicker = exports.CameraHoverPicker = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
 var InstantiatedActor_1 = require("./lib/InstantiatedActor");
@@ -2262,13 +2295,23 @@ var TiledFloor_1 = require("./lib/TiledFloor");
 Object.defineProperty(exports, "TiledFloor", { enumerable: true, get: function () { return TiledFloor_1.default; } });
 var ActorIntersection_1 = require("./lib/ActorIntersection");
 Object.defineProperty(exports, "ActorIntersection", { enumerable: true, get: function () { return ActorIntersection_1.default; } });
+var CameraHoverPicker_1 = require("./lib/Camera/CameraHoverPicker");
+Object.defineProperty(exports, "CameraHoverPicker", { enumerable: true, get: function () { return CameraHoverPicker_1.default; } });
+var CameraMousePicker_1 = require("./lib/Camera/CameraMousePicker");
+Object.defineProperty(exports, "CameraMousePicker", { enumerable: true, get: function () { return CameraMousePicker_1.default; } });
+var MPressMover_1 = require("./lib/Camera/MPressMover");
+Object.defineProperty(exports, "MPressMover", { enumerable: true, get: function () { return MPressMover_1.default; } });
+var WheelLifterCameraMover_1 = require("./lib/Camera/WheelLifterCameraMover");
+Object.defineProperty(exports, "WheelLifterCameraMover", { enumerable: true, get: function () { return WheelLifterCameraMover_1.default; } });
+var WSADCameraMover_1 = require("./lib/Camera/WSADCameraMover");
+Object.defineProperty(exports, "WSADCameraMover", { enumerable: true, get: function () { return WSADCameraMover_1.default; } });
 // spatial animations
 var TransitionCycle_1 = require("./lib/TransitionCycle");
 Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: function () { return TransitionCycle_1.default; } });
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/CompanionActor":14,"./lib/HTMLActor":16,"./lib/InstantiatedActor":17,"./lib/Position":18,"./lib/Stage":25,"./lib/Theatre":29,"./lib/TiledActors":30,"./lib/TiledFloor":31,"./lib/TransitionCycle":32,"./lib/Warderobe":33}],35:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/Camera/CameraHoverPicker":6,"./lib/Camera/CameraMousePicker":7,"./lib/Camera/MPressMover":9,"./lib/Camera/WSADCameraMover":11,"./lib/Camera/WheelLifterCameraMover":12,"./lib/CompanionActor":14,"./lib/HTMLActor":16,"./lib/InstantiatedActor":17,"./lib/Position":18,"./lib/Stage":25,"./lib/Theatre":29,"./lib/TiledActors":30,"./lib/TiledFloor":31,"./lib/TransitionCycle":32,"./lib/Warderobe":33}],35:[function(require,module,exports){
 "use strict";
 
 /**

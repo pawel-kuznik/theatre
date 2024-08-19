@@ -7,6 +7,7 @@ import buildPickEventData from "./buildPickEventData";
 import CameraPicker from "./CameraPicker";
 import { InstantiatedActor } from "../InstantiatedActor";
 import { RenderSize } from "../RenderSize";
+import { RenderStep } from "../RenderStep";
 
 /**
  *  This is a class that allows the user to pick actors with mouse. Useful in strategy games
@@ -19,12 +20,49 @@ import { RenderSize } from "../RenderSize";
      */
     private readonly _raycaster:Raycaster = new Raycaster();
 
+    private _point: Vector2 = new Vector2(0, 0);
+    private _toPick: boolean = false;
+
+    private _enabled: boolean = true;
+
     /**
      *  The constructor.
      */
     constructor(private readonly _camera:Camera, private readonly _actorsHolder:ActorsHolder, private readonly _renderSize: RenderSize) {
 
         super();
+    }
+
+    enable() {
+
+        this._enabled = true;
+    }
+
+    disable() {
+
+        this._enabled = false;
+    }
+
+    restrictLayers(layers: number[]) {
+
+        this._raycaster.layers.disableAll();
+
+        for (let layer of layers) {
+            this._raycaster.layers.set(layer);
+        }
+    }
+
+    renderUpdate(step: RenderStep): void {
+    
+        if (!this._toPick || !this._enabled) return;
+
+        this._raycaster.setFromCamera(this._point, this._camera.native);
+
+        const objects = this._actorsHolder.actors.map((actor:Actor|InstantiatedActor) => actor.object);
+
+        const intersections = this._raycaster.intersectObjects(objects, true);
+
+        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder));
     }
 
     /**
@@ -36,14 +74,9 @@ import { RenderSize } from "../RenderSize";
 
         if (event.button !== -1) return;
 
-        const screenClick = new Vector2((event.offsetX / this._renderSize.width) * 2 - 1, - (event.offsetY / this._renderSize.height) * 2 + 1);
+        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
+        this._point.y = - (event.offsetY / this._renderSize.height) * 2 + 1;
 
-        this._raycaster.setFromCamera(screenClick, this._camera.native);
-
-        const objects = this._actorsHolder.actors.map((actor:Actor|InstantiatedActor) => actor.object);
-
-        const intersections = this._raycaster.intersectObjects(objects, true);
-
-        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder));
+        this._toPick = true;
     }
 };

@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     theatre.warderobe.importTexture('crate:side', './crate.png', 'pixelart');
     theatre.warderobe.importTexture('floor:top', './floor.png', 'pixelart');
 
-    const floor = new THEATRE.TiledFloor('floor:top', { size: 21 * 21 });
-    floor.fill(-10, -10, 10, 10);
+    const floor = new THEATRE.TiledFloor('floor:top', { size: 101 * 101 });
+    floor.fill(-50, -50, 50, 50);
 
     testStage.insert(floor);
 
@@ -100,6 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     testStage.insert(crate_2);
     testStage.insert(crate_3);
     testStage.insert(crate_4);
+
+    for (let x = 5; x < 50; x +=2) {
+        for (let y = 5; y < 50; y +=2) {
+            const crate = new Crate();
+            crate.moveTo(x, y);
+            testStage.insert(crate);
+        }
+    }
 
     theatre.warderobe.wait().then(() => {
 
