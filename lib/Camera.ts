@@ -58,4 +58,11 @@ export default interface Camera extends RenderParticipant, EmitterLike {
      *  Move camera to given position.
      */
     moveTo(x: number, y: number, z: number|undefined) : void;
+
+    /**
+     *  Move the camera so that the look at target is at specific
+     *  position. The camera position will remain in the same relative
+     *  position as it was before the move.
+     */
+    moveLootAtTo(x: number, y: number, z: number|undefined) : void;
 };

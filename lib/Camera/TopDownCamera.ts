@@ -143,6 +143,32 @@ export default class TopDownCamera extends Emitter implements FreefloatCamera {
     }
 
     /**
+     *  Move the camera so that the look at target is at specific
+     *  position. The camera position will remain in the same relative
+     *  position as it was before the move.
+     */
+    moveLootAtTo(x: number, y: number, z: number | undefined): void {
+        
+        const diff = new Vector3(
+            this._camera.position.x - this._looktAt.x,
+            this._camera.position.y - this._looktAt.y,
+            this._camera.position.z - this._looktAt.z,
+        );
+
+        this._camera.position.x = x;
+        this._camera.position.y = y;
+        if (z !== undefined) this._camera.position.z = z;
+
+        this._camera.lookAt(new Vector3(
+            this._camera.position.x + diff.x,
+            this._camera.position.y + diff.y,
+            this._camera.position.z + diff.z
+        ));
+
+        this._moved = true;
+    }
+
+    /**
      *  Handle event related to the user input.
      */
     public handlePointer(event:KeyboardEvent|PointerEvent|WheelEvent) {
