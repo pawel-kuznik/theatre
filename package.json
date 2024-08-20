@@ -1,6 +1,6 @@
 {
   "name": "@pawel-kuznik/theatre",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "theatre.js is a rendering library built on top of three.js. It creates an opinionated\r framework for creating scenes, manages actors, lights, camera, and input. This is mostly\r useful for my own games and rendering needs.",
   "main": "build/theatre.js",
   "module": "build/theatre.js",
