@@ -26,7 +26,7 @@ function lookUp(object:Object3D, holder:ActorsHolder) : Actor|InstantiatedActor|
  *  This is a helper function that allows for preparing data for pick-like event
  *  of different CameraPickers.
  */
-export default function buildPickEventData(intersections:Array<Intersection<Object3D>>, holder:ActorsHolder) : any {
+export default function buildPickEventData(intersections:Array<Intersection<Object3D>>, holder:ActorsHolder, event: PointerEvent|MouseEvent) : any {
 
     const result = intersections.map((value:Intersection<Object3D>) => {
 
@@ -41,6 +41,10 @@ export default function buildPickEventData(intersections:Array<Intersection<Obje
 
     return {
         intersections: result,
-        first: result[0]
+        first: result[0],
+        sceenX: event.screenX,
+        screenY: event.screenY,
+        offsetX: event.offsetX,
+        offsetY: event.offsetY
     };
 };

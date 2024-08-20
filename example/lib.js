@@ -289,8 +289,9 @@ class CameraHoverPicker extends iventy_1.Emitter {
          *  The raycaster that will do the checking.
          */
         this._raycaster = new three_1.Raycaster();
-        this._point = new three_1.Vector2(0, 0);
-        this._toPick = false;
+        /**
+         *  Is the picker enabled?
+         */
         this._enabled = true;
     }
     enable() {
@@ -302,28 +303,30 @@ class CameraHoverPicker extends iventy_1.Emitter {
     restrictLayers(layers) {
         this._raycaster.layers.disableAll();
         for (let layer of layers) {
-            this._raycaster.layers.set(layer);
+            this._raycaster.layers.enable(layer);
         }
     }
     renderUpdate(step) {
-        if (!this._toPick || !this._enabled)
+        if (!this._lastPointerEvent || !this._enabled)
             return;
-        this._raycaster.setFromCamera(this._point, this._camera.native);
-        const objects = this._actorsHolder.actors.map((actor) => actor.object);
+        const event = this._lastPointerEvent;
+        const point = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
+        this._raycaster.setFromCamera(point, this._camera.native);
+        const objects = this._actorsHolder.actors
+            .map((actor) => actor.object);
         const intersections = this._raycaster.intersectObjects(objects, true);
-        this.trigger('hover', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
+        this.trigger('hover', (0, buildPickEventData_1.default)(intersections, this._actorsHolder, event));
     }
     /**
      *  Handle mouse event and try to pick actors.
      */
     handlePointer(event) {
-        if (event.type !== 'pointermove')
+        // is it pointer move? and no buttons are pressed?
+        if (event.type !== 'pointermove' || event.button !== -1)
             return;
-        if (event.button !== -1)
-            return;
-        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
-        this._point.y = -(event.offsetY / this._renderSize.height) * 2 + 1;
-        this._toPick = true;
+        // the actual handling has to happen in the render step to make sure that
+        // the handling occurs a the same speed as the rendering. 
+        this._lastPointerEvent = event;
     }
 }
 exports.default = CameraHoverPicker;
@@ -352,17 +355,18 @@ class CameraMousePicker extends iventy_1.Emitter {
          *  The raycaster that will do the checking.
          */
         this._raycaster = new three_1.Raycaster();
-        this._point = new three_1.Vector2(0, 0);
-        this._toPick = false;
     }
     renderUpdate(step) {
-        if (!this._toPick)
+        if (!this._lastPointerEvent)
             return;
-        const objects = this._actorsHolder.actors.map((actor) => actor.object);
-        this._raycaster.setFromCamera(this._point, this._camera.native);
+        const event = this._lastPointerEvent;
+        const point = new three_1.Vector2((event.offsetX / this._renderSize.width) * 2 - 1, -(event.offsetY / this._renderSize.height) * 2 + 1);
+        this._raycaster.setFromCamera(point, this._camera.native);
+        const objects = this._actorsHolder.actors
+            .map((actor) => actor.object);
         const intersections = this._raycaster.intersectObjects(objects, true);
-        this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder));
-        this._toPick = false;
+        this.trigger('pick', (0, buildPickEventData_1.default)(intersections, this._actorsHolder, event));
+        this._lastPointerEvent = undefined;
     }
     /**
      *  Handle mouse event and try to pick actors.
@@ -373,9 +377,7 @@ class CameraMousePicker extends iventy_1.Emitter {
         // only handle primary button clicks
         if (event.button !== 0)
             return;
-        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
-        this._point.y = -(event.offsetY / this._renderSize.height) * 2 + 1;
-        this._toPick = true;
+        this._lastPointerEvent = event;
     }
 }
 exports.default = CameraMousePicker;
@@ -863,7 +865,7 @@ function lookUp(object, holder) {
  *  This is a helper function that allows for preparing data for pick-like event
  *  of different CameraPickers.
  */
-function buildPickEventData(intersections, holder) {
+function buildPickEventData(intersections, holder, event) {
     const result = intersections.map((value) => {
         const actor = lookUp(value.object, holder);
         if (!actor)
@@ -873,7 +875,11 @@ function buildPickEventData(intersections, holder) {
     }).filter((value) => !!value);
     return {
         intersections: result,
-        first: result[0]
+        first: result[0],
+        sceenX: event.screenX,
+        screenY: event.screenY,
+        offsetX: event.offsetX,
+        offsetY: event.offsetY
     };
 }
 exports.default = buildPickEventData;

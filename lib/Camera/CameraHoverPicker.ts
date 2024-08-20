@@ -20,16 +20,20 @@ import { RenderStep } from "../RenderStep";
      */
     private readonly _raycaster:Raycaster = new Raycaster();
 
-    private _point: Vector2 = new Vector2(0, 0);
-    private _toPick: boolean = false;
+    /**
+     *  The last pointer event that qualifies for hover pick event.
+     */
+    private _lastPointerEvent: PointerEvent | undefined;
 
+    /**
+     *  Is the picker enabled?
+     */
     private _enabled: boolean = true;
 
     /**
      *  The constructor.
      */
     constructor(private readonly _camera:Camera, private readonly _actorsHolder:ActorsHolder, private readonly _renderSize: RenderSize) {
-
         super();
     }
 
@@ -48,21 +52,29 @@ import { RenderStep } from "../RenderStep";
         this._raycaster.layers.disableAll();
 
         for (let layer of layers) {
-            this._raycaster.layers.set(layer);
+            this._raycaster.layers.enable(layer);
         }
     }
 
     renderUpdate(step: RenderStep): void {
     
-        if (!this._toPick || !this._enabled) return;
+        if (!this._lastPointerEvent || !this._enabled) return;
 
-        this._raycaster.setFromCamera(this._point, this._camera.native);
+        const event = this._lastPointerEvent;
 
-        const objects = this._actorsHolder.actors.map((actor:Actor|InstantiatedActor) => actor.object);
+        const point = new Vector2(
+            (event.offsetX / this._renderSize.width) * 2 - 1,
+            - (event.offsetY / this._renderSize.height) * 2 + 1
+        );
+
+        this._raycaster.setFromCamera(point, this._camera.native);
+
+        const objects = this._actorsHolder.actors
+            .map((actor:Actor|InstantiatedActor) => actor.object);
 
         const intersections = this._raycaster.intersectObjects(objects, true);
 
-        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder));
+        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder, event));
     }
 
     /**
@@ -70,13 +82,11 @@ import { RenderStep } from "../RenderStep";
      */
     handlePointer(event:PointerEvent) {
 
-        if (event.type !== 'pointermove') return;
+        // is it pointer move? and no buttons are pressed?
+        if (event.type !== 'pointermove' || event.button !== -1) return;
 
-        if (event.button !== -1) return;
-
-        this._point.x = (event.offsetX / this._renderSize.width) * 2 - 1;
-        this._point.y = - (event.offsetY / this._renderSize.height) * 2 + 1;
-
-        this._toPick = true;
+        // the actual handling has to happen in the render step to make sure that
+        // the handling occurs a the same speed as the rendering. 
+        this._lastPointerEvent= event;
     }
 };
