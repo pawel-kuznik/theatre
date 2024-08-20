@@ -42,7 +42,7 @@ export default function buildPickEventData(intersections:Array<Intersection<Obje
     return {
         intersections: result,
         first: result[0],
-        sceenX: event.screenX,
+        screenX: event.screenX,
         screenY: event.screenY,
         offsetX: event.offsetX,
         offsetY: event.offsetY
