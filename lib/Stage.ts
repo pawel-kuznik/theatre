@@ -116,23 +116,12 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      */
     destroy(actor:Actor|InstantiatedActor|HTMLActor) {
 
-        if (actor instanceof Actor) {
+        // check for the HTMLActor before we check for the Actor cause HTMLActor
+        // inherits from an Actor
+        if (actor instanceof HTMLActor) this._htmlActors.delete(actor);
+        else if (actor instanceof Actor) this._actors.delete(actor);
 
-            if (!this._actors.has(actor)) return;
-            this._actors.delete(actor);
-        }
-
-        if (actor instanceof InstantiatedActor) {
-
-            if (!this._instantiatedActors.has(actor)) return;
-            this._instantiatedActors.delete(actor);
-        }
-
-        if (actor instanceof HTMLActor) {
-            
-            if (!this._htmlActors.has(actor)) return;
-            this._htmlActors.delete(actor);
-        }
+        if (actor instanceof InstantiatedActor) this._instantiatedActors.delete(actor);
 
         actor.detach();
         actor.dispose();
