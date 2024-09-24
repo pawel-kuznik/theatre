@@ -73,6 +73,8 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      *  Make a render update for all actors.
      */
     renderUpdate(step: RenderStep): void {
+
+        for (let actor of this._htmlActors) actor.renderUpdate(step);
         
         for (let actor of this._actors) actor.renderUpdate(step);
 
@@ -89,23 +91,24 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      */
     insert(actor:Actor|InstantiatedActor|HTMLActor) {
 
-        if (actor instanceof Actor) {
+        if (actor instanceof HTMLActor) {
+
+            this._htmlActors.add(actor);
+            if (this._warderobe) actor.hydrate(this._warderobe);
+            actor.attachTo(this.scene);
+        }
+
+        else if (actor instanceof Actor) {
 
             this._actors.add(actor);
             if (this._warderobe) actor.hydrate(this._warderobe);
             actor.attachTo(this.scene); 
         }
 
-        if (actor instanceof InstantiatedActor) {
+        else if (actor instanceof InstantiatedActor) {
             
             this._instantiatedActors.add(actor);
             if (this._warderobe) actor.hydrate(this._warderobe);
-            actor.attachTo(this.scene);
-        }
-
-        if (actor instanceof HTMLActor) {
-
-            this._htmlActors.add(actor);
             actor.attachTo(this.scene);
         }
     }
@@ -120,8 +123,7 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         // inherits from an Actor
         if (actor instanceof HTMLActor) this._htmlActors.delete(actor);
         else if (actor instanceof Actor) this._actors.delete(actor);
-
-        if (actor instanceof InstantiatedActor) this._instantiatedActors.delete(actor);
+        else if (actor instanceof InstantiatedActor) this._instantiatedActors.delete(actor);
 
         actor.detach();
         actor.dispose();
@@ -135,6 +137,8 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     hydrate(warderobe:Warderobe) {
 
         this._warderobe = warderobe;
+
+        for (let actor of this._htmlActors) actor.hydrate(warderobe);
 
         for (let actor of this._actors) actor.hydrate(warderobe);
 
