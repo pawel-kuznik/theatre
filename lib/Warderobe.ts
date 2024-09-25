@@ -1,4 +1,4 @@
-import { Material, MeshBasicMaterial, MeshPhongMaterial, NearestFilter, Texture, TextureLoader } from "three";
+import { Material, NearestFilter, Texture, TextureLoader } from "three";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
 import TextureAnimator from "./TextureAnimator";
@@ -61,7 +61,7 @@ export default class Warderobe implements RenderParticipant {
     /**
      *  Register new material.
      */
-    public registerMaterial(name:string, material:MeshBasicMaterial|MeshPhongMaterial) : void {
+    public registerMaterial(name:string, material:Material) : void {
 
         this._materials.set(name, material);
         material.userData.ownedByWarderobe = true;
