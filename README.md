@@ -1,8 +1,8 @@
-# theater.js
+# theatre.js
 
-theathre.js is a rendering library built on top of three.js. It creates an opinionated
-framework for creating scenes, manages actors, lights, camera, and input. This is mostly
-useful for my own games and rendering needs.
+theatre.js is a rendering library built on top of three.js. It creates an opinionated
+scaffolding for scenes, actors, lights, camera, and input. The library is meant for
+my own games.
 
 ## How to get started?
 
@@ -50,7 +50,8 @@ export class CompanionActor extends Actor {
 ```
 
 The above code will setup a simple scene with a companion box. It's not much, but it illustrates
-how to setup the theatre and stage for more action.
+how to setup the theatre and stage for more action. More examples can be found in the example
+directory.
 
 ## Running development environment
 
