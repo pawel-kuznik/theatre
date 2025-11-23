@@ -95,6 +95,13 @@ export default class RendererHandler {
 
         this._observer.disconnect();
         this._renderer.dispose();
+
+        // remove the CSSRenderer. We only remove its dom element cause it doesn't
+        // have a dedicated dispose, remove, or destroy method.
+        this._css.domElement.remove()
+
+        // remove created canvas.
+        this._canvas.remove();
     }
 
     /**
