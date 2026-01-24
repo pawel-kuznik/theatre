@@ -5,7 +5,11 @@
         "declaration": true,
         "outDir": "./example/build",
         "strict": true,
-        "lib": ["es6", "es2017", "dom"]
+        "lib": ["es6", "es2017", "dom"],
+
+        // this is cause the three-instanced-uniforms-mesh library is not typed correctly
+        // and the compiler is complaining about it
+        "skipLibCheck": true,
     },
     "include": [ "./theatre.ts", "./lib/**/*" ],
     "exclude": [ "./build", "node_modules", "**/__tests__/*"]

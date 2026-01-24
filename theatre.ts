@@ -10,6 +10,7 @@ export { default as Theatre } from "./lib/Theatre";
 export { default as TiledFloor } from "./lib/TiledFloor";
 export { default as ActorIntersection } from "./lib/ActorIntersection";
 export { default as RenderingQualitySettings } from "./lib/RenderingQualitySettings";
+export { TextureAtlasMaterial, createTextureAtlas } from "./lib/TextureAtlasMaterial";
 
 export { default as CameraHoverPicker } from "./lib/Camera/CameraHoverPicker";
 export { default as CameraMousePicker } from "./lib/Camera/CameraMousePicker";

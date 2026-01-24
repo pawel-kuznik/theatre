@@ -1,4 +1,4 @@
-import { BoxGeometry, BufferGeometry, Color, DynamicDrawUsage, InstancedMesh, Material, Matrix4, MeshBasicMaterial, Object3D, Vector3 } from "three";
+import { BoxGeometry, BufferGeometry, Color, DynamicDrawUsage, Material, Matrix4, MeshBasicMaterial, Object3D, Vector3, InstancedMesh, InstancedBufferAttribute } from "three";
 import Warderobe from "./Warderobe";
 import RenderParticipant from "./RenderParticipant";
 import { RenderStep } from "./RenderStep";
@@ -8,8 +8,13 @@ import { RenderStep } from "./RenderStep";
  *  Meaning, it makes it performant when dealing with a lot of actors that have same
  *  geometry and material.
  */
-export abstract class InstantiatedActor implements RenderParticipant {
+export abstract class InstantiatedActor<TMaterial extends Material = Material> implements RenderParticipant {
 
+    // private _mesh: InstancedUniformsMesh<Material> = new InstancedUniformsMesh<Material>(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0x55ffcc }), 1);
+
+    /**
+     *  The actual mesh of the actor.
+     */
     private _mesh: InstancedMesh = new InstancedMesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0x55ffcc }), 1);
 
     /**
@@ -17,17 +22,29 @@ export abstract class InstantiatedActor implements RenderParticipant {
      */
     private _count: number;
 
+    /**
+     * The number of instances of the actor.
+     */
     public get count() { return this._mesh.count; }
 
-    protected abstract _initGoemetry(warderobe: Warderobe) : BufferGeometry;
+    /**
+     * The method that has to be implemented by the child class to initialize the geometry of the actor.
+     */
+    protected abstract _initGeometry(warderobe: Warderobe) : BufferGeometry;
 
-    protected abstract _initMaterial(warderobe: Warderobe) : Material;
+    /**
+     * The method that has to be implemented by the child class to initialize the material of the actor.
+     */
+    protected abstract _initMaterial(warderobe: Warderobe) : TMaterial;
 
     /**
      *  The UUID of the top object.
      */
     get renderUUID() : string { return this._mesh?.uuid || ''; }
 
+    /**
+     * The object associated with the actor.
+     */
     get object() : Object3D { return this._mesh; }
 
     constructor(count: number) {
@@ -37,12 +54,12 @@ export abstract class InstantiatedActor implements RenderParticipant {
     /**
      *  Initialize the instance.
      */
-    protected _init(warderobe: Warderobe) : InstancedMesh {
+    private _init(warderobe: Warderobe) : InstancedMesh<BufferGeometry, TMaterial> {
 
-        const geometry = this._initGoemetry(warderobe);
+        const geometry = this._initGeometry(warderobe);
         const material = this._initMaterial(warderobe);
 
-        const mesh = new InstancedMesh(geometry, material, this._count);
+        const mesh = new InstancedMesh<BufferGeometry, TMaterial>(geometry, material, this._count);
 
         // this line will make sure that the mesh will be updated every frame.
         // @todo this might need to be an option
@@ -205,5 +222,77 @@ export abstract class InstantiatedActor implements RenderParticipant {
         
         this._mesh.setColorAt(index, color);
         if (this._mesh.instanceColor) this._mesh.instanceColor.needsUpdate = true;
+    }
+
+    /**
+     * Helper function to determine the size and array representation of a uniform value.
+     */
+    private getUniformSize(value: any): { itemSize: number, arrayValue: number[] } | null {
+
+        if (typeof value === 'number') {
+            return { itemSize: 1, arrayValue: [value] };
+        } else if (value.isVector2) {
+            return { itemSize: 2, arrayValue: [value.x, value.y] };
+        } else if (value.isVector3) {
+            return { itemSize: 3, arrayValue: [value.x, value.y, value.z] };
+        } else if (value.isVector4 || value.isQuaternion) {
+            return { itemSize: 4, arrayValue: [value.x, value.y, value.z, value.w] };
+        } else if (value.isColor) {
+            return { itemSize: 3, arrayValue: [value.r, value.g, value.b] };
+        } else if (Array.isArray(value)) {
+            return { itemSize: value.length, arrayValue: value };
+        }
+
+        return null;
+    }
+
+    /**
+     * Set a uniform value for an instance of an actor.
+     */
+    setUniformAt(index: number, name: string, value: any) {
+
+        if (index >= this._count) return undefined;
+
+        const uniformData = this.getUniformSize(value);
+
+        if (!uniformData) {
+            console.warn(`Unsupported uniform type for ${name}`);
+            return;
+        }
+
+        const { itemSize, arrayValue } = uniformData;
+        const attr = this._mesh.geometry.getAttribute(name);
+
+        if (attr instanceof InstancedBufferAttribute) {
+            // Update existing attribute
+            if (attr.itemSize !== itemSize) {
+                console.warn(`Item size mismatch for uniform ${name}: expected ${attr.itemSize}, got ${itemSize}`);
+                return;
+            }
+
+            for (let i = 0; i < itemSize; i++) {
+                attr.setComponent(index, i, arrayValue[i]);
+            }
+            attr.needsUpdate = true;
+        } else {
+            // Create a new InstancedBufferAttribute
+            const buffer = new Float32Array(this._count * itemSize);
+
+            // Set the value at the specified index
+            const offset = index * itemSize;
+            for (let i = 0; i < itemSize; i++) {
+                buffer[offset + i] = arrayValue[i];
+            }
+
+            const newAttr = new InstancedBufferAttribute(buffer, itemSize);
+            this._mesh.geometry.setAttribute(name, newAttr);
+        }
+    }
+
+    /**
+     * Unset a uniform value for all instances of an actor.
+     */
+    unsetUniform(name: string) {
+        this._mesh.geometry.deleteAttribute(name);
     }
 };
