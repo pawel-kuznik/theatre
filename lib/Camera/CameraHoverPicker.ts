@@ -5,7 +5,7 @@ import ActorsHolder from "../ActorsHolder";
 import Camera from "../Camera";
 import buildPickEventData from "./buildPickEventData";
 import CameraPicker from "./CameraPicker";
-import { InstantiatedActor } from "../InstantiatedActor";
+import { InstancedActor } from "../InstancedActor";
 import { RenderSize } from "../RenderSize";
 import { RenderStep } from "../RenderStep";
 
@@ -70,7 +70,7 @@ import { RenderStep } from "../RenderStep";
         this._raycaster.setFromCamera(point, this._camera.native);
 
         const objects = this._actorsHolder.actors
-            .map((actor:Actor|InstantiatedActor) => actor.object);
+            .map((actor:Actor|InstancedActor) => actor.object);
 
         const intersections = this._raycaster.intersectObjects(objects, true);
 

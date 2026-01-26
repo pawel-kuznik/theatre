@@ -1,4 +1,4 @@
-class CheckerboardTiles extends THEATRE.InstantiatedActor {
+class CheckerboardTiles extends THEATRE.InstancedActor {
 
     _atlasMaterial = null;
 

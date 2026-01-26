@@ -7,7 +7,7 @@ import { RenderStep } from "./RenderStep";
 import StageAmbience from "./Stage/StageAmbience";
 import StageAmbienceProperties from "./StageAmbienceProperties";
 import Warderobe from "./Warderobe";
-import { InstantiatedActor } from "./InstantiatedActor";
+import { InstancedActor } from "./InstancedActor";
 import { HTMLActor } from "./HTMLActor";
 
 /**
@@ -27,9 +27,9 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     private readonly _actors:Set<Actor> = new Set();
 
     /**
-     *  The instantiated actors.
+     *  The instanced actors.
      */
-    private readonly _instantiatedActors: Set<InstantiatedActor> = new Set();
+    private readonly _instancedActors: Set<InstancedActor> = new Set();
 
     /**
      *  The HTML actors.
@@ -49,14 +49,14 @@ export default class Stage implements RenderParticipant, ActorsHolder {
     /**
      *  Fetch an actor by uuid of it's main object.
      */
-    fetch(uuid:string) : Actor|InstantiatedActor|HTMLActor|undefined {
+    fetch(uuid:string) : Actor|InstancedActor|HTMLActor|undefined {
 
         for (let actor of this._actors) {
             
             if (actor.renderUUID === uuid) return actor;
         }
 
-        for (let actor of this._instantiatedActors) {
+        for (let actor of this._instancedActors) {
 
             if (actor.renderUUID === uuid) return actor;
         }
@@ -78,18 +78,18 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         
         for (let actor of this._actors) actor.renderUpdate(step);
 
-        for (let actor of this._instantiatedActors) actor.renderUpdate(step);
+        for (let actor of this._instancedActors) actor.renderUpdate(step);
     }
 
     /**
      *  The the current actors of the scene.
      */
-    get actors() : Array<Actor|InstantiatedActor|HTMLActor> { return [...this._actors, ...this._instantiatedActors, ...this._htmlActors]; }
+    get actors() : Array<Actor|InstancedActor|HTMLActor> { return [...this._actors, ...this._instancedActors, ...this._htmlActors]; }
 
     /**
      *  Insert an actor into the scene.
      */
-    insert(actor:Actor|InstantiatedActor|HTMLActor) {
+    insert(actor:Actor|InstancedActor|HTMLActor) {
 
         if (actor instanceof HTMLActor) {
 
@@ -105,9 +105,9 @@ export default class Stage implements RenderParticipant, ActorsHolder {
             actor.attachTo(this.scene); 
         }
 
-        else if (actor instanceof InstantiatedActor) {
+        else if (actor instanceof InstancedActor) {
             
-            this._instantiatedActors.add(actor);
+            this._instancedActors.add(actor);
             if (this._warderobe) actor.hydrate(this._warderobe);
             actor.attachTo(this.scene);
         }
@@ -117,13 +117,13 @@ export default class Stage implements RenderParticipant, ActorsHolder {
      *  Destroy a target actor residing in this scene. If the actor is not inside
      *  the scene no action will be done.
      */
-    destroy(actor:Actor|InstantiatedActor|HTMLActor) {
+    destroy(actor:Actor|InstancedActor|HTMLActor) {
 
         // check for the HTMLActor before we check for the Actor cause HTMLActor
         // inherits from an Actor
         if (actor instanceof HTMLActor) this._htmlActors.delete(actor);
         else if (actor instanceof Actor) this._actors.delete(actor);
-        else if (actor instanceof InstantiatedActor) this._instantiatedActors.delete(actor);
+        else if (actor instanceof InstancedActor) this._instancedActors.delete(actor);
 
         actor.detach();
         actor.dispose();
@@ -140,9 +140,9 @@ export default class Stage implements RenderParticipant, ActorsHolder {
 
         for (let actor of this._htmlActors) actor.hydrate(warderobe);
 
-        for (let actor of this._actors) actor.hydrate(warderobe);
+    for (let actor of this._actors) actor.hydrate(warderobe);
 
-        for (let actor of this._instantiatedActors) actor.hydrate(warderobe);
+        for (let actor of this._instancedActors) actor.hydrate(warderobe);
     }
 
     /**
@@ -173,7 +173,7 @@ export default class Stage implements RenderParticipant, ActorsHolder {
             this.destroy(actor);
         }
         
-        for (let actor of this._instantiatedActors) {
+        for (let actor of this._instancedActors) {
             this.destroy(actor);
         }
 
@@ -182,7 +182,7 @@ export default class Stage implements RenderParticipant, ActorsHolder {
         }
 
         this._actors.clear();
-        this._instantiatedActors.clear();
+        this._instancedActors.clear();
         this._htmlActors.clear();
 
         if (this._ambience) this._ambience.vacate();

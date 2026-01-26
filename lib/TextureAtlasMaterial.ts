@@ -1,9 +1,9 @@
-import { ShaderMaterial, Texture, CanvasTexture, LinearFilter, NearestFilter, ShaderLib, UniformsUtils, Color, SRGBColorSpace } from 'three';
+import { ShaderMaterial, Texture, CanvasTexture, NearestFilter, ShaderLib, UniformsUtils, Color, SRGBColorSpace } from 'three';
 
 /**
  * TextureAtlasMaterial - A custom material for instanced rendering with texture atlases
  *
- * Example usage with InstantiatedActor:
+ * Example usage with InstancedActor:
  *
  * ```typescript
  * // 1. Load your textures
@@ -19,8 +19,8 @@ import { ShaderMaterial, Texture, CanvasTexture, LinearFilter, NearestFilter, Sh
  * // 3. Create material with atlas
  * const material = new TextureAtlasMaterial(atlas, textures.length);
  *
- * // 4. Use with InstantiatedActor
- * class MyActor extends InstantiatedActor {
+ * // 4. Use with InstancedActor
+ * class MyActor extends InstancedActor {
  *     protected _initMaterial(warderobe: Warderobe) {
  *         return material;
  *     }

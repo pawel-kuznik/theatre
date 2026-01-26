@@ -8,7 +8,7 @@ import { RenderStep } from "./RenderStep";
  *  Meaning, it makes it performant when dealing with a lot of actors that have same
  *  geometry and material.
  */
-export abstract class InstantiatedActor<TMaterial extends Material = Material> implements RenderParticipant {
+export abstract class InstancedActor<TMaterial extends Material = Material> implements RenderParticipant {
 
     // private _mesh: InstancedUniformsMesh<Material> = new InstancedUniformsMesh<Material>(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0x55ffcc }), 1);
 
@@ -35,7 +35,7 @@ export abstract class InstantiatedActor<TMaterial extends Material = Material> i
     /**
      * The method that has to be implemented by the child class to initialize the material of the actor.
      */
-    protected abstract _initMaterial(warderobe: Warderobe) : TMaterial;
+    protected abstract _initMaterial(warderobe: Warderobe) : TMaterial | TMaterial[];
 
     /**
      *  The UUID of the top object.
@@ -54,12 +54,12 @@ export abstract class InstantiatedActor<TMaterial extends Material = Material> i
     /**
      *  Initialize the instance.
      */
-    private _init(warderobe: Warderobe) : InstancedMesh<BufferGeometry, TMaterial> {
+    private _init(warderobe: Warderobe) : InstancedMesh<BufferGeometry, TMaterial | TMaterial[]> {
 
         const geometry = this._initGeometry(warderobe);
         const material = this._initMaterial(warderobe);
 
-        const mesh = new InstancedMesh<BufferGeometry, TMaterial>(geometry, material, this._count);
+        const mesh = new InstancedMesh<BufferGeometry, TMaterial | TMaterial[]>(geometry, material, this._count);
 
         // this line will make sure that the mesh will be updated every frame.
         // @todo this might need to be an option

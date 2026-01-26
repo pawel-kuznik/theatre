@@ -973,14 +973,14 @@ exports.HTMLActor = HTMLActor;
 },{"./Actor":2,"@pawel-kuznik/three-css3d":47}],17:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InstantiatedActor = void 0;
+exports.InstancedActor = void 0;
 const three_1 = require("three");
 /**
  *  This a variation on an actor that allows to render a lot of actors in one draw call.
  *  Meaning, it makes it performant when dealing with a lot of actors that have same
  *  geometry and material.
  */
-class InstantiatedActor {
+class InstancedActor {
     constructor(count) {
         // private _mesh: InstancedUniformsMesh<Material> = new InstancedUniformsMesh<Material>(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: 0x55ffcc }), 1);
         /**
@@ -1203,7 +1203,7 @@ class InstantiatedActor {
         this._mesh.geometry.deleteAttribute(name);
     }
 }
-exports.InstantiatedActor = InstantiatedActor;
+exports.InstancedActor = InstancedActor;
 ;
 
 },{"three":49}],18:[function(require,module,exports){
@@ -1512,7 +1512,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
 const Actor_1 = require("./Actor");
 const StageAmbience_1 = require("./Stage/StageAmbience");
-const InstantiatedActor_1 = require("./InstantiatedActor");
+const InstancedActor_1 = require("./InstancedActor");
 const HTMLActor_1 = require("./HTMLActor");
 /**
  *  This is the stage. This class represents the scene as well as definition for
@@ -1529,9 +1529,9 @@ class Stage {
          */
         this._actors = new Set();
         /**
-         *  The instantiated actors.
+         *  The instanced actors.
          */
-        this._instantiatedActors = new Set();
+        this._instancedActors = new Set();
         /**
          *  The HTML actors.
          */
@@ -1549,7 +1549,7 @@ class Stage {
             if (actor.renderUUID === uuid)
                 return actor;
         }
-        for (let actor of this._instantiatedActors) {
+        for (let actor of this._instancedActors) {
             if (actor.renderUUID === uuid)
                 return actor;
         }
@@ -1567,13 +1567,13 @@ class Stage {
             actor.renderUpdate(step);
         for (let actor of this._actors)
             actor.renderUpdate(step);
-        for (let actor of this._instantiatedActors)
+        for (let actor of this._instancedActors)
             actor.renderUpdate(step);
     }
     /**
      *  The the current actors of the scene.
      */
-    get actors() { return [...this._actors, ...this._instantiatedActors, ...this._htmlActors]; }
+    get actors() { return [...this._actors, ...this._instancedActors, ...this._htmlActors]; }
     /**
      *  Insert an actor into the scene.
      */
@@ -1590,8 +1590,8 @@ class Stage {
                 actor.hydrate(this._warderobe);
             actor.attachTo(this.scene);
         }
-        else if (actor instanceof InstantiatedActor_1.InstantiatedActor) {
-            this._instantiatedActors.add(actor);
+        else if (actor instanceof InstancedActor_1.InstancedActor) {
+            this._instancedActors.add(actor);
             if (this._warderobe)
                 actor.hydrate(this._warderobe);
             actor.attachTo(this.scene);
@@ -1608,8 +1608,8 @@ class Stage {
             this._htmlActors.delete(actor);
         else if (actor instanceof Actor_1.default)
             this._actors.delete(actor);
-        else if (actor instanceof InstantiatedActor_1.InstantiatedActor)
-            this._instantiatedActors.delete(actor);
+        else if (actor instanceof InstancedActor_1.InstancedActor)
+            this._instancedActors.delete(actor);
         actor.detach();
         actor.dispose();
     }
@@ -1624,7 +1624,7 @@ class Stage {
             actor.hydrate(warderobe);
         for (let actor of this._actors)
             actor.hydrate(warderobe);
-        for (let actor of this._instantiatedActors)
+        for (let actor of this._instancedActors)
             actor.hydrate(warderobe);
     }
     /**
@@ -1650,14 +1650,14 @@ class Stage {
         for (let actor of this._actors) {
             this.destroy(actor);
         }
-        for (let actor of this._instantiatedActors) {
+        for (let actor of this._instancedActors) {
             this.destroy(actor);
         }
         for (let actor of this._htmlActors) {
             this.destroy(actor);
         }
         this._actors.clear();
-        this._instantiatedActors.clear();
+        this._instancedActors.clear();
         this._htmlActors.clear();
         if (this._ambience)
             this._ambience.vacate();
@@ -1666,7 +1666,7 @@ class Stage {
 exports.default = Stage;
 ;
 
-},{"./Actor":2,"./HTMLActor":16,"./InstantiatedActor":17,"./Stage/StageAmbience":26,"three":49}],26:[function(require,module,exports){
+},{"./Actor":2,"./HTMLActor":16,"./InstancedActor":17,"./Stage/StageAmbience":26,"three":49}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = require("three");
@@ -1828,7 +1828,7 @@ const three_1 = require("three");
 /**
  * TextureAtlasMaterial - A custom material for instanced rendering with texture atlases
  *
- * Example usage with InstantiatedActor:
+ * Example usage with InstancedActor:
  *
  * ```typescript
  * // 1. Load your textures
@@ -1844,8 +1844,8 @@ const three_1 = require("three");
  * // 3. Create material with atlas
  * const material = new TextureAtlasMaterial(atlas, textures.length);
  *
- * // 4. Use with InstantiatedActor
- * class MyActor extends InstantiatedActor {
+ * // 4. Use with InstancedActor
+ * class MyActor extends InstancedActor {
  *     protected _initMaterial(warderobe: Warderobe) {
  *         return material;
  *     }
@@ -2811,11 +2811,11 @@ exports.default = Warderobe;
 },{"./TextureAnimator":28,"three":49}],35:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActorTranslation = exports.TransitionCycle = exports.WSADCameraMover = exports.WheelLifterCameraMover = exports.MPressMover = exports.CameraMousePicker = exports.CameraHoverPicker = exports.createTextureAtlas = exports.TextureAtlasMaterial = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstantiatedActor = exports.Actor = void 0;
+exports.ActorTranslation = exports.TransitionCycle = exports.WSADCameraMover = exports.WheelLifterCameraMover = exports.MPressMover = exports.CameraMousePicker = exports.CameraHoverPicker = exports.createTextureAtlas = exports.TextureAtlasMaterial = exports.ActorIntersection = exports.TiledFloor = exports.Theatre = exports.Position = exports.Warderobe = exports.Stage = exports.HTMLActor = exports.CompanionActor = exports.TiledActors = exports.InstancedActor = exports.Actor = void 0;
 var Actor_1 = require("./lib/Actor");
 Object.defineProperty(exports, "Actor", { enumerable: true, get: function () { return Actor_1.default; } });
-var InstantiatedActor_1 = require("./lib/InstantiatedActor");
-Object.defineProperty(exports, "InstantiatedActor", { enumerable: true, get: function () { return InstantiatedActor_1.InstantiatedActor; } });
+var InstancedActor_1 = require("./lib/InstancedActor");
+Object.defineProperty(exports, "InstancedActor", { enumerable: true, get: function () { return InstancedActor_1.InstancedActor; } });
 var TiledActors_1 = require("./lib/TiledActors");
 Object.defineProperty(exports, "TiledActors", { enumerable: true, get: function () { return TiledActors_1.default; } });
 var CompanionActor_1 = require("./lib/CompanionActor");
@@ -2853,7 +2853,7 @@ Object.defineProperty(exports, "TransitionCycle", { enumerable: true, get: funct
 var Translation_1 = require("./lib/ActorTransitions/Translation");
 Object.defineProperty(exports, "ActorTranslation", { enumerable: true, get: function () { return Translation_1.default; } });
 
-},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/Camera/CameraHoverPicker":6,"./lib/Camera/CameraMousePicker":7,"./lib/Camera/MPressMover":9,"./lib/Camera/WSADCameraMover":11,"./lib/Camera/WheelLifterCameraMover":12,"./lib/CompanionActor":14,"./lib/HTMLActor":16,"./lib/InstantiatedActor":17,"./lib/Position":18,"./lib/Stage":25,"./lib/TextureAtlasMaterial":29,"./lib/Theatre":30,"./lib/TiledActors":31,"./lib/TiledFloor":32,"./lib/TransitionCycle":33,"./lib/Warderobe":34}],36:[function(require,module,exports){
+},{"./lib/Actor":2,"./lib/ActorIntersection":3,"./lib/ActorTransitions/Translation":4,"./lib/Camera/CameraHoverPicker":6,"./lib/Camera/CameraMousePicker":7,"./lib/Camera/MPressMover":9,"./lib/Camera/WSADCameraMover":11,"./lib/Camera/WheelLifterCameraMover":12,"./lib/CompanionActor":14,"./lib/HTMLActor":16,"./lib/InstancedActor":17,"./lib/Position":18,"./lib/Stage":25,"./lib/TextureAtlasMaterial":29,"./lib/Theatre":30,"./lib/TiledActors":31,"./lib/TiledFloor":32,"./lib/TransitionCycle":33,"./lib/Warderobe":34}],36:[function(require,module,exports){
 "use strict";
 
 /**

@@ -1,4 +1,4 @@
-class Boxes extends THEATRE.InstantiatedActor {
+class Boxes extends THEATRE.InstancedActor {
 
     _initGeometry(warderobe) {
 

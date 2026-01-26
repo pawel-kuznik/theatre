@@ -1,5 +1,5 @@
 export { default as Actor } from "./lib/Actor";
-export { InstantiatedActor } from "./lib/InstantiatedActor";
+export { InstancedActor } from "./lib/InstancedActor";
 export { default as TiledActors } from "./lib/TiledActors";
 export { default as CompanionActor } from "./lib/CompanionActor";
 export { HTMLActor } from "./lib/HTMLActor";

@@ -1,6 +1,6 @@
 import { Intersection, Object3D, Vector3 } from "three";
 import Actor from "./Actor";
-import { InstantiatedActor } from "./InstantiatedActor";
+import { InstancedActor } from "./InstancedActor";
 
 /**
  *  This is a structure that we get when we intersect something with an actor. This is useful,
@@ -16,7 +16,7 @@ export default class ActorIntersection {
 
     constructor(
         intersection: Intersection<Object3D>,
-        public readonly actor:Actor|InstantiatedActor,
+        public readonly actor:Actor|InstancedActor,
         public readonly child:number|undefined = undefined
     ) {
         this._intersection = intersection;
