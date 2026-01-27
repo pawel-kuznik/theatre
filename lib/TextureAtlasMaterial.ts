@@ -34,6 +34,22 @@ import { ShaderMaterial, Texture, CanvasTexture, NearestFilter, ShaderLib, Unifo
  * ```
  */
 
+export interface CreateTextureAtlasOptions {
+
+    /**
+     *  This option is to flip the texture atlas vertically.
+     *  @default false
+     */
+    flipY?: boolean;
+
+    /**
+     *  This option is to quickly mount the texture atlas canvas to the DOM.
+     *  Use this option to quickly debug the texture atlas.
+     *  @default false
+     */
+    debugMount?: boolean;
+}
+
 /**
  * Creates a texture atlas from an array of square textures of the same size.
  *
@@ -41,7 +57,10 @@ import { ShaderMaterial, Texture, CanvasTexture, NearestFilter, ShaderLib, Unifo
  * @param textureSize Size of each individual texture (assumes square textures)
  * @returns A texture containing all input textures arranged in a grid
  */
-export function createTextureAtlas(textures: Texture[], textureSize: number): Texture {
+export function createTextureAtlas(textures: Texture[], textureSize: number, options?: CreateTextureAtlasOptions): Texture {
+
+    const flipY = options?.flipY ?? false;
+    const debugMount = options?.debugMount ?? false;
 
     if (textures.length === 0) {
         throw new Error('Cannot create texture atlas from empty array');
@@ -56,6 +75,17 @@ export function createTextureAtlas(textures: Texture[], textureSize: number): Te
     canvas.width = atlasSize;
     canvas.height = atlasSize;
     const ctx = canvas.getContext('2d');
+
+    if (debugMount) {
+        canvas.style.display = 'block';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.border = '1px solid red';
+        document.body.appendChild(canvas);
+    }
 
     if (!ctx) {
         throw new Error('Could not get 2D context for atlas canvas');
@@ -75,7 +105,7 @@ export function createTextureAtlas(textures: Texture[], textureSize: number): Te
 
     // Create a Three.js texture from the canvas
     const atlasTexture = new CanvasTexture(canvas);
-    atlasTexture.flipY = false;
+    atlasTexture.flipY = flipY;
     atlasTexture.minFilter = NearestFilter;
     atlasTexture.magFilter = NearestFilter;
     atlasTexture.colorSpace = SRGBColorSpace;
@@ -90,6 +120,7 @@ export function createTextureAtlas(textures: Texture[], textureSize: number): Te
 export interface TextureAtlasMaterialOptions {
     receiveShadows?: boolean;
     unlit?: boolean;
+    flipY?: boolean;
     metalness?: number;
     roughness?: number;
     diffuse?: Color;
@@ -101,11 +132,13 @@ export class TextureAtlasMaterial extends ShaderMaterial {
     private _textureCount: number;
     private _receiveShadows: boolean;
     private _unlit: boolean;
+    private _flipY: boolean;
 
     constructor(atlasTexture: Texture, textureCount: number, options?: TextureAtlasMaterialOptions, params?: any) {
 
         const receiveShadows = options?.receiveShadows ?? true;
         const unlit = options?.unlit ?? false;
+        const flipY = options?.flipY ?? true;
         const metalness = options?.metalness ?? 0;
         const roughness = options?.roughness ?? 1;
         const diffuse = options?.diffuse ?? new Color(0xffffff);
@@ -140,7 +173,7 @@ export class TextureAtlasMaterial extends ShaderMaterial {
         super({
             uniforms: uniforms,
             vertexShader: getVertexShader(receiveShadows),
-            fragmentShader: getFragmentShader(receiveShadows, unlit),
+            fragmentShader: getFragmentShader(receiveShadows, unlit, flipY),
             lights: true,
             ...params
         });
@@ -149,6 +182,7 @@ export class TextureAtlasMaterial extends ShaderMaterial {
         this._textureCount = textureCount;
         this._receiveShadows = receiveShadows;
         this._unlit = unlit;
+        this._flipY = flipY;
     }
 
     get gridSize(): number {
@@ -165,6 +199,10 @@ export class TextureAtlasMaterial extends ShaderMaterial {
 
     get unlit(): boolean {
         return this._unlit;
+    }
+
+    get flipY(): boolean {
+        return this._flipY;
     }
 }
 
@@ -231,12 +269,13 @@ function getVertexShader(receiveShadows: boolean): string {
 /**
  * Fragment shader that samples from the atlas based on the texture index
  */
-function getFragmentShader(receiveShadows: boolean, unlit: boolean = false): string {
+function getFragmentShader(receiveShadows: boolean, unlit: boolean = false, flipY: boolean = true): string {
     return `
         #define STANDARD
         #define USE_UV
         ${receiveShadows ? '' : '#undef USE_SHADOWMAP'}
         ${unlit ? '#define UNLIT' : ''}
+        ${flipY ? '#define FLIP_Y' : ''}
 
         #ifdef PHYSICAL
             #define IOR
@@ -354,7 +393,12 @@ function getFragmentShader(receiveShadows: boolean, unlit: boolean = false): str
             float tileY = floor(index / gridSize);
 
             // Transform UVs to sample from the correct tile in the atlas
-            vec2 tileUV = vUv / gridSize;
+            #ifdef FLIP_Y
+                vec2 correctedUV = vec2(vUv.x, 1.0 - vUv.y);
+            #else
+                vec2 correctedUV = vUv;
+            #endif
+            vec2 tileUV = correctedUV / gridSize;
             vec2 tileOffset = vec2(tileX, tileY) / gridSize;
             vec2 atlasUV = tileUV + tileOffset;
 
@@ -470,7 +514,12 @@ function getUnlitFragmentShader(): string {
             float tileY = floor(index / gridSize);
 
             // Transform UVs to sample from the correct tile in the atlas
-            vec2 tileUV = vUv / gridSize;
+            #ifdef FLIP_Y
+                vec2 correctedUV = vec2(vUv.x, 1.0 - vUv.y);
+            #else
+                vec2 correctedUV = vUv;
+            #endif
+            vec2 tileUV = correctedUV / gridSize;
             vec2 tileOffset = vec2(tileX, tileY) / gridSize;
             vec2 atlasUV = tileUV + tileOffset;
 

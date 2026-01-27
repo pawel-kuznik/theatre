@@ -14,7 +14,10 @@ export default interface RenderingQualitySettings {
     shaderPrecision:ShaderPrecisionSetting;
 
     // tells the user agent at which power setting the gpu should run.
-    powerPreference:PowerPreferenceSetting;      
+    powerPreference:PowerPreferenceSetting;
+    
+    // should the rendered render with transparent background?
+    alpha:boolean;
 };
 
 export enum ShaderPrecisionSetting {

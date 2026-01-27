@@ -18,6 +18,12 @@ export interface TheatreOptions {
     quality?:Partial<RenderingQualitySettings>;
 
     camera:CameraFactorySpecs;
+
+    /**
+     * Should the background be transparent?
+     * @default false
+     */
+    alphaBackground: boolean;
 };
 
 /**
@@ -108,7 +114,8 @@ export default class Theatre extends Emitter  {
         this._rendererHandler = new RendererHandler(container, Object.assign({ }, {
             antialiasing:       true,
             shaderPrecision:    ShaderPrecisionSetting.high,
-            powerPreference:    PowerPreferenceSetting.default      
+            powerPreference:    PowerPreferenceSetting.default,
+            alpha:              options?.alphaBackground ?? false
         }));
 
         const canvas = this._rendererHandler.canvas;

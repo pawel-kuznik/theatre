@@ -1127,6 +1127,26 @@ class InstancedActor {
         this._mesh.instanceMatrix.needsUpdate = true;
     }
     /**
+     *  Set the matrix of an instance of the actor.
+     */
+    setMatrixAt(index, matrix) {
+        if (index >= this._count)
+            return undefined;
+        this._mesh.setMatrixAt(index, matrix);
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
+    }
+    /**
+     *  Get the matrix of an instance of the actor.
+     */
+    getMatrixAt(index) {
+        if (index >= this._count)
+            return undefined;
+        const matrix = new three_1.Matrix4();
+        this._mesh.getMatrixAt(index, matrix);
+        return matrix;
+    }
+    /**
      *  Set color of an instance of an actor.
      */
     setColorAt(index, color) {
@@ -1314,7 +1334,8 @@ class RendererHandler {
             canvas: this._canvas,
             antialias: options.antialiasing,
             precision: options.shaderPrecision,
-            powerPreference: options.powerPreference
+            powerPreference: options.powerPreference,
+            alpha: options.alpha
         });
         three_1.Object3D.DEFAULT_UP = new three_1.Vector3(0, 0, 1);
         this._renderer.shadowMap.enabled = true;
@@ -1826,46 +1847,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TextureAtlasMaterial = exports.createTextureAtlas = void 0;
 const three_1 = require("three");
 /**
- * TextureAtlasMaterial - A custom material for instanced rendering with texture atlases
- *
- * Example usage with InstancedActor:
- *
- * ```typescript
- * // 1. Load your textures
- * const textures = [
- *     textureLoader.load('texture1.png'),
- *     textureLoader.load('texture2.png'),
- *     textureLoader.load('texture3.png'),
- * ];
- *
- * // 2. Create texture atlas
- * const atlas = createTextureAtlas(textures, 256); // 256 = texture size in pixels
- *
- * // 3. Create material with atlas
- * const material = new TextureAtlasMaterial(atlas, textures.length);
- *
- * // 4. Use with InstancedActor
- * class MyActor extends InstancedActor {
- *     protected _initMaterial(warderobe: Warderobe) {
- *         return material;
- *     }
- * }
- *
- * // 5. Set texture index for each instance
- * const actor = new MyActor(100);
- * actor.setUniformAt(0, 'textureIndex', 0);  // Use first texture
- * actor.setUniformAt(1, 'textureIndex', 1);  // Use second texture
- * actor.setUniformAt(2, 'textureIndex', 2);  // Use third texture
- * ```
- */
-/**
  * Creates a texture atlas from an array of square textures of the same size.
  *
  * @param textures Array of textures to combine into an atlas
  * @param textureSize Size of each individual texture (assumes square textures)
  * @returns A texture containing all input textures arranged in a grid
  */
-function createTextureAtlas(textures, textureSize) {
+function createTextureAtlas(textures, textureSize, options) {
+    var _a, _b;
+    const flipY = (_a = options === null || options === void 0 ? void 0 : options.flipY) !== null && _a !== void 0 ? _a : false;
+    const debugMount = (_b = options === null || options === void 0 ? void 0 : options.debugMount) !== null && _b !== void 0 ? _b : false;
     if (textures.length === 0) {
         throw new Error('Cannot create texture atlas from empty array');
     }
@@ -1877,6 +1868,16 @@ function createTextureAtlas(textures, textureSize) {
     canvas.width = atlasSize;
     canvas.height = atlasSize;
     const ctx = canvas.getContext('2d');
+    if (debugMount) {
+        canvas.style.display = 'block';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.border = '1px solid red';
+        document.body.appendChild(canvas);
+    }
     if (!ctx) {
         throw new Error('Could not get 2D context for atlas canvas');
     }
@@ -1892,7 +1893,7 @@ function createTextureAtlas(textures, textureSize) {
     });
     // Create a Three.js texture from the canvas
     const atlasTexture = new three_1.CanvasTexture(canvas);
-    atlasTexture.flipY = false;
+    atlasTexture.flipY = flipY;
     atlasTexture.minFilter = three_1.NearestFilter;
     atlasTexture.magFilter = three_1.NearestFilter;
     atlasTexture.colorSpace = three_1.SRGBColorSpace;
@@ -1901,12 +1902,13 @@ function createTextureAtlas(textures, textureSize) {
 exports.createTextureAtlas = createTextureAtlas;
 class TextureAtlasMaterial extends three_1.ShaderMaterial {
     constructor(atlasTexture, textureCount, options, params) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const receiveShadows = (_a = options === null || options === void 0 ? void 0 : options.receiveShadows) !== null && _a !== void 0 ? _a : true;
         const unlit = (_b = options === null || options === void 0 ? void 0 : options.unlit) !== null && _b !== void 0 ? _b : false;
-        const metalness = (_c = options === null || options === void 0 ? void 0 : options.metalness) !== null && _c !== void 0 ? _c : 0;
-        const roughness = (_d = options === null || options === void 0 ? void 0 : options.roughness) !== null && _d !== void 0 ? _d : 1;
-        const diffuse = (_e = options === null || options === void 0 ? void 0 : options.diffuse) !== null && _e !== void 0 ? _e : new three_1.Color(0xffffff);
+        const flipY = (_c = options === null || options === void 0 ? void 0 : options.flipY) !== null && _c !== void 0 ? _c : true;
+        const metalness = (_d = options === null || options === void 0 ? void 0 : options.metalness) !== null && _d !== void 0 ? _d : 0;
+        const roughness = (_e = options === null || options === void 0 ? void 0 : options.roughness) !== null && _e !== void 0 ? _e : 1;
+        const diffuse = (_f = options === null || options === void 0 ? void 0 : options.diffuse) !== null && _f !== void 0 ? _f : new three_1.Color(0xffffff);
         // Calculate grid size from texture count
         const gridSize = Math.ceil(Math.sqrt(textureCount));
         // Build uniforms based on lighting mode
@@ -1929,11 +1931,12 @@ class TextureAtlasMaterial extends three_1.ShaderMaterial {
                 textureCount: { value: textureCount }
             }
         ]);
-        super(Object.assign({ uniforms: uniforms, vertexShader: getVertexShader(receiveShadows), fragmentShader: getFragmentShader(receiveShadows, unlit), lights: true }, params));
+        super(Object.assign({ uniforms: uniforms, vertexShader: getVertexShader(receiveShadows), fragmentShader: getFragmentShader(receiveShadows, unlit, flipY), lights: true }, params));
         this._gridSize = gridSize;
         this._textureCount = textureCount;
         this._receiveShadows = receiveShadows;
         this._unlit = unlit;
+        this._flipY = flipY;
     }
     get gridSize() {
         return this._gridSize;
@@ -1946,6 +1949,9 @@ class TextureAtlasMaterial extends three_1.ShaderMaterial {
     }
     get unlit() {
         return this._unlit;
+    }
+    get flipY() {
+        return this._flipY;
     }
 }
 exports.TextureAtlasMaterial = TextureAtlasMaterial;
@@ -2011,12 +2017,13 @@ function getVertexShader(receiveShadows) {
 /**
  * Fragment shader that samples from the atlas based on the texture index
  */
-function getFragmentShader(receiveShadows, unlit = false) {
+function getFragmentShader(receiveShadows, unlit = false, flipY = true) {
     return `
         #define STANDARD
         #define USE_UV
         ${receiveShadows ? '' : '#undef USE_SHADOWMAP'}
         ${unlit ? '#define UNLIT' : ''}
+        ${flipY ? '#define FLIP_Y' : ''}
 
         #ifdef PHYSICAL
             #define IOR
@@ -2134,7 +2141,12 @@ function getFragmentShader(receiveShadows, unlit = false) {
             float tileY = floor(index / gridSize);
 
             // Transform UVs to sample from the correct tile in the atlas
-            vec2 tileUV = vUv / gridSize;
+            #ifdef FLIP_Y
+                vec2 correctedUV = vec2(vUv.x, 1.0 - vUv.y);
+            #else
+                vec2 correctedUV = vUv;
+            #endif
+            vec2 tileUV = correctedUV / gridSize;
             vec2 tileOffset = vec2(tileX, tileY) / gridSize;
             vec2 atlasUV = tileUV + tileOffset;
 
@@ -2248,7 +2260,12 @@ function getUnlitFragmentShader() {
             float tileY = floor(index / gridSize);
 
             // Transform UVs to sample from the correct tile in the atlas
-            vec2 tileUV = vUv / gridSize;
+            #ifdef FLIP_Y
+                vec2 correctedUV = vec2(vUv.x, 1.0 - vUv.y);
+            #else
+                vec2 correctedUV = vUv;
+            #endif
+            vec2 tileUV = correctedUV / gridSize;
             vec2 tileOffset = vec2(tileX, tileY) / gridSize;
             vec2 atlasUV = tileUV + tileOffset;
 
@@ -2293,6 +2310,7 @@ class Theatre extends iventy_1.Emitter {
      *  @throw  Error   When initialization fails. The message contains the reason.
      */
     constructor(canvasContainer, options) {
+        var _a;
         super();
         /**
          *  The warderobe for the theathre.
@@ -2317,7 +2335,8 @@ class Theatre extends iventy_1.Emitter {
         this._rendererHandler = new RendererHandler_1.default(container, Object.assign({}, {
             antialiasing: true,
             shaderPrecision: RenderingQualitySettings_1.ShaderPrecisionSetting.high,
-            powerPreference: RenderingQualitySettings_1.PowerPreferenceSetting.default
+            powerPreference: RenderingQualitySettings_1.PowerPreferenceSetting.default,
+            alpha: (_a = options === null || options === void 0 ? void 0 : options.alphaBackground) !== null && _a !== void 0 ? _a : false
         }));
         const canvas = this._rendererHandler.canvas;
         const cameraDefaults = {

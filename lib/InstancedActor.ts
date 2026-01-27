@@ -211,7 +211,29 @@ export abstract class InstancedActor<TMaterial extends Material = Material> impl
         this._mesh.setMatrixAt(index, matrix);
         this._mesh.updateMatrix();
         this._mesh.instanceMatrix.needsUpdate = true;
-    } 
+    }
+
+    /**
+     *  Set the matrix of an instance of the actor.
+     */
+    setMatrixAt(index: number, matrix: Matrix4) {
+        if (index >= this._count) return undefined
+
+        this._mesh.setMatrixAt(index, matrix);
+        this._mesh.updateMatrix();
+        this._mesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /**
+     *  Get the matrix of an instance of the actor.
+     */
+    getMatrixAt(index: number) : Matrix4 | undefined {
+        if (index >= this._count) return undefined
+
+        const matrix = new Matrix4();
+        this._mesh.getMatrixAt(index, matrix);
+        return matrix;
+    }
 
     /**
      *  Set color of an instance of an actor.

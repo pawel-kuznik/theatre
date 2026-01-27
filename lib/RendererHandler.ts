@@ -42,7 +42,8 @@ export default class RendererHandler {
             canvas:             this._canvas,
             antialias:          options.antialiasing,
             precision:          options.shaderPrecision,
-            powerPreference:    options.powerPreference
+            powerPreference:    options.powerPreference,
+            alpha:              options.alpha
         });
 
         Object3D.DEFAULT_UP = new Vector3(0, 0, 1);

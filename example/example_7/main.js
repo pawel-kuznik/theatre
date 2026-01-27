@@ -49,7 +49,7 @@ class Crate extends THEATRE.Actor {
 document.addEventListener('DOMContentLoaded', () => {
 
     // construct a theatre
-    const theatre = new THEATRE.Theatre(document.body);
+    const theatre = new THEATRE.Theatre(document.body, { alphaBackground: true });
 
     theatre.on('pick', (event) => {
         console.log('pick', event);
