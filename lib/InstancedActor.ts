@@ -211,6 +211,11 @@ export abstract class InstancedActor<TMaterial extends Material = Material> impl
         this._mesh.setMatrixAt(index, matrix);
         this._mesh.updateMatrix();
         this._mesh.instanceMatrix.needsUpdate = true;
+
+        // Runtime InstancedMesh has these; @types/three r150 omits them on InstancedMesh.
+        // We need to reset it by hand as it causes issues with the raycaster.
+        this._mesh.boundingSphere = null;
+        this._mesh.boundingBox = null;
     }
 
     /**
