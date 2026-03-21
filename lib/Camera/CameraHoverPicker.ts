@@ -74,7 +74,11 @@ import { RenderStep } from "../RenderStep";
 
         const intersections = this._raycaster.intersectObjects(objects, true);
 
-        this.trigger('hover', buildPickEventData(intersections, this._actorsHolder, event));
+        try {
+            this.trigger('hover', buildPickEventData(intersections, this._actorsHolder, event));
+        } catch (error) {
+            // no intersections found, do nothing as there is no event to trigger
+        }
     }
 
     /**

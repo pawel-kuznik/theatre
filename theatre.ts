@@ -19,6 +19,7 @@ export { default as CameraPicker } from "./lib/Camera/CameraPicker";
 export { default as MPressMover } from "./lib/Camera/MPressMover";
 export { default as WheelLifterCameraMover } from "./lib/Camera/WheelLifterCameraMover";
 export { default as WSADCameraMover } from "./lib/Camera/WSADCameraMover";
+export { PickEventPayload } from "./lib/Camera/PickEventPayload";
 
 // spatial animations
 export { default as TransitionCycle } from "./lib/TransitionCycle";

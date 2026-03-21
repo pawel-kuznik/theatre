@@ -9,14 +9,13 @@ class CheckerboardTiles extends THEATRE.InstancedActor {
         const floorTexture = warderobe.fetchTexture('floor:top');
 
         // Create texture atlas from both textures (assuming 32x32 pixel textures)
-        // const atlas = THEATRE.createTextureAtlas([crateTexture, floorTexture], 32);
+        const atlas = THEATRE.createTextureAtlas([crateTexture, floorTexture], 32);
 
         // Create the atlas material with 2 textures
-        // this._atlasMaterial = new THEATRE.TextureAtlasMaterial(atlas, 2);
+        this._atlasMaterial = new THEATRE.TextureAtlasMaterial(atlas, 2);
 
         // Use the pre-created atlas material
-        // return atlasMaterial;
-        return new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff00ff)});
+        return this._atlasMaterial;
     }
 
     _initGeometry(warderobe) {
@@ -68,5 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Created', tiles.count, 'tiles in checkerboard pattern');
 
         theatre.transitionTo('test');
+    });
+
+    theatre.on('pick', (event) => {
+        console.log('pick', event);
     });
 });

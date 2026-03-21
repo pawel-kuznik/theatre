@@ -39,6 +39,11 @@ export interface TheatreOptions {
  * 
  *  @event  resize      This event triggers when the canvas resizes and the renderer
  *                      updated to the new size.
+ * 
+ *  @event  pick        This event triggers when a pick event occurs. The `data` property
+ *                      contains a `PickEventPayload` object.   
+ *  @event  hover       This event triggers when a hover event occurs. The `data` property
+ *                      contains a `PickEventPayload` object.
  */
 export default class Theatre extends Emitter  {
 

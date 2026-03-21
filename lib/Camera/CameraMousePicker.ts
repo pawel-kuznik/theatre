@@ -50,7 +50,11 @@ export default class CameraMousePicker extends Emitter implements CameraPicker {
         
         const intersections = this._raycaster.intersectObjects(objects, true);
 
-        this.trigger('pick', buildPickEventData(intersections, this._actorsHolder, event));
+        try {
+            this.trigger('pick', buildPickEventData(intersections, this._actorsHolder, event));
+        } catch (error) {
+            // no intersections found, do nothing as there is no event to trigger
+        }
 
         this._lastPointerEvent = undefined;
     }
